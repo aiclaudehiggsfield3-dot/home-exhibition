@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>home — 진행 기록</title>
+<style>
+  :root{--bg:#faf8f5;--ink:#26221e;--sub:#6b645c;--line:#ddd6cc;--accent:#c0562a;--warm:#f7e3c4;--warm-ink:#7a4a14}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",sans-serif;line-height:1.7;font-size:16px}
+  main{max-width:920px;margin:0 auto;padding:44px 20px 90px}
+  .kicker{font-size:13px;letter-spacing:.08em;color:var(--accent);font-weight:700;margin:0 0 6px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.02em}
+  .lead{color:var(--sub);margin:0 0 24px}
+  .status{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:40px}
+  .box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 20px}
+  .box h2{font-size:14px;color:var(--sub);margin:0 0 6px;font-weight:600}
+  .box .now{font-size:20px;font-weight:700}
+  .box .upd{font-size:13px;color:var(--sub);margin-top:4px}
+  .box ul{margin:0;padding-left:18px}
+  .entry{position:relative;padding:0 0 34px 28px;border-left:2px solid var(--line);margin-left:6px}
+  .entry::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--accent)}
+  .when{font-size:13px;color:var(--sub)}
+  .entry h3{font-size:19px;margin:2px 0 8px}
+  .tag{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:99px;background:var(--warm);color:var(--warm-ink);margin-right:5px}
+  .entry p{margin:6px 0}
+  .media{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:12px}
+  figure{margin:0}
+  figure img,figure video{width:100%;display:block;border-radius:10px;border:1px solid var(--line);background:#111}
+  figcaption{font-size:13px;color:var(--sub);margin-top:6px}
+  .links{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px}
+  .links a{font-size:14px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:#fff;border-radius:99px;padding:3px 12px}
+  @media(max-width:640px){.status{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+  <p class="kicker">진행 기록</p>
+  <h1 id="title"></h1>
+  <p class="lead" id="subtitle"></p>
+  <div class="status">
+    <div class="box"><h2>현재 단계</h2><div class="now" id="status"></div><div class="upd" id="updated"></div></div>
+    <div class="box"><h2>다음 할 일</h2><ul id="next"></ul></div>
+  </div>
+  <section id="timeline"></section>
+</main>
+<script src="data/progress.js"></script>
+<script>
+  const P = window.PROJECT, L = window.PROGRESS;
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  document.getElementById("title").textContent = P.title;
+  document.getElementById("subtitle").textContent = P.subtitle;
+  document.getElementById("status").textContent = P.status;
+  if (L.length) document.getElementById("updated").textContent = "마지막 업데이트 " + L[0].date + " " + L[0].time;
+  document.getElementById("next").innerHTML = P.next.map(n => "<li>" + esc(n) + "</li>").join("");
+  document.getElementById("timeline").innerHTML = L.map(e => `
+    <article class="entry">
+      <div class="when">${esc(e.date)} ${esc(e.time)}</div>
+      <h3>${esc(e.title)}</h3>
+      <div>${(e.tags||[]).map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
+      ${(e.body||[]).map(p => `<p>${esc(p)}</p>`).join("")}
+      ${(e.media||[]).length ? `<div class="media">${e.media.map(m => `<figure>${
+        m.type === "video"
+          ? `<video src="${esc(m.src)}" controls muted playsinline preload="metadata"></video>`
+          : `<a href="${esc(m.src)}"><img src="${esc(m.src)}" alt="${esc(m.caption||"")}" loading="lazy"></a>`
+      }<figcaption>${esc(m.caption||"")}</figcaption></figure>`).join("")}</div>` : ""}
+      ${(e.links||[]).length ? `<div class="links">${e.links.map(l => `<a href="${esc(l.href)}">${esc(l.label)}</a>`).join("")}</div>` : ""}
+    </article>`).join("");
+</script>
+</body>
+</html>

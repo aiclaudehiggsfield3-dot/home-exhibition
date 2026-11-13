@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unreal 전시 공간 오브젝트 구조</title>
+<style>
+:root{--bg:#faf8f5;--ink:#26221e;--sub:#6b645c;--line:#ddd6cc;--cold:#dfe6ec;--cold-ink:#34495a;--warm:#f7e3c4;--warm-ink:#7a4a14;--accent:#c0562a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",sans-serif;line-height:1.65;font-size:16px}
+main{max-width:980px;margin:0 auto;padding:40px 20px 80px}
+h1{font-size:30px;margin:0 0 6px;letter-spacing:-.02em}
+.lead{color:var(--sub);margin:0 0 30px;font-size:17px}
+h2{font-size:20px;margin:48px 0 6px}
+h2 .n{display:inline-block;width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;text-align:center;line-height:28px;font-size:14px;margin-right:8px;vertical-align:2px}
+h3{font-size:16px;margin:26px 0 8px}
+p.cap{color:var(--sub);margin:0 0 16px;font-size:15px}
+.summary{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 22px}
+.summary b{color:var(--accent)}
+svg{width:100%;height:auto;display:block;background:#fff;border:1px solid var(--line);border-radius:14px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px;font-size:14px;color:var(--sub)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block;margin-right:8px;vertical-align:-1px;border:1px solid rgba(0,0,0,.15)}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{border-radius:14px;padding:16px 20px;border:1px solid var(--line)}
+.card.a{background:var(--cold);color:var(--cold-ink)} .card.b{background:var(--warm);color:var(--warm-ink)}
+.card h3{margin:0 0 6px;font-size:18px} .card ul{margin:0;padding-left:18px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);font-size:14px}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
+td:nth-child(2){white-space:normal}
+th{background:#f1ede6;font-weight:600}
+td.num{font-variant-numeric:tabular-nums}
+code{font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.note{margin-top:12px;font-size:14px;color:var(--sub)}
+@media(max-width:640px){.cards{grid-template-columns:1fr}}
+</style></head><body><main>
+<h1>Unreal 전시 공간 오브젝트 구조</h1>
+<p class="lead"><code>build_exhibition.py</code>가 만드는 오브젝트의 크기와 위치 정리 · 모든 단위 cm</p>
+
+<div class="summary">
+전체 <b>300 × 300</b>, 벽 높이 <b>240</b>, 벽 두께 <b>10</b>. 가벽을 X=<b>120</b>에 세워 A(120) / B(180)로 나눔.
+문은 모두 폭 <b>80</b> × 높이 <b>210</b>이고, 그 위 30cm는 벽으로 막혀 있음. 스크립트에서는 문이 <b>열린 상태</b>로 놓임.
+</div>
+
+<h2><span class="n">1</span>위에서 본 배치도</h2>
+<p class="cap">눈금 한 칸 = 50cm. 좌표 기준점(0, 0)은 입구 쪽 왼쪽 위 모서리. X는 오른쪽, Y는 아래쪽, 높이(Z)는 바닥 윗면이 2. 도형에 마우스를 올리면 오브젝트 이름이 보여요.</p>
+<svg viewBox="0 0 710 904" role="img" aria-label="위에서 본 배치도">
+<defs><pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse" x="40" y="230"><path d="M100 0H0V100" fill="none" stroke="#000" stroke-opacity=".07"/></pattern>
+<marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#26221e"/></marker></defs>
+<rect x="40" y="230" width="240" height="600" fill="#dfe6ec"/>
+<rect x="280" y="230" width="360" height="600" fill="#f7e3c4"/>
+<rect x="40" y="230" width="600" height="600" fill="url(#grid)"/>
+<rect x="310" y="290" width="290" height="480" fill="#e6d1ad" fill-opacity=".55"><title>EX_Rug</title></rect>
+<rect x="310" y="370" width="150" height="320" fill="#a6472a" rx="6"><title>EX_Sofa_Seat</title></rect>
+<rect x="310" y="370" width="36" height="320" fill="#7d3220"><title>EX_Sofa_Back</title></rect>
+<rect x="310" y="370" width="150" height="30" fill="#7d3220"><title>EX_Sofa_Arm_1</title></rect>
+<rect x="310" y="660" width="150" height="30" fill="#7d3220"><title>EX_Sofa_Arm_2</title></rect>
+<rect x="267.0" y="250" width="2.0" height="380" fill="#c0562a"><title>EX_Screen_A_Society</title></rect>
+<rect x="627.0" y="310" width="2.0" height="440" fill="#c0562a"><title>EX_Screen_B_Home</title></rect>
+<rect x="30.0" y="230" width="20.0" height="600" fill="#3a3f46"><title>EX_Wall_Left_A</title></rect>
+<rect x="630.0" y="230" width="20.0" height="600" fill="#3a3f46"><title>EX_Wall_Right_B_Screen</title></rect>
+<rect x="40" y="820.0" width="240" height="20.0" fill="#3a3f46"><title>EX_Wall_Bottom_A</title></rect>
+<rect x="280" y="820.0" width="360" height="20.0" fill="#3a3f46"><title>EX_Wall_Bottom_B</title></rect>
+<rect x="200" y="220.0" width="80" height="20.0" fill="#3a3f46"><title>EX_Wall_Top_A</title></rect>
+<rect x="280" y="220.0" width="160" height="20.0" fill="#3a3f46"><title>EX_Wall_Top_B_1</title></rect>
+<rect x="600" y="220.0" width="40" height="20.0" fill="#3a3f46"><title>EX_Wall_Top_B_2</title></rect>
+<rect x="270.0" y="230" width="20.0" height="420" fill="#26221e"><title>EX_Partition_1</title></rect>
+<rect x="270.0" y="810" width="20.0" height="20" fill="#26221e"><title>EX_Partition_2</title></rect>
+<rect x="290.0" y="798" width="160.0" height="8" fill="#8c5a38"><title>EX_Door_Partition</title></rect>
+<rect x="588" y="60.0" width="8" height="160.0" fill="#8c5a38"><title>EX_Door_Exit</title></rect>
+<rect x="60" y="414" width="60" height="52" fill="#111"><title>EX_Projector_A</title></rect>
+<rect x="340" y="504" width="60" height="52" fill="none" stroke="#111" stroke-width="2" stroke-dasharray="4 3"><title>EX_Projector_B</title></rect>
+<rect x="70" y="770" width="30" height="30" fill="#111"><title>EX_Speaker_A</title></rect>
+<rect x="590" y="260" width="30" height="30" fill="#111"><title>EX_Speaker_B_1</title></rect>
+<rect x="590" y="770" width="30" height="30" fill="#111"><title>EX_Speaker_B_2</title></rect>
+<path d="M280 650 A 160 160 0 0 1 440 810" fill="none" stroke="#c0562a" stroke-dasharray="4 4"/>
+<path d="M440 230 A 160 160 0 0 0 600 70" fill="none" stroke="#c0562a" stroke-dasharray="4 4"/>
+<circle cx="160" cy="530" r="11" fill="#7fa6c9" stroke="#fff" stroke-width="2"><title>EX_Light_A_Cold</title></circle>
+<text x="160" y="534" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">L1</text>
+<circle cx="540" cy="790" r="11" fill="#f0a33a" stroke="#fff" stroke-width="2"><title>EX_Light_B_Warm_1</title></circle>
+<text x="540" y="794" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">L2</text>
+<circle cx="360" cy="290" r="11" fill="#f0a33a" stroke="#fff" stroke-width="2"><title>EX_Light_B_Warm_2</title></circle>
+<text x="360" y="294" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">L3</text>
+<line x1="120" y1="260" x2="120.0" y2="300.0" stroke="#26221e" stroke-width="2" marker-end="url(#arr2)"/>
+<rect x="111" y="251" width="18" height="18" rx="4" fill="#26221e"><title>EX_Cam_A_Entrance</title></rect>
+<text x="120" y="264" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">C1</text>
+<line x1="296" y1="530" x2="336.0" y2="530.0" stroke="#26221e" stroke-width="2" marker-end="url(#arr2)"/>
+<rect x="287" y="521" width="18" height="18" rx="4" fill="#26221e"><title>EX_Cam_B_OverSofa</title></rect>
+<text x="296" y="534" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">C2</text>
+<line x1="600" y1="270" x2="571.7" y2="298.3" stroke="#26221e" stroke-width="2" marker-end="url(#arr2)"/>
+<rect x="591" y="261" width="18" height="18" rx="4" fill="#26221e"><title>EX_Cam_B_Corner</title></rect>
+<text x="600" y="274" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">C3</text>
+<path d="M120 314 l-9 -14 h18 z" fill="#2f7d4f"/><text x="136" y="294" font-size="12" fill="#2f7d4f" font-weight="700">관객 시작</text>
+<text x="160" y="730" font-size="20" font-weight="700" text-anchor="middle" fill="#34495a">A. 사회</text>
+<text x="160" y="750" font-size="12" text-anchor="middle" fill="#34495a">120 × 300</text>
+<text x="530" y="530" font-size="20" font-weight="700" text-anchor="middle" fill="#7a4a14">B. 집</text>
+<text x="530" y="550" font-size="12" text-anchor="middle" fill="#7a4a14">180 × 300</text>
+<text x="120" y="216" font-size="14" font-weight="700" text-anchor="middle">입구 (75)</text>
+<text x="490" y="58" font-size="14" font-weight="700" text-anchor="middle" fill="#c0562a">출구 (80) · 바깥으로 열림</text>
+<text x="296" y="642" font-size="13" font-weight="700" fill="#c0562a">문 (80)</text>
+<text x="259.0" y="440" font-size="12" font-weight="700" fill="#c0562a" text-anchor="middle" transform="rotate(-90 259.0 440)">A 영상 190 × 160</text>
+<text x="617.0" y="530" font-size="12" font-weight="700" fill="#c0562a" text-anchor="middle" transform="rotate(-90 617.0 530)">B 영상 220 × 150</text>
+<text x="400" y="640" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">소파</text>
+<text x="370" y="500" font-size="11" fill="#fff" text-anchor="middle">B 프로젝터(천장)</text>
+<text x="90" y="406" font-size="11" fill="#26221e" text-anchor="middle">A 프로젝터</text>
+<text x="84" y="760" font-size="11" fill="#26221e" text-anchor="middle">스피커</text>
+<text x="604" y="310" font-size="11" fill="#26221e" text-anchor="middle">스피커</text>
+<text x="604" y="762" font-size="11" fill="#26221e" text-anchor="middle">스피커</text>
+<line x1="40" y1="864" x2="640" y2="864" stroke="#6b645c"/>
+<line x1="40" y1="858" x2="40" y2="870" stroke="#6b645c"/>
+<line x1="280" y1="858" x2="280" y2="870" stroke="#6b645c"/>
+<line x1="640" y1="858" x2="640" y2="870" stroke="#6b645c"/>
+<text x="160" y="858" font-size="12" text-anchor="middle" fill="#6b645c">120</text>
+<text x="460" y="858" font-size="12" text-anchor="middle" fill="#6b645c">180</text>
+<text x="340" y="884" font-size="13" text-anchor="middle" fill="#6b645c">가로 300 (X)</text>
+<line x1="674" y1="230" x2="674" y2="830" stroke="#6b645c"/>
+<text x="688" y="530" font-size="13" fill="#6b645c" text-anchor="middle" transform="rotate(90 688 530)">세로 300 (Y)</text></svg>
+<div class="legend">
+<span><span class="sw" style="background:#3a3f46"></span>외벽</span>
+<span><span class="sw" style="background:#26221e"></span>가벽</span>
+<span><span class="sw" style="background:#8c5a38"></span>문 (열린 상태)</span>
+<span><span class="sw" style="background:#c0562a"></span>영상 투사면</span>
+<span><span class="sw" style="background:#a6472a"></span>소파</span>
+<span><span class="sw" style="background:#111"></span>장비</span>
+<span><span class="sw" style="background:#7fa6c9;border-radius:50%"></span>차가운 조명</span>
+<span><span class="sw" style="background:#f0a33a;border-radius:50%"></span>따뜻한 조명</span>
+<span><span class="sw" style="background:#26221e"></span>C = 카메라 (선은 바라보는 방향)</span>
+</div>
+
+<h2><span class="n">2</span>두 공간 요약</h2>
+<div class="cards">
+<div class="card a"><h3>A. 사회</h3><ul>
+<li>바닥 120 × 300, 어두운 콘크리트색</li>
+<li>벽 회청색, 차가운 조명 6500K</li>
+<li>가벽 A쪽 면에 영상 190 × 160 (바닥에서 40~200)</li>
+<li>입구 폭 75 (왼쪽 벽 두께를 뺀 실제 통로)</li>
+</ul></div>
+<div class="card b"><h3>B. 집</h3><ul>
+<li>바닥 180 × 300, 나무색</li>
+<li>벽 베이지, 따뜻한 조명 2700K × 2</li>
+<li>오른쪽 배정 벽에 영상 220 × 150 (바닥에서 50~200)</li>
+<li>소파 75 × 160, 앞면에서 영상 벽까지 약 85</li>
+<li>출구: 위쪽 벽 오른쪽 끝, 모서리에서 20 안쪽</li>
+</ul></div>
+</div>
+
+<h2><span class="n">3</span>오브젝트별 크기와 위치</h2>
+<p class="cap">크기 = 가로(X) × 세로(Y) × 높이(Z). 범위는 시작~끝 좌표. 이름은 Unreal 아웃라이너에 보이는 이름과 같아요.</p>
+<h3>바닥·천장</h3><div class="tw"><table><thead><tr><th>아웃라이너 이름</th><th>역할</th><th>크기 (가로X × 세로Y × 높이Z)</th><th>X 범위</th><th>Y 범위</th><th>높이 범위</th></tr></thead><tbody>
+<tr><td><span class="sw" style="background:#2e3036"></span><code>EX_Floor_A</code></td><td>A 공간 바닥 (어두운 콘크리트색)</td><td class="num"><b>120 × 300 × 5</b></td><td class="num">0~120</td><td class="num">0~300</td><td class="num">-3~2</td></tr>
+<tr><td><span class="sw" style="background:#734d2e"></span><code>EX_Floor_B</code></td><td>B 공간 바닥 (나무색)</td><td class="num"><b>180 × 300 × 5</b></td><td class="num">120~300</td><td class="num">0~300</td><td class="num">-3~2</td></tr>
+<tr><td><span class="sw" style="background:#ccc"></span><code>EX_Ceiling</code></td><td>천장 (사진 찍을 때 숨김 가능)</td><td class="num"><b>300 × 300 × 5</b></td><td class="num">0~300</td><td class="num">0~300</td><td class="num">242~247</td></tr></tbody></table></div>
+<h3>외벽</h3><div class="tw"><table><thead><tr><th>아웃라이너 이름</th><th>역할</th><th>크기 (가로X × 세로Y × 높이Z)</th><th>X 범위</th><th>Y 범위</th><th>높이 범위</th></tr></thead><tbody>
+<tr><td><span class="sw" style="background:#3a3f46"></span><code>EX_Wall_Left_A</code></td><td>A 왼쪽 벽</td><td class="num"><b>10 × 300 × 240</b></td><td class="num">-5~5</td><td class="num">0~300</td><td class="num">2~242</td></tr>
+<tr><td><span class="sw" style="background:#3a3f46"></span><code>EX_Wall_Right_B_Screen</code></td><td>B 영상 벽 (배정 벽 1면)</td><td class="num"><b>10 × 300 × 240</b></td><td class="num">295~305</td><td class="num">0~300</td><td class="num">2~242</td></tr>
+<tr><td><span class="sw" style="background:#3a3f46"></span><code>EX_Wall_Bottom_A</code></td><td>아래쪽 벽 (A 구간)</td><td class="num"><b>120 × 10 × 240</b></td><td class="num">0~120</td><td class="num">295~305</td><td class="num">2~242</td></tr>
+<tr><td><span class="sw" style="background:#3a3f46"></span><code>EX_Wall_Bottom_B</code></td><td>아래쪽 벽 (B 구간)</td><td class="num"><b>180 × 10 × 240</b></td><td class="num">120~300</td><td class="num">295~305</td><td class="num">2~242</td></tr>
+<tr><td><span class="sw" style="background:#3a3f46"></span><code>EX_Wall_Top_A</code></td><td>위쪽 벽 (입구 옆, A 구간)</td><td class="num"><b>40 × 10 × 240</b></td><td class="num">80~120</td><td class="num">-5~5</td><td class="num">2~242</td></tr>
+<tr><td><span class="sw" style="background:#3a3f46"></span><code>EX_Wall_Top_B_1</code></td><td>위쪽 벽 (B 구간, 출구 왼쪽)</td><td class="num"><b>80 × 10 × 240</b></td><td class="num">120~200</td><td class="num">-5~5</td><td class="num">2~242</td></tr>
+<tr><td><span class="sw" style="background:#3a3f46"></span><code>EX_Wall_Top_B_2</code></td><td>위쪽 벽 (출구 오른쪽 모서리)</td><td class="num"><b>20 × 10 × 240</b></td><td class="num">280~300</td><td class="num">-5~5</td><td class="num">2~242</td></tr>
+<tr><td><span class="sw" style="background:#3a3f46"></span><code>EX_Wall_Top_ExitHeader</code></td><td>출구 위 막음 벽</td><td class="num"><b>80 × 10 × 30</b></td><td class="num">200~280</td><td class="num">-5~5</td><td class="num">212~242</td></tr></tbody></table></div>
+<h3>가벽·문</h3><div class="tw"><table><thead><tr><th>아웃라이너 이름</th><th>역할</th><th>크기 (가로X × 세로Y × 높이Z)</th><th>X 범위</th><th>Y 범위</th><th>높이 범위</th></tr></thead><tbody>
+<tr><td><span class="sw" style="background:#26221e"></span><code>EX_Partition_1</code></td><td>가벽 (A 영상 투사면이 붙는 부분)</td><td class="num"><b>10 × 210 × 240</b></td><td class="num">115~125</td><td class="num">0~210</td><td class="num">2~242</td></tr>
+<tr><td><span class="sw" style="background:#26221e"></span><code>EX_Partition_2</code></td><td>가벽 (문 아래 짧은 부분)</td><td class="num"><b>10 × 10 × 240</b></td><td class="num">115~125</td><td class="num">290~300</td><td class="num">2~242</td></tr>
+<tr><td><span class="sw" style="background:#26221e"></span><code>EX_Partition_DoorHeader</code></td><td>가벽 문 위 막음 벽</td><td class="num"><b>10 × 80 × 30</b></td><td class="num">115~125</td><td class="num">210~290</td><td class="num">212~242</td></tr>
+<tr><td><span class="sw" style="background:#8c5a38"></span><code>EX_Door_Partition</code></td><td>A→B 문 (열린 상태, 경첩은 아래쪽 끝)</td><td class="num"><b>80 × 4 × 210</b></td><td class="num">125~205</td><td class="num">284~288</td><td class="num">2~212</td></tr>
+<tr><td><span class="sw" style="background:#8c5a38"></span><code>EX_Door_Exit</code></td><td>출구 문 (열린 상태, 바깥으로 열림)</td><td class="num"><b>4 × 80 × 210</b></td><td class="num">274~278</td><td class="num">-85~-5</td><td class="num">2~212</td></tr></tbody></table></div>
+<h3>영상 투사면</h3><div class="tw"><table><thead><tr><th>아웃라이너 이름</th><th>역할</th><th>크기 (가로X × 세로Y × 높이Z)</th><th>X 범위</th><th>Y 범위</th><th>높이 범위</th></tr></thead><tbody>
+<tr><td><span class="sw" style="background:#c0562a"></span><code>EX_Screen_A_Society</code></td><td>A 영상 (가벽 A쪽 면)</td><td class="num"><b>1 × 190 × 160</b></td><td class="num">113.5~114.5</td><td class="num">10~200</td><td class="num">42~202</td></tr>
+<tr><td><span class="sw" style="background:#c0562a"></span><code>EX_Screen_B_Home</code></td><td>B 영상 (오른쪽 배정 벽 안쪽 면)</td><td class="num"><b>1 × 220 × 150</b></td><td class="num">293.5~294.5</td><td class="num">40~260</td><td class="num">52~202</td></tr></tbody></table></div>
+<h3>가구</h3><div class="tw"><table><thead><tr><th>아웃라이너 이름</th><th>역할</th><th>크기 (가로X × 세로Y × 높이Z)</th><th>X 범위</th><th>Y 범위</th><th>높이 범위</th></tr></thead><tbody>
+<tr><td><span class="sw" style="background:#e6d1ad"></span><code>EX_Rug</code></td><td>러그</td><td class="num"><b>145 × 240 × 1</b></td><td class="num">135~280</td><td class="num">30~270</td><td class="num">2~3</td></tr>
+<tr><td><span class="sw" style="background:#a6472a"></span><code>EX_Sofa_Seat</code></td><td>소파 좌석 (영상 벽을 바라봄)</td><td class="num"><b>75 × 160 × 44</b></td><td class="num">135~210</td><td class="num">70~230</td><td class="num">3~47</td></tr>
+<tr><td><span class="sw" style="background:#7d3220"></span><code>EX_Sofa_Back</code></td><td>소파 등받이</td><td class="num"><b>18 × 160 × 40</b></td><td class="num">135~153</td><td class="num">70~230</td><td class="num">47~87</td></tr>
+<tr><td><span class="sw" style="background:#7d3220"></span><code>EX_Sofa_Arm_1</code></td><td>소파 팔걸이 (위쪽)</td><td class="num"><b>75 × 15 × 20</b></td><td class="num">135~210</td><td class="num">70~85</td><td class="num">47~67</td></tr>
+<tr><td><span class="sw" style="background:#7d3220"></span><code>EX_Sofa_Arm_2</code></td><td>소파 팔걸이 (아래쪽)</td><td class="num"><b>75 × 15 × 20</b></td><td class="num">135~210</td><td class="num">215~230</td><td class="num">47~67</td></tr></tbody></table></div>
+<h3>장비 (자리 표시)</h3><div class="tw"><table><thead><tr><th>아웃라이너 이름</th><th>역할</th><th>크기 (가로X × 세로Y × 높이Z)</th><th>X 범위</th><th>Y 범위</th><th>높이 범위</th></tr></thead><tbody>
+<tr><td><span class="sw" style="background:#111"></span><code>EX_Projector_A</code></td><td>A 영상 프로젝터</td><td class="num"><b>30 × 26 × 12</b></td><td class="num">10~40</td><td class="num">92~118</td><td class="num">152~164</td></tr>
+<tr><td><span class="sw" style="background:#111"></span><code>EX_Projector_B</code></td><td>B 영상 프로젝터 (천장 쪽)</td><td class="num"><b>30 × 26 × 12</b></td><td class="num">150~180</td><td class="num">137~163</td><td class="num">217~229</td></tr>
+<tr><td><span class="sw" style="background:#111"></span><code>EX_Speaker_A</code></td><td>A 공간 스피커</td><td class="num"><b>15 × 15 × 30</b></td><td class="num">15~30</td><td class="num">270~285</td><td class="num">2~32</td></tr>
+<tr><td><span class="sw" style="background:#111"></span><code>EX_Speaker_B_1</code></td><td>B 공간 스피커 (위쪽 모서리)</td><td class="num"><b>15 × 15 × 30</b></td><td class="num">275~290</td><td class="num">15~30</td><td class="num">2~32</td></tr>
+<tr><td><span class="sw" style="background:#111"></span><code>EX_Speaker_B_2</code></td><td>B 공간 스피커 (아래쪽 모서리)</td><td class="num"><b>15 × 15 × 30</b></td><td class="num">275~290</td><td class="num">270~285</td><td class="num">2~32</td></tr></tbody></table></div>
+
+<h3>조명</h3>
+<div class="tw"><table><thead><tr><th>이름</th><th>역할</th><th>위치 (X, Y, 높이)</th><th>색온도</th><th>밝기</th></tr></thead><tbody>
+<tr><td><b>L1</b> <code>EX_Light_A_Cold</code></td><td>A 차가운 조명</td><td class="num">(60, 150, 222)</td><td class="num">6500K</td><td class="num">250 lm</td></tr>
+<tr><td><b>L2</b> <code>EX_Light_B_Warm_1</code></td><td>B 따뜻한 조명 (아래쪽 모서리, 낮은 위치)</td><td class="num">(250, 280, 112)</td><td class="num">2700K</td><td class="num">500 lm</td></tr>
+<tr><td><b>L3</b> <code>EX_Light_B_Warm_2</code></td><td>B 따뜻한 조명 (위쪽, 중간 높이)</td><td class="num">(160, 30, 172)</td><td class="num">2700K</td><td class="num">350 lm</td></tr></tbody></table></div>
+
+<h3>예시 사진용 카메라</h3>
+<div class="tw"><table><thead><tr><th>이름</th><th>보는 장면</th><th>위치 (X, Y, 높이)</th><th>각도</th><th>초점거리</th></tr></thead><tbody>
+<tr><td><b>-</b> <code>EX_Cam_TopView</code></td><td>위에서 본 전체 배치</td><td class="num">(150, 150, 900)</td><td class="num">아래로 90° · 방향 -90°</td><td class="num">24mm</td></tr>
+<tr><td><b>C1</b> <code>EX_Cam_A_Entrance</code></td><td>입구에서 A 공간을 바라봄</td><td class="num">(40, 15, 162)</td><td class="num">아래로 5° · 방향 90°</td><td class="num">14mm</td></tr>
+<tr><td><b>C2</b> <code>EX_Cam_B_OverSofa</code></td><td>소파 뒤에서 B 영상 벽을 바라봄</td><td class="num">(128, 150, 142)</td><td class="num">아래로 8° · 방향 0°</td><td class="num">14mm</td></tr>
+<tr><td><b>C3</b> <code>EX_Cam_B_Corner</code></td><td>출구 쪽 모서리에서 B 공간 전체</td><td class="num">(280, 20, 202)</td><td class="num">아래로 25° · 방향 135°</td><td class="num">14mm</td></tr></tbody></table></div>
+<p class="note">방향 0° = X(오른쪽), 90° = Y(아래쪽)를 바라봄. 관객 시작 위치(Player Start)는 (40, 30, 102)에서 아래쪽(A 공간 안쪽)을 바라봄.</p>
+
+<h2><span class="n">4</span>레이아웃 바꾸는 값</h2>
+<p class="cap">스크립트 맨 위 "설정값"에서 이 숫자를 바꾸고 다시 실행하면 관련 오브젝트가 함께 옮겨져요.</p>
+<div class="tw"><table><thead><tr><th>설정값</th><th>현재</th><th>바꾸면</th></tr></thead><tbody>
+<tr><td><code>ROOM</code></td><td class="num">300</td><td>전체 공간 한 변</td></tr>
+<tr><td><code>SPLIT_X</code></td><td class="num">120</td><td>가벽 위치 (= A 공간 폭)</td></tr>
+<tr><td><code>WALL_H</code> / <code>WALL_T</code></td><td class="num">240 / 10</td><td>벽 높이 / 두께</td></tr>
+<tr><td><code>DOOR_W</code> / <code>DOOR_H</code></td><td class="num">80 / 210</td><td>모든 문의 폭 / 높이</td></tr>
+<tr><td><code>ENTRANCE_X</code></td><td class="num">(0, 80)</td><td>입구 위치 (위쪽 벽)</td></tr>
+<tr><td><code>PARTITION_DOOR_Y</code></td><td class="num">(210, 290)</td><td>가벽 문 위치</td></tr>
+<tr><td><code>EXIT_X</code></td><td class="num">(200, 280)</td><td>출구 위치 (위쪽 벽)</td></tr>
+<tr><td><code>DOORS_OPEN</code></td><td>True</td><td>False면 문이 닫힌 상태로 놓임</td></tr>
+<tr><td><code>INCLUDE_CEILING</code></td><td>True</td><td>False면 천장 없이 지음</td></tr>
+</tbody></table></div>
+<p class="note">소파, 러그, 영상 면, 장비, 조명, 카메라는 위치가 숫자로 직접 적혀 있어서 SPLIT_X 등을 크게 바꾸면 따로 맞춰야 해요.</p>
+</main></body></html>
