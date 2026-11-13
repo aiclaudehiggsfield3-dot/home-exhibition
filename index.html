@@ -5,67 +5,136 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>home — 진행 기록</title>
 <style>
-  :root{--bg:#faf8f5;--ink:#26221e;--sub:#6b645c;--line:#ddd6cc;--accent:#c0562a;--warm:#f7e3c4;--warm-ink:#7a4a14}
+  :root{--bg:#faf8f5;--ink:#26221e;--sub:#6b645c;--line:#ddd6cc;--accent:#c0562a;--warm:#f7e3c4;--warm-ink:#7a4a14;--cold:#dfe6ec}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",sans-serif;line-height:1.7;font-size:16px}
-  main{max-width:920px;margin:0 auto;padding:44px 20px 90px}
+  a{color:inherit}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 20px 90px}
   .kicker{font-size:13px;letter-spacing:.08em;color:var(--accent);font-weight:700;margin:0 0 6px}
   h1{font-size:30px;margin:0 0 6px;letter-spacing:-.02em}
   .lead{color:var(--sub);margin:0 0 24px}
-  .status{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:40px}
+  .status{display:grid;grid-template-columns:1fr 1.4fr;gap:14px;margin-bottom:34px}
   .box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 20px}
-  .box h2{font-size:14px;color:var(--sub);margin:0 0 6px;font-weight:600}
-  .box .now{font-size:20px;font-weight:700}
-  .box .upd{font-size:13px;color:var(--sub);margin-top:4px}
+  .box h2{font-size:13px;color:var(--sub);margin:0 0 6px;font-weight:600}
+  .now{font-size:21px;font-weight:700}
+  .upd{font-size:13px;color:var(--sub);margin-top:4px}
   .box ul{margin:0;padding-left:18px}
-  .entry{position:relative;padding:0 0 34px 28px;border-left:2px solid var(--line);margin-left:6px}
-  .entry::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--accent)}
-  .when{font-size:13px;color:var(--sub)}
-  .entry h3{font-size:19px;margin:2px 0 8px}
-  .tag{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:99px;background:var(--warm);color:var(--warm-ink);margin-right:5px}
-  .entry p{margin:6px 0}
-  .media{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+  .card{display:block;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;transition:transform .12s,border-color .12s,box-shadow .12s}
+  .card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 6px 18px rgba(0,0,0,.06)}
+  .card .num{font-size:13px;font-weight:800;color:var(--accent)}
+  .card h3{margin:2px 0 6px;font-size:18px}
+  .card p{margin:0;color:var(--sub);font-size:14.5px}
+  .card .cnt{margin-top:10px;font-size:12.5px;color:var(--sub)}
+  details.log{margin-top:34px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 20px}
+  details.log summary{cursor:pointer;font-weight:700}
+  .log ol{list-style:none;margin:10px 0 0;padding:0}
+  .log li{padding:6px 0;border-top:1px solid #eee;font-size:14.5px}
+  .log li span{color:var(--sub);display:inline-block;width:132px}
+  /* 상세 */
+  .detail{display:grid;grid-template-columns:220px 1fr;gap:28px;align-items:start}
+  .side{position:sticky;top:20px;display:flex;flex-direction:column;gap:4px}
+  .side a{text-decoration:none;font-size:14.5px;padding:7px 10px;border-radius:8px;color:var(--sub)}
+  .side a:hover{background:#f1ede6}
+  .side a.on{background:var(--ink);color:#fff}
+  .side .home{color:var(--accent);font-weight:700;margin-bottom:8px}
+  .content h2{font-size:27px;margin:0 0 4px;letter-spacing:-.02em}
+  .content .sum{color:var(--sub);margin:0 0 22px}
+  .content h4{font-size:18px;margin:30px 0 8px}
+  .content p{margin:8px 0}
+  .content ul{padding-left:20px}
+  .note{background:var(--warm);color:var(--warm-ink);border-radius:12px;padding:12px 16px;margin:16px 0;font-size:15px}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);font-size:14.5px;margin:10px 0}
+  th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#f1ede6;font-weight:600}
+  .tw{overflow-x:auto}
+  .media{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin:12px 0}
+  .media.one{grid-template-columns:1fr}
   figure{margin:0}
   figure img,figure video{width:100%;display:block;border-radius:10px;border:1px solid var(--line);background:#111}
-  figcaption{font-size:13px;color:var(--sub);margin-top:6px}
-  .links{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px}
-  .links a{font-size:14px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:#fff;border-radius:99px;padding:3px 12px}
-  @media(max-width:640px){.status{grid-template-columns:1fr}}
+  .media:not(.one) img{aspect-ratio:16/9;object-fit:contain}
+  figcaption{font-size:13.5px;color:var(--sub);margin-top:6px}
+  .links{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+  .links a{font-size:14px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 14px}
+  .pager{display:flex;justify-content:space-between;margin-top:40px;gap:10px}
+  .pager a{text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 16px;font-size:14.5px}
+  @media(max-width:760px){.status,.detail{grid-template-columns:1fr}.side{position:static;flex-direction:row;flex-wrap:wrap}}
 </style>
 </head>
 <body>
-<main>
-  <p class="kicker">진행 기록</p>
-  <h1 id="title"></h1>
-  <p class="lead" id="subtitle"></p>
-  <div class="status">
-    <div class="box"><h2>현재 단계</h2><div class="now" id="status"></div><div class="upd" id="updated"></div></div>
-    <div class="box"><h2>다음 할 일</h2><ul id="next"></ul></div>
-  </div>
-  <section id="timeline"></section>
-</main>
-<script src="data/progress.js"></script>
+<div class="wrap" id="app"></div>
+<script src="data/topics.js"></script>
 <script>
-  const P = window.PROJECT, L = window.PROGRESS;
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  document.getElementById("title").textContent = P.title;
-  document.getElementById("subtitle").textContent = P.subtitle;
-  document.getElementById("status").textContent = P.status;
-  if (L.length) document.getElementById("updated").textContent = "마지막 업데이트 " + L[0].date + " " + L[0].time;
-  document.getElementById("next").innerHTML = P.next.map(n => "<li>" + esc(n) + "</li>").join("");
-  document.getElementById("timeline").innerHTML = L.map(e => `
-    <article class="entry">
-      <div class="when">${esc(e.date)} ${esc(e.time)}</div>
-      <h3>${esc(e.title)}</h3>
-      <div>${(e.tags||[]).map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
-      ${(e.body||[]).map(p => `<p>${esc(p)}</p>`).join("")}
-      ${(e.media||[]).length ? `<div class="media">${e.media.map(m => `<figure>${
-        m.type === "video"
-          ? `<video src="${esc(m.src)}" controls muted playsinline preload="metadata"></video>`
-          : `<a href="${esc(m.src)}"><img src="${esc(m.src)}" alt="${esc(m.caption||"")}" loading="lazy"></a>`
-      }<figcaption>${esc(m.caption||"")}</figcaption></figure>`).join("")}</div>` : ""}
-      ${(e.links||[]).length ? `<div class="links">${e.links.map(l => `<a href="${esc(l.href)}">${esc(l.label)}</a>`).join("")}</div>` : ""}
-    </article>`).join("");
+const P = window.PROJECT, T = window.TOPICS, LOG = window.LOG || [];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const app = document.getElementById("app");
+
+function countMedia(t){
+  let img=0, vid=0;
+  t.blocks.forEach(b => (b.type==="media") && b.items.forEach(m => m.type==="video" ? vid++ : img++));
+  return [img && `사진 ${img}`, vid && `영상 ${vid}`].filter(Boolean).join(" · ");
+}
+
+function block(b){
+  switch(b.type){
+    case "h": return `<h4>${esc(b.text)}</h4>`;
+    case "p": return `<p>${esc(b.text)}</p>`;
+    case "note": return `<div class="note">${esc(b.text)}</div>`;
+    case "list": return `<ul>${b.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>`;
+    case "table": return `<div class="tw"><table><thead><tr>${b.head.map(h => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${
+      b.rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    case "media": return `<div class="media${b.items.length===1?" one":""}">${b.items.map(m => `<figure>${
+      m.type==="video"
+        ? `<video src="${esc(m.src)}" controls muted playsinline preload="metadata"></video>`
+        : `<a href="${esc(m.src)}" target="_blank"><img src="${esc(m.src)}" alt="${esc(m.caption||"")}" loading="lazy"></a>`
+    }<figcaption>${esc(m.caption||"")}</figcaption></figure>`).join("")}</div>`;
+    case "links": return `<div class="links">${b.items.map(l => `<a href="${esc(l.href)}" target="_blank">${esc(l.label)} ↗</a>`).join("")}</div>`;
+  }
+  return "";
+}
+
+function header(){
+  return `<p class="kicker">진행 기록</p><h1>${esc(P.title)}</h1><p class="lead">${esc(P.subtitle)}</p>`;
+}
+
+function home(){
+  app.innerHTML = header() + `
+    <div class="status">
+      <div class="box"><h2>현재 단계</h2><div class="now">${esc(P.status)}</div><div class="upd">마지막 업데이트 ${esc(P.updated)}</div></div>
+      <div class="box"><h2>다음 할 일</h2><ul>${P.next.map(n => `<li>${esc(n)}</li>`).join("")}</ul></div>
+    </div>
+    <div class="grid">${T.map(t => `
+      <a class="card" href="#${t.id}">
+        <div class="num">${esc(t.num)}</div><h3>${esc(t.title)}</h3><p>${esc(t.summary)}</p>
+        <div class="cnt">${countMedia(t)}</div>
+      </a>`).join("")}
+    </div>
+    <details class="log"><summary>날짜별 작업 기록 (${LOG.length})</summary>
+      <ol>${LOG.map(l => `<li><span>${esc(l.date)} ${esc(l.time)}</span>${esc(l.text)}</li>`).join("")}</ol>
+    </details>`;
+  window.scrollTo(0,0);
+}
+
+function detail(id){
+  const i = T.findIndex(t => t.id === id);
+  if (i < 0) return home();
+  const t = T[i], prev = T[i-1], next = T[i+1];
+  app.innerHTML = header() + `
+    <div class="detail">
+      <nav class="side"><a class="home" href="#">← 전체 주제</a>${T.map(x =>
+        `<a href="#${x.id}" class="${x.id===id?"on":""}">${esc(x.num)} ${esc(x.title)}</a>`).join("")}</nav>
+      <article class="content">
+        <h2>${esc(t.title)}</h2><p class="sum">${esc(t.summary)}</p>
+        ${t.blocks.map(block).join("")}
+        <div class="pager">${prev ? `<a href="#${prev.id}">← ${esc(prev.title)}</a>` : "<span></span>"}${next ? `<a href="#${next.id}">${esc(next.title)} →</a>` : ""}</div>
+      </article>
+    </div>`;
+  window.scrollTo(0,0);
+}
+
+function route(){ const id = location.hash.slice(1); id ? detail(id) : home(); }
+window.addEventListener("hashchange", route);
+route();
 </script>
 </body>
 </html>
