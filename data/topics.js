@@ -3,12 +3,11 @@
 window.PROJECT = {
   title: "home — 인터랙티브 전시 제작 기록",
   subtitle: "AI 기반 영상 제작 워크샵 기말 프로젝트 · Unreal Engine 5.4 · 3m × 3m 체험 전시",
-  status: "안 4 설계 완료 · Unreal 렌더 대기",
-  updated: "2026-11-13 22:20",
+  status: "5가지 배치 모두 렌더 완료 · 최종안 결정 대기",
+  updated: "2026-11-14 02:00",
   next: [
     "A(사회) 영상을 실제 파일로 교체 (Content/Movies/A_society.mp4)",
-    "안 4를 Unreal로 짓고 렌더·워크스루 영상 제작 (맥 연결 복구 후)",
-    "5가지 배치 중 최종안 결정",
+    "5가지 배치 중 최종안 결정 (비교 시트·동시 비교 영상 참고)",
     "인터랙션 ① 문 센서 → 장면 전환 (키보드로 먼저, 이후 아두이노)"
   ]
 };
@@ -86,17 +85,17 @@ window.TOPICS = [
         ["안 3. 가로로 나누기", "A 300×100 / B 300×200", "160", "약 215", "41°"],
         ["안 4. 안 3 수정 (스케치)", "A 300×100 / B 300×200", "160", "약 240", "37°"]
       ]},
-      { type: "p", text: "네 안 모두 B 영상은 배정 벽(오른쪽)에 둔다. 시청 거리가 가장 긴 안 3을 우선 검토안으로 제안했다." },
+      { type: "p", text: "안 1~3은 B 영상을 배정 벽(오른쪽)에 둔다. 시청 거리가 가장 긴 안 3을 우선 검토안으로 제안했고, 이후 사용자 스케치를 바탕으로 B 영상을 왼쪽 벽으로 옮긴 안 4를 추가했다." },
       { type: "media", items: [{ type: "image", src: "assets/2026-11-13_report_preview.jpg", caption: "배치 검토 보고서 첫 화면" }] },
       { type: "links", items: [{ label: "배치 검토 보고서 전문 (HTML)", href: "reports/layout_review.html" }] }
     ]
   },
   {
-    id: "layouts", num: "04", title: "4가지 배치 레벨",
-    summary: "기존 계획과 안 1·2·3을 각각 Unreal 레벨로 구현",
+    id: "layouts", num: "04", title: "5가지 배치 레벨",
+    summary: "기존 계획과 안 1·2·3·4를 각각 Unreal 레벨로 구현",
     blocks: [
-      { type: "p", text: "스크립트 하나(build_layouts.py)를 실행하면 레벨 4개(L_Current, L_Opt1, L_Opt2, L_Opt3)가 한 번에 만들어진다. 프로젝트를 열면 L_Current가 바로 열리고, 레벨마다 위에서 비스듬히 내려다보는 부감샷 시점이 저장돼 있다." },
-      { type: "media", items: [{ type: "image", src: "assets/2026-11-13_layouts_compare.jpg", caption: "4가지 배치 같은 시점 비교 (위에서 / A 입구 / 소파 뒤 / 모서리)" }] },
+      { type: "p", text: "스크립트 하나(build_layouts.py)를 실행하면 레벨 5개(L_Current, L_Opt1~L_Opt4)가 한 번에 만들어진다. 프로젝트를 열면 L_Current가 바로 열리고, 레벨마다 위에서 비스듬히 내려다보는 부감샷 시점이 저장돼 있다." },
+      { type: "media", items: [{ type: "image", src: "assets/2026-11-14_layouts_compare5.jpg", caption: "5가지 배치 같은 시점 비교 (위에서 / A 입구 / 소파 뒤 / 모서리)" }] },
       { type: "h", text: "기존 계획 (L_Current)" },
       { type: "media", items: [
         { type: "image", src: "assets/layout_Current_TopView.jpg", caption: "위에서" },
@@ -121,7 +120,7 @@ window.TOPICS = [
         { type: "image", src: "assets/layout_Opt3_B_Corner.jpg", caption: "출구 모서리에서 본 B" }
       ]},
       { type: "note", text: "안 3에서는 A→B 문이 B 쪽으로 열리면 B 화면을 가려서, A 쪽으로 열리도록 바꿨다." },
-      { type: "h", text: "안 4. 안 3 수정 (L_Opt4) — 설계 완료, 렌더 대기" },
+      { type: "h", text: "안 4. 안 3 수정 (L_Opt4)" },
       { type: "p", text: "11/13 손스케치를 바탕으로 안 3을 고쳤다. A 복도와 입구는 그대로 두고, B에서는 영상을 왼쪽 벽으로 옮기고 소파를 오른쪽 벽에 붙여 왼쪽 화면을 바라보게 했다. 출구는 아래쪽 벽 왼쪽 끝으로 옮겨, 영상 앞을 지나 나가는 동선이 된다." },
       { type: "media", items: [{ type: "image", src: "assets/layout_Opt4_plan.png", caption: "안 4 배치도 (위에서 본 모습)" }] },
       { type: "table", head: ["항목", "안 3", "안 4"], rows: [
@@ -131,7 +130,13 @@ window.TOPICS = [
         ["출구", "아래쪽 벽 오른쪽", "아래쪽 벽 왼쪽 끝"],
         ["시청 거리 / 시야각", "약 215cm / 41°", "약 240cm / 37°"]
       ]},
-      { type: "note", text: "안 4는 B 영상이 배정 벽(오른쪽)이 아닌 왼쪽 벽에 온다. 배정 벽 조건을 지켜야 하면 좌우를 뒤집은 버전으로 바꿀 수 있다. Unreal 레벨 생성과 렌더는 맥 연결이 복구되면 진행한다." },
+      { type: "media", items: [
+        { type: "image", src: "assets/layout_Opt4_TopView.jpg", caption: "위에서" },
+        { type: "image", src: "assets/layout_Opt4_A_Entrance.jpg", caption: "A 3m 복도" },
+        { type: "image", src: "assets/layout_Opt4_B_OverSofa.jpg", caption: "소파 뒤 · 왼쪽 벽 화면 160" },
+        { type: "image", src: "assets/layout_Opt4_B_Corner.jpg", caption: "출구 모서리에서 본 B" }
+      ]},
+      { type: "note", text: "안 4는 B 영상이 배정 벽(오른쪽)이 아닌 왼쪽 벽에 오지만, 규격과 상관없이 이 배치로 진행하기로 했다(11/13 22:36). 스케치에는 A→B 사이가 뚫려 있었지만, 문 센서 인터랙션을 위해 80cm 문을 넣었다." },
       { type: "links", items: [{ label: "build_layouts.py", href: "scripts/build_layouts.py" }] }
     ]
   },
@@ -160,16 +165,17 @@ window.TOPICS = [
     id: "walkthrough", num: "06", title: "관객 시점 워크스루 영상",
     summary: "배치별 입구 → A → 문 → 소파 → 출구 30초 영상 5종",
     blocks: [
-      { type: "p", text: "네 배치 모두 같은 동선으로 관객 시점 영상을 렌더했다. 입구로 들어와 A 복도에서 사회 영상을 보고, 문을 지나 B로 들어가 소파에 앉아 약 6초간 영상을 본 뒤 출구로 나간다." },
-      { type: "media", items: [{ type: "video", src: "assets/2026-11-13_walkthrough_compare.mp4", caption: "4개 배치 동시 비교" }] },
+      { type: "p", text: "다섯 배치 모두 같은 동선으로 관객 시점 영상을 렌더했다. 입구로 들어와 A 복도에서 사회 영상을 보고, 문을 지나 B로 들어가 소파에 앉아 약 6초간 영상을 본 뒤 출구로 나간다." },
+      { type: "media", items: [{ type: "video", src: "assets/2026-11-14_walkthrough_compare5.mp4", caption: "5개 배치 동시 비교" }] },
       { type: "h", text: "배치별 영상" },
       { type: "media", items: [
         { type: "video", src: "assets/walk_Current.mp4", caption: "기존 계획" },
         { type: "video", src: "assets/walk_Opt1.mp4", caption: "안 1. 화면 축소" },
         { type: "video", src: "assets/walk_Opt2.mp4", caption: "안 2. 가벽 이동" },
-        { type: "video", src: "assets/walk_Opt3.mp4", caption: "안 3. 가로로 나누기" }
+        { type: "video", src: "assets/walk_Opt3.mp4", caption: "안 3. 가로로 나누기" },
+        { type: "video", src: "assets/walk_Opt4.mp4", caption: "안 4. 안 3 수정" }
       ]},
-      { type: "note", text: "소파 장면을 보면 기존 계획은 화면이 시야를 꽉 채우고, 안 3은 거실 TV처럼 한눈에 들어온다. 렌더 중 화면 하나가 검게 나오던 문제는 영상 재생을 시퀀스 시간에 맞추는 방식으로 해결했다." },
+      { type: "note", text: "소파 장면을 보면 기존 계획은 화면이 시야를 꽉 채우고, 안 3은 거실 TV처럼 한눈에 들어온다. 렌더 중 화면 하나가 검게 나오던 문제는 영상 재생을 시퀀스 시간에 맞추는 방식으로 해결했다. 안 4는 소파에서 왼쪽 벽 화면을 정면으로 보며, A 복도 끝(8~10초)에서는 잠깐 막힌 벽을 보고 문 쪽으로 돌아선다." },
       { type: "links", items: [{ label: "make_walkthrough.py", href: "scripts/make_walkthrough.py" }] }
     ]
   },
@@ -195,7 +201,7 @@ window.TOPICS = [
         ["프로젝트 폴더", "문서/Unreal Projects/AICLASS_prototype1"],
         ["레벨", "콘텐츠 드로어 → Exhibition → Maps (시작 맵: L_Current)"],
         ["영상 파일", "Content/Movies"],
-        ["스크립트", "Scripts/build_layouts.py, Scripts/make_walkthrough.py"],
+        ["스크립트", "Scripts/build_layouts.py, make_walkthrough.py, rebuild_one.py, walk_one.py, go.py"],
         ["워크스루 영상", "워크스루_영상 폴더"],
         ["진행 기록 저장소", "home-exhibition 폴더 (GitHub Desktop)"]
       ]},
@@ -203,7 +209,8 @@ window.TOPICS = [
       { type: "p", text: "Unreal 아래쪽 출력 로그 입력칸(Cmd)에 py \"스크립트 경로\" 를 입력한다. 입력기가 한글이면 앞 글자가 깨질 수 있으니 영문 상태에서 입력한다." },
       { type: "list", items: [
         "공간 다시 짓기: build_layouts.py (EX_로 시작하는 물체를 지우고 새로 지음)",
-        "워크스루 다시 찍기: make_walkthrough.py (네 배치 약 3분)",
+        "워크스루 다시 찍기: make_walkthrough.py (다섯 배치 약 4분)",
+        "레벨 하나만: Saved/one.txt에 Opt4처럼 적고 rebuild_one.py(다시 짓기) 또는 walk_one.py(워크스루)",
         "부감샷 시점 바꾸기: build_layouts.py의 OVERHEAD_EYE 값 수정 후 다시 실행"
       ]}
     ]
@@ -211,6 +218,7 @@ window.TOPICS = [
 ];
 
 window.LOG = [
+  { date: "2026-11-14", time: "02:00", text: "안 4 Unreal 레벨 생성·렌더 4장·워크스루 영상 완료, 5개 배치 비교 시트·동시 비교 영상 갱신" },
   { date: "2026-11-13", time: "22:20", text: "안 4(안 3 수정) 설계: 스케치 기반 배치도·스크립트 추가, 렌더는 맥 연결 복구 후 진행" },
   { date: "2026-11-13", time: "21:55", text: "진행 기록 페이지를 주제별 구성으로 바꾸고 워크스루 영상 5종 전체 업로드" },
   { date: "2026-11-13", time: "21:45", text: "진행 기록 저장소(home-exhibition) 생성" },
