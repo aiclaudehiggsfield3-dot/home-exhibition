@@ -10,6 +10,7 @@
   L_Opt1    : 안 1. 화면 축소 (B 화면 150)
   L_Opt2    : 안 2. 가벽 이동 (A 90 / B 210)
   L_Opt3    : 안 3. 가로로 나누기 (A 300x100 / B 300x200)
+  L_Opt4    : 안 4. 안 3 수정 (B 영상 왼쪽 벽, 소파 오른쪽, 출구 아래쪽 벽 왼쪽)
 
 영상
   Content/Movies/A_society.mp4 → 모든 레벨의 A(사회) 화면
@@ -25,7 +26,7 @@ import unreal
 # =====================================================================
 # 1. 공통 설정
 # =====================================================================
-BUILD = ["Current", "Opt1", "Opt2", "Opt3"]   # 만들 레벨. 하나만 다시 지으려면 ["Opt3"]처럼
+BUILD = ["Current", "Opt1", "Opt2", "Opt3", "Opt4"]   # 만들 레벨. 하나만 다시 지으려면 ["Opt3"]처럼
 OPEN_AFTER = "Current"                          # 다 지은 뒤 열어 둘 레벨
 
 ROOM, T, H, F = 300, 10, 240, 2     # 공간 한 변, 벽 두께, 벽 높이, 바닥 윗면 높이
@@ -154,11 +155,63 @@ def horizontal_split():
     return dict(boxes=boxes, screens=screens, lights=lights, cams=cams, start=start)
 
 
+def horizontal_split_v2():
+    """안 4 (안 3 수정, 2026-11-13 스케치): A는 위쪽 3m 복도, B 영상은 왼쪽 벽, 소파는 오른쪽에서 왼쪽을 봄, 출구는 아래쪽 벽 왼쪽"""
+    S = 100
+    PD = (190, 270)          # A→B 문 (가벽 오른쪽 끝)
+    EX = (10, 90)            # 출구 (아래쪽 벽 왼쪽 끝)
+    sofa_x1 = 290            # 소파 등받이 (오른쪽 벽 쪽)
+    sofa_x0 = sofa_x1 - 75
+    sy0, sy1 = 130, 290
+    boxes = [
+        ("Floor_A", 0, ROOM, 0, S, F - 5, F, "A_Floor"),
+        ("Floor_B", 0, ROOM, S, ROOM, F - 5, F, "B_Floor"),
+        wall_y("Wall_Top", 0, 0, ROOM, "A_Wall"),
+        wall_x("Wall_Left_A_1", 0, 0, 10, "A_Wall"),              # 입구: 왼쪽 벽 10~90
+        wall_x("Wall_Left_A_2", 0, 90, S, "A_Wall"),
+        wall_x("Wall_Left_B_Screen", 0, S, ROOM, "B_Wall"),       # B 영상: 왼쪽 벽
+        wall_x("Wall_Right_A", ROOM, 0, S, "A_Wall"),
+        wall_x("Wall_Right_B", ROOM, S, ROOM, "B_Wall"),
+        wall_y("Wall_Bottom_1", ROOM, EX[1], ROOM, "B_Wall"),     # 출구: 아래쪽 벽 10~90
+        wall_y("Wall_Bottom_ExitHeader", ROOM, EX[0], EX[1], "B_Wall", z0=F + DH),
+        wall_y("Partition_1", S, 0, PD[0], "A_Wall"),
+        wall_y("Partition_2", S, PD[1], ROOM, "A_Wall"),
+        wall_y("Partition_DoorHeader", S, PD[0], PD[1], "A_Wall", z0=F + DH),
+        ("Door_Partition", PD[1] - 6, PD[1] - 2, S - 5 - DW, S - 5, F, F + DH, "Door"),   # A 쪽으로 열림
+        ("Door_Exit", EX[1] - 6, EX[1] - 2, ROOM + T / 2, ROOM + T / 2 + DW, F, F + DH, "Door"),
+        ("Rug", 40, 270, 115, 285, F, F + 1, "Rug"),
+        ("Projector_A", 90, 120, 10, 40, TOP - 31, TOP - 19, "Device"),
+        ("Projector_B", sofa_x0 + 10, sofa_x0 + 40, 197, 223, TOP - 25, TOP - 13, "Device"),
+        ("Speaker_A", 270, 285, 10, 25, F, F + 30, "Device"),
+        ("Speaker_B_1", 10, 25, 105, 120, F, F + 30, "Device"),
+        ("Speaker_B_2", 275, 290, 105, 120, F, F + 30, "Device"),
+        # 소파: 등받이가 오른쪽, 앉으면 왼쪽(-X) 화면을 봄
+        ("Sofa_Seat", sofa_x0, sofa_x1, sy0, sy1, F + 1, F + 45, "Sofa"),
+        ("Sofa_Back", sofa_x1 - 18, sofa_x1, sy0, sy1, F + 45, F + 85, "Sofa"),
+        ("Sofa_Arm_1", sofa_x0, sofa_x1, sy0, sy0 + 15, F + 45, F + 65, "Sofa"),
+        ("Sofa_Arm_2", sofa_x0, sofa_x1, sy1 - 15, sy1, F + 45, F + 65, "Sofa"),
+    ]
+    screens = [
+        ("Screen_B_Home", VIDEO_B, T / 2 + 1, 210, F + 125, 160, 160 * 9 / 16, 180),
+        ("Screen_A_Society", VIDEO_A, 95, S - T / 2 - 1, F + 125, 170, 170 * 9 / 16, 90),
+    ]
+    lights = [("Light_A_Cold", 150, 50, TOP - 20, 6500, 2),
+              ("Light_B_Warm_1", 285, 285, F + 110, 2700, 4),
+              ("Light_B_Warm_2", 150, 115, F + 170, 2700, 2.5)]
+    cams = [("Cam_TopView", 150, 150, 900, -90, -90, 24),
+            ("Cam_A_Entrance", 15, 50, F + 160, -5, 0, 14),
+            ("Cam_B_OverSofa", 292, 210, 215, -30, 180, 12),
+            ("Cam_B_Corner", 20, 285, F + 200, -25, -40, 14)]
+    start = (20, 50, 90)
+    return dict(boxes=boxes, screens=screens, lights=lights, cams=cams, start=start)
+
+
 LAYOUTS = {
     "Current": lambda: vertical_split(120, 220),
     "Opt1":    lambda: vertical_split(120, 150),
     "Opt2":    lambda: vertical_split(90, 180),
     "Opt3":    horizontal_split,
+    "Opt4":    horizontal_split_v2,
 }
 
 # =====================================================================
@@ -330,7 +383,7 @@ def build_level(key, mats, playlists):
         camera(c)
     exposure()
     x, y, z = spec["start"]
-    yaw = 90.0 if key != "Opt3" else 0.0
+    yaw = 0.0 if key in ("Opt3", "Opt4") else 90.0
     ps = actors.spawn_actor_from_class(unreal.PlayerStart, unreal.Vector(x, y, z),
                                        unreal.Rotator(roll=0.0, pitch=0.0, yaw=yaw))
     label(ps, "PlayerStart", "Start")

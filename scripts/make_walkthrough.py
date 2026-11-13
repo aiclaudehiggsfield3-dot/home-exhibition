@@ -8,7 +8,7 @@
 """
 import unreal
 
-LAYOUTS = ["Current", "Opt1", "Opt2", "Opt3"]
+LAYOUTS = ["Current", "Opt1", "Opt2", "Opt3", "Opt4"]
 FPS = 30
 RES = (1280, 720)
 EYE, SIT = 160, 110          # 서 있을 때 / 앉았을 때 눈높이
@@ -62,8 +62,27 @@ def path_horizontal():
     ]
 
 
+def path_v2():
+    return [
+        (0,  -90, 50, EYE,   0, -5),      # 입구 밖 (왼쪽 벽)
+        (2,   10, 50, EYE,   0, -5),
+        (5,  110, 45, EYE,  15, -3),      # A 복도: 오른쪽 가벽의 사회 영상을 봄
+        (8,  180, 45, EYE,  10, -3),
+        (10, 228, 50, EYE,   0, -5),
+        (11.5, 230, 50, EYE, 90, -5),     # 문 쪽으로 돌아섬
+        (13.5, 230, 118, EYE, 90, -5),    # 문 통과, B 진입
+        (15.5, 190, 170, EYE, 150, -8),   # 소파 앞으로
+        (18, 248, 210, SIT, 180, -2),     # 소파에 앉음 (왼쪽 벽 화면을 봄)
+        (24, 246, 210, SIT, 180, -2),     # 영상 시청
+        (26, 180, 245, EYE, 135, -5),     # 일어남
+        (28.5, 50, 272, EYE, 90, -5),     # 출구 앞
+        (30.5, 50, 325, EYE, 90, -5),     # 출구 통과
+    ]
+
+
 PATHS = {"Current": lambda: path_vertical(120), "Opt1": lambda: path_vertical(120),
-         "Opt2": lambda: path_vertical(90), "Opt3": path_horizontal}
+         "Opt2": lambda: path_vertical(90), "Opt3": path_horizontal,
+         "Opt4": path_v2}
 
 
 def manual_exposure(ps):
