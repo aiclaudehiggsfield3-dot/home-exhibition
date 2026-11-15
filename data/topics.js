@@ -3,14 +3,43 @@
 window.PROJECT = {
   title: "home — 인터랙티브 전시 제작 기록",
   subtitle: "AI 기반 영상 제작 워크샵 기말 프로젝트 · Unreal Engine 5.4 · 3m × 3m 체험 전시",
-  status: "안 5 변형 8가지 비교 → 본안 추천(브라운관 + 거실) · 인터랙션은 블루프린트로 설계",
-  updated: "2026-11-15 14:30",
+  status: "공간 설계 끝 → 본안 결정과 인터랙션(블루프린트) 구현 시작",
+  updated: "2026-11-15 14:40",
+  // 큰 흐름. state: done(끝) / now(진행 중) / todo(아직)
+  phases: [
+    { name: "기획·공간 구조", state: "done" },
+    { name: "배치안 5종 + 안 5 변형 8가지", state: "done" },
+    { name: "본안 결정", state: "now" },
+    { name: "인터랙션 구현 (블루프린트)", state: "todo" },
+    { name: "소리·센서·QR", state: "todo" },
+    { name: "리허설 · 시연", state: "todo" }
+  ],
+  // 지금 정해야 하는 것 (홈 화면 상단 카드)
+  decision: {
+    q: "본안을 무엇으로 할까?",
+    pick: "추천: 브라운관 TV + 거실 가구",
+    why: "가구가 있어야 '안주하게 되는 집'이 바로 읽히고, 작은 브라운관은 문을 열면 켜지는 연출이 또렷하다. 점수 45점(공동 1위).",
+    alt: "다른 후보: 브라운관 + 생활감 45점 · 프로젝터 + 거실 43점",
+    img: "assets/prev_Opt5B_crt_B_OverSofa.jpg",
+    link: "reports/home_v5_variants.html"
+  },
+  // 다음 할 일. who: 팀 / 지원 / Claude, state: now / todo / done
   next: [
-    "본안 확정: 브라운관 + 거실 (또는 생활감·프로젝터 안과 비교해 팀 결정)",
-    "블루프린트 0~2단계: 입력(키 1~6) → BP_HomeDirector → 문 열면 TV·조명",
-    "소리 파일 5개 준비 (지하철 + 집 0~3단계) → 블루프린트 3단계",
-    "크브페 지원서에 인터랙션 문단 넣기 (인터랙션 페이지에 붙여넣기용 있음)",
-    "아두이노 Leonardo + 자석 센서 1개로 문 열림 테스트"
+    { title: "본안 확정", detail: "브라운관 + 거실로 갈지 팀에서 결정한다. 정해지면 그 안만 다듬어 최종 렌더를 뽑는다.", who: "팀", time: "10분", state: "now", link: "reports/home_v5_variants.html", linkLabel: "8가지 비교 보기" },
+    { title: "블루프린트 0~2단계", detail: "키 입력 설정(IMC_Home) → 문 열면 TV·조명 켜짐(BP_HomeDoor) → 소파 착석 감지(BP_SitZone).", who: "지원 + Claude", time: "1~2시간", state: "todo", link: "reports/home_interaction.html#guide", linkLabel: "단계별 안내" },
+    { title: "소리 파일 5개", detail: "지하철 칸 소리 1개 + 집 소리 0~3단계(점점 이상하고 불편하게) 4개.", who: "팀", time: "반나절", state: "todo" },
+    { title: "크브페 지원서 인터랙션 문단", detail: "인터랙션 페이지 맨 아래 긴/짧은 문단을 복사해 붙인다. HWP를 주면 Claude가 채워 줄 수 있다.", who: "지원", time: "20분", state: "todo", link: "reports/home_interaction.html#cbf", linkLabel: "문단 복사하기" },
+    { title: "아두이노 문 센서 테스트", detail: "Leonardo + 자석(리드) 스위치 1개 → 문이 열리면 키보드 키 입력처럼 Unreal에 전달.", who: "팀", time: "1시간", state: "todo", link: "reports/home_interaction.html#guide", linkLabel: "아두이노 코드" },
+    { title: "CCTV용 마네킹", detail: "Unreal만으로 시연할 때 CCTV 화면에 사람이 보이도록 움직이는 마네킹을 넣는다.", who: "Claude", time: "30분", state: "todo" },
+    { title: "결과 QR 이미지", detail: "관객별 QR은 블루프린트로 못 만들어서, 결과 견본 페이지 주소로 QR 하나를 만들어 시연한다.", who: "Claude", time: "10분", state: "todo", link: "reports/result_sample.html", linkLabel: "결과 견본" },
+    { title: "(선택) 워크스루 끝 출구 밝히기", detail: "워크스루 영상 끝부분에서 출구 바깥이 어둡게 나온다.", who: "Claude", time: "20분", state: "todo" }
+  ],
+  // 최근에 끝낸 것
+  done: [
+    "브라운관/프로젝터 × 가구 4종 = 8가지 비교·점수표",
+    "프로젝터 레벨 2개 렌더·워크스루, 추천 4개 동시 비교 영상",
+    "인터랙션을 블루프린트 구조로 다시 설계 + 단계별 안내",
+    "크브페 지원서용 인터랙션 문단 (긴/짧은)"
   ]
 };
 
@@ -306,6 +335,7 @@ window.TOPICS = [
 ];
 
 window.LOG = [
+  { date: "2026-11-15", time: "14:40", text: "홈 화면 개편: 지금 할 일·결정할 것·진행 단계가 첫 화면에 바로 보이게" },
   { date: "2026-11-15", time: "14:30", text: "브라운관/프로젝터 × 가구 8가지 비교 → 본안 브라운관+거실 추천, 프로젝터 레벨 2개 Unreal 렌더·워크스루, 인터랙션을 블루프린트 구현으로 개편(단계별 가이드·아두이노 코드·지원서 문단)" },
   { date: "2026-11-15", time: "14:00", text: "안 5(지하철 칸 → 넓은 집, 브라운관 TV, 가구 4구성) Unreal 렌더 20장·워크스루 4개 완료, 3D 미리보기·인터랙션 설계·QR 결과 견본 페이지 추가" },
   { date: "2026-11-14", time: "02:00", text: "안 4 Unreal 레벨 생성·렌더 4장·워크스루 영상 완료, 5개 배치 비교 시트·동시 비교 영상 갱신" },

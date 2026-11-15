@@ -5,32 +5,84 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>home — 진행 기록</title>
 <style>
-  :root{--bg:#faf8f5;--ink:#26221e;--sub:#6b645c;--line:#ddd6cc;--accent:#c0562a;--warm:#f7e3c4;--warm-ink:#7a4a14;--cold:#dfe6ec}
+  :root{--bg:#faf8f5;--ink:#26221e;--sub:#6b645c;--line:#e3ddd3;--accent:#c0562a;--accent-soft:#fbe9df;--warm:#f7e3c4;--warm-ink:#7a4a14;--ok:#3d7a4f;--ok-soft:#e3f0e6;--card:#fff}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",sans-serif;line-height:1.7;font-size:16px}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",sans-serif;line-height:1.7;font-size:16px;word-break:keep-all}
   a{color:inherit}
   .wrap{max-width:1080px;margin:0 auto;padding:40px 20px 90px}
   .kicker{font-size:13px;letter-spacing:.08em;color:var(--accent);font-weight:700;margin:0 0 6px}
-  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.02em}
-  .lead{color:var(--sub);margin:0 0 24px}
-  .status{display:grid;grid-template-columns:1fr 1.4fr;gap:14px;margin-bottom:34px}
-  .box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 20px}
-  .box h2{font-size:13px;color:var(--sub);margin:0 0 6px;font-weight:600}
-  .now{font-size:21px;font-weight:700}
-  .upd{font-size:13px;color:var(--sub);margin-top:4px}
-  .box ul{margin:0;padding-left:18px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
-  .card{display:block;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;transition:transform .12s,border-color .12s,box-shadow .12s}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.02em;line-height:1.3}
+  .lead{color:var(--sub);margin:0 0 6px}
+  .upd{font-size:13.5px;color:var(--sub);margin:0 0 26px}
+  .sec{font-size:13px;font-weight:800;letter-spacing:.06em;color:var(--sub);margin:38px 0 12px;display:flex;align-items:center;gap:10px}
+  .sec::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  /* 진행 단계 */
+  .phases{display:flex;gap:6px;margin:0 0 6px;flex-wrap:wrap}
+  .ph{flex:1 1 140px;border-radius:10px;padding:10px 12px;font-size:14px;font-weight:600;background:#efebe5;color:#9a9288;position:relative}
+  .ph small{display:block;font-size:11.5px;font-weight:700;letter-spacing:.04em;margin-bottom:2px}
+  .ph.s-done{background:var(--ok-soft);color:var(--ok)}
+  .ph.s-now{background:var(--accent);color:#fff;box-shadow:0 6px 16px rgba(192,86,42,.25)}
+  .nowline{font-size:20px;font-weight:700;margin:14px 0 0;line-height:1.45}
+
+  /* 지금 할 일 */
+  .hero{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;align-items:start}
+  .then{margin-top:18px;padding-top:14px;border-top:1px dashed var(--line);font-size:14.5px;color:var(--sub)}
+  .then b{color:var(--ink)}
+  .then ol{margin:4px 0 0;padding-left:20px}
+  .now-card{background:var(--card);border:2px solid var(--accent);border-radius:18px;padding:22px 24px}
+  .badge{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.06em;border-radius:99px;padding:3px 11px}
+  .badge.now{background:var(--accent);color:#fff}
+  .badge.q{background:var(--warm);color:var(--warm-ink)}
+  .now-card h2{font-size:26px;margin:10px 0 6px;letter-spacing:-.02em;line-height:1.3}
+  .now-card p{margin:0 0 12px;color:#4a443d}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+  .meta span{font-size:13px;background:#f3efe9;border-radius:8px;padding:3px 10px;color:var(--sub)}
+  .btn{display:inline-block;text-decoration:none;background:var(--accent);color:#fff;font-weight:700;font-size:14.5px;border-radius:10px;padding:9px 16px}
+  .btn.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  .dec{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+  .dec img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#222}
+  .dec .in{padding:16px 20px 20px}
+  .dec h3{font-size:18px;margin:8px 0 2px}
+  .dec .pick{font-size:19px;font-weight:800;color:var(--accent);margin:2px 0 6px}
+  .dec p{margin:0 0 6px;font-size:14.5px;color:#4a443d}
+  .dec .alt{font-size:13.5px;color:var(--sub);margin-bottom:12px}
+
+  /* 할 일 목록 */
+  .todo{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .todo li{display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:start;padding:16px 20px;border-top:1px solid var(--line)}
+  .todo li:first-child{border-top:0}
+  .todo li.now{background:var(--accent-soft)}
+  .todo .n{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px;background:#efebe5;color:var(--sub)}
+  .todo li.now .n{background:var(--accent);color:#fff}
+  .todo li.done .n{background:var(--ok);color:#fff}
+  .todo li.done .t{text-decoration:line-through;color:var(--sub)}
+  .todo .t{font-size:17px;font-weight:700;line-height:1.4}
+  .todo .d{font-size:14.5px;color:#55504a;margin-top:2px}
+  .todo .tags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+  .todo .tags span{font-size:12.5px;border-radius:6px;padding:1px 8px;background:#f3efe9;color:var(--sub)}
+  .todo .tags span.who-c{background:#e6eef6;color:#2f5878}
+  .todo .go{white-space:nowrap;align-self:center;text-decoration:none;font-size:13.5px;font-weight:700;color:var(--accent);border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 13px}
+  .todo .go:hover{border-color:var(--accent)}
+
+  .doneb{background:var(--ok-soft);border-radius:14px;padding:14px 20px;color:#2c5a3a;font-size:14.5px}
+  .doneb ul{margin:4px 0 0;padding-left:0;list-style:none}
+  .doneb li::before{content:"✓ ";font-weight:800}
+
+  /* 주제 카드 */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+  .card{display:block;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;transition:transform .12s,border-color .12s,box-shadow .12s}
   .card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 6px 18px rgba(0,0,0,.06)}
   .card .num{font-size:13px;font-weight:800;color:var(--accent)}
-  .card h3{margin:2px 0 6px;font-size:18px}
-  .card p{margin:0;color:var(--sub);font-size:14.5px}
-  .card .cnt{margin-top:10px;font-size:12.5px;color:var(--sub)}
-  details.log{margin-top:34px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 20px}
+  .card h3{margin:2px 0 4px;font-size:17px}
+  .card p{margin:0;color:var(--sub);font-size:14px}
+  .card .cnt{margin-top:8px;font-size:12.5px;color:var(--sub)}
+  details.log{margin-top:30px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 20px}
   details.log summary{cursor:pointer;font-weight:700}
   .log ol{list-style:none;margin:10px 0 0;padding:0}
   .log li{padding:6px 0;border-top:1px solid #eee;font-size:14.5px}
   .log li span{color:var(--sub);display:inline-block;width:132px}
+
   /* 상세 */
   .detail{display:grid;grid-template-columns:220px 1fr;gap:28px;align-items:start}
   .side{position:sticky;top:20px;display:flex;flex-direction:column;gap:4px}
@@ -38,11 +90,13 @@
   .side a:hover{background:#f1ede6}
   .side a.on{background:var(--ink);color:#fff}
   .side .home{color:var(--accent);font-weight:700;margin-bottom:8px}
+  .content{max-width:780px}
   .content h2{font-size:27px;margin:0 0 4px;letter-spacing:-.02em}
   .content .sum{color:var(--sub);margin:0 0 22px}
-  .content h4{font-size:18px;margin:30px 0 8px}
+  .content h4{font-size:19px;margin:34px 0 8px;padding-left:10px;border-left:4px solid var(--accent)}
   .content p{margin:8px 0}
   .content ul{padding-left:20px}
+  .content li{margin:3px 0}
   .note{background:var(--warm);color:var(--warm-ink);border-radius:12px;padding:12px 16px;margin:16px 0;font-size:15px}
   table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);font-size:14.5px;margin:10px 0}
   th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
@@ -58,7 +112,10 @@
   .links a{font-size:14px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 14px}
   .pager{display:flex;justify-content:space-between;margin-top:40px;gap:10px}
   .pager a{text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 16px;font-size:14.5px}
-  @media(max-width:760px){.status,.detail{grid-template-columns:1fr}.side{position:static;flex-direction:row;flex-wrap:wrap}}
+  .topbar{display:none;margin:0 0 18px;background:var(--accent-soft);border-radius:12px;padding:10px 14px;font-size:14.5px}
+  .topbar a{color:var(--accent);font-weight:700;text-decoration:none}
+  @media(max-width:860px){.hero,.detail{grid-template-columns:1fr}.side{position:static;flex-direction:row;flex-wrap:wrap}.topbar{display:block}}
+  @media(max-width:560px){.todo li{grid-template-columns:36px 1fr}.todo .go{grid-column:2;justify-self:start}h1{font-size:25px}.now-card h2{font-size:22px}}
 </style>
 </head>
 <body>
@@ -66,8 +123,10 @@
 <script src="data/topics.js"></script>
 <script>
 const P = window.PROJECT, T = window.TOPICS, LOG = window.LOG || [];
-const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const app = document.getElementById("app");
+// 예전 형식(문자열 목록)도 그대로 보이게
+const NEXT = (P.next || []).map((n, i) => typeof n === "string" ? { title: n, state: i ? "todo" : "now" } : n);
 
 function countMedia(t){
   let img=0, vid=0;
@@ -94,15 +153,58 @@ function block(b){
 }
 
 function header(){
-  return `<p class="kicker">진행 기록</p><h1>${esc(P.title)}</h1><p class="lead">${esc(P.subtitle)}</p>`;
+  return `<p class="kicker">진행 기록</p><h1>${esc(P.title)}</h1><p class="lead">${esc(P.subtitle)}</p><p class="upd">마지막 업데이트 ${esc(P.updated)}</p>`;
+}
+
+function phases(){
+  if (!P.phases) return `<div class="nowline">${esc(P.status)}</div>`;
+  const label = {done:"끝", now:"지금", todo:"다음"};
+  return `<div class="phases">${P.phases.map((p,i) =>
+    `<div class="ph s-${p.state}"><small>${i+1} · ${label[p.state]||""}</small>${esc(p.name)}</div>`).join("")}</div>
+    <div class="nowline">${esc(P.status)}</div>`;
+}
+
+function hero(){
+  const cur = NEXT.find(n => n.state === "now") || NEXT[0];
+  const d = P.decision;
+  if (!cur && !d) return "";
+  const nowCard = cur ? `<div class="now-card">
+      <span class="badge now">지금 할 일</span>
+      <h2>${esc(cur.title)}</h2>
+      ${cur.detail ? `<p>${esc(cur.detail)}</p>` : ""}
+      <div class="meta">${cur.who ? `<span>담당 ${esc(cur.who)}</span>` : ""}${cur.time ? `<span>예상 ${esc(cur.time)}</span>` : ""}</div>
+      ${cur.link ? `<a class="btn" href="${esc(cur.link)}" target="_blank">${esc(cur.linkLabel || "자세히")} →</a>` : ""}
+      ${(() => { const up = NEXT.filter(n => n !== cur && n.state !== "done").slice(0,2);
+        return up.length ? `<div class="then"><b>그다음</b><ol>${up.map(n => `<li>${esc(n.title)}${n.time ? ` · ${esc(n.time)}` : ""}</li>`).join("")}</ol></div>` : ""; })()}
+    </div>` : "";
+  const decCard = d ? `<div class="dec">
+      ${d.img ? `<img src="${esc(d.img)}" alt="">` : ""}
+      <div class="in"><span class="badge q">결정할 것</span>
+        <h3>${esc(d.q)}</h3><div class="pick">${esc(d.pick)}</div>
+        <p>${esc(d.why)}</p>${d.alt ? `<div class="alt">${esc(d.alt)}</div>` : ""}
+        ${d.link ? `<a class="btn ghost" href="${esc(d.link)}" target="_blank">8가지 비교 보기 ↗</a>` : ""}
+      </div></div>` : "";
+  return `<div class="hero">${nowCard}${decCard}</div>`;
+}
+
+function todoList(){
+  return `<ol class="todo">${NEXT.map((n,i) => {
+    const whoC = /claude/i.test(n.who||"") && !/지원|팀/.test(n.who||"");
+    return `<li class="${n.state||"todo"}">
+      <div class="n">${n.state==="done" ? "✓" : i+1}</div>
+      <div><div class="t">${esc(n.title)}</div>${n.detail ? `<div class="d">${esc(n.detail)}</div>` : ""}
+        <div class="tags">${n.who ? `<span class="${whoC?"who-c":""}">${esc(n.who)}</span>` : ""}${n.time ? `<span>${esc(n.time)}</span>` : ""}</div></div>
+      ${n.link ? `<a class="go" href="${esc(n.link)}" target="_blank">${esc(n.linkLabel||"보기")} ↗</a>` : "<span></span>"}
+    </li>`;}).join("")}</ol>`;
 }
 
 function home(){
-  app.innerHTML = header() + `
-    <div class="status">
-      <div class="box"><h2>현재 단계</h2><div class="now">${esc(P.status)}</div><div class="upd">마지막 업데이트 ${esc(P.updated)}</div></div>
-      <div class="box"><h2>다음 할 일</h2><ul>${P.next.map(n => `<li>${esc(n)}</li>`).join("")}</ul></div>
-    </div>
+  app.innerHTML = header()
+    + `<div class="sec">진행 단계</div>` + phases()
+    + `<div class="sec">지금</div>` + hero()
+    + `<div class="sec">할 일 순서</div>` + todoList()
+    + (P.done && P.done.length ? `<div class="sec">최근에 끝낸 것</div><div class="doneb"><ul>${P.done.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "")
+    + `<div class="sec">주제별 기록</div>
     <div class="grid">${T.map(t => `
       <a class="card" href="#${t.id}">
         <div class="num">${esc(t.num)}</div><h3>${esc(t.title)}</h3><p>${esc(t.summary)}</p>
@@ -119,9 +221,11 @@ function detail(id){
   const i = T.findIndex(t => t.id === id);
   if (i < 0) return home();
   const t = T[i], prev = T[i-1], next = T[i+1];
+  const cur = NEXT.find(n => n.state === "now") || NEXT[0];
   app.innerHTML = header() + `
+    ${cur ? `<div class="topbar">지금 할 일: <b>${esc(cur.title)}</b> · <a href="#">첫 화면에서 보기</a></div>` : ""}
     <div class="detail">
-      <nav class="side"><a class="home" href="#">← 전체 주제</a>${T.map(x =>
+      <nav class="side"><a class="home" href="#">← 할 일 · 전체 주제</a>${T.map(x =>
         `<a href="#${x.id}" class="${x.id===id?"on":""}">${esc(x.num)} ${esc(x.title)}</a>`).join("")}</nav>
       <article class="content">
         <h2>${esc(t.title)}</h2><p class="sum">${esc(t.summary)}</p>
