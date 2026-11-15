@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>안 5 공간 설계 — home</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f0ea;--ink:#211e1a;--mute:#6f675d;--line:#e2d9cc;--card:#fffdf9;--warm:#b5532a;--cold:#3d6b8e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;line-height:1.6}
+.wrap{max-width:1280px;margin:0 auto;padding:36px 22px 80px}
+h1{font-size:30px;margin:0 0 6px;letter-spacing:-.5px}h1 small{font-size:15px;color:var(--warm);font-weight:500}
+h2{font-size:21px;margin:0 0 10px}h3{font-size:16px;margin:0 0 6px}
+.lead{color:var(--mute);margin:0 0 20px;max-width:920px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:20px}
+.chg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;list-style:none;margin:0;padding:0}
+.chg li{background:#fbf7f1;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}.chg b{display:block;font-size:14.5px}
+.studio{display:grid;grid-template-columns:1fr 330px;gap:16px}
+#view{position:relative;background:#111;border-radius:14px;overflow:hidden;aspect-ratio:16/10}
+#view canvas{display:block;width:100%!important;height:100%!important}
+.hud{position:absolute;left:12px;top:10px;color:#f2ece2;font-size:13px;background:#0008;padding:4px 10px;border-radius:8px;pointer-events:none}
+.hud2{position:absolute;right:12px;bottom:10px;color:#f2ece2;font-size:12px;background:#0008;padding:3px 9px;border-radius:8px;pointer-events:none}
+.nogl{position:absolute;inset:0;display:none;place-items:center;color:#ddd;padding:30px;text-align:center}
+.views{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+button{font:inherit;font-size:13px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:99px;padding:5px 12px;cursor:pointer}
+button:hover{border-color:#bfb3a2}button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+button.act{background:var(--warm);border-color:var(--warm);color:#fff}
+.panel{display:flex;flex-direction:column;gap:12px}
+.panel .grp{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.panel h3{font-size:14px;color:var(--mute);font-weight:500;margin-bottom:8px}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:6px}.presets button{border-radius:10px;text-align:left;padding:7px 10px}
+.presets button small{display:block;color:inherit;opacity:.7;font-size:11.5px}
+.seg{display:flex;gap:6px}.seg button{flex:1;border-radius:10px}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:13.5px}
+.tg label{display:flex;gap:6px;align-items:center;cursor:pointer}.tg label.dis{opacity:.4;cursor:not-allowed}
+#checks{font-size:13px;margin:0;padding-left:18px}#checks li{margin:2px 0}
+.ok{color:#2c6b33}.warn{color:#8a5a00}.bad{color:#a3271b}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+#plan{width:100%;height:auto;background:#1b1c1e;border-radius:12px;display:block}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--mute);font-weight:500}
+.pcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.pcard{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fbf7f1;font-size:14px}
+.pcard h3{display:flex;justify-content:space-between;align-items:center}.pcard dl{display:grid;grid-template-columns:64px 1fr;gap:2px 8px;margin:6px 0 0;font-size:13px}.pcard dt{color:var(--mute)}.pcard dd{margin:0}
+img.render{width:100%;border-radius:12px;display:block}
+.cap{font-size:12.5px;color:var(--mute);margin-top:6px}
+.gal{display:grid;grid-template-columns:1.35fr 1fr;gap:16px}.thumbs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px}.thumbs img{width:100%;border-radius:6px;cursor:pointer;opacity:.6;display:block}.thumbs img.on{opacity:1;outline:2px solid var(--warm)}
+@media (max-width:980px){.gal{grid-template-columns:1fr}}
+.sub ul{margin:6px 0 0;padding-left:18px;font-size:14px}.sub li{margin:3px 0}
+@media (max-width:980px){.studio,.two{grid-template-columns:1fr}}
+</style></head><body><div class="wrap">
+<h1>안 5 · 지하철에서 집으로 <small>공간 설계 · 3D 미리보기 · Unreal 렌더</small></h1>
+<p class="lead">사회(A)는 폭 80cm의 좁은 지하철 칸으로 줄이고 <b>영상 없이 공간 디자인만으로</b> 표현합니다. 그만큼 집(B)을 300×220으로 넓혔고, B 영상은 <b>작은 브라운관 TV</b>로 보여 줍니다(프로젝터로 바꿔 볼 수 있음). 가구는 있어도 되고 없어도 되도록 켜고 끌 수 있게 했습니다. 아래 3D는 Unreal 스크립트와 같은 치수로 그렸습니다.</p>
+
+<section class="box"><h2>안 4에서 바뀐 것</h2><ul class="chg">
+<li><b>사회 = 지하철 칸</b>폭 100 → 80(안쪽 70). 영상 대신 손잡이, 광고 라이트박스, 노선 LED, 차가운 형광등, 낮은 천장(215), 사람 실루엣 판</li>
+<li><b>집이 넓어짐</b>깊이 200 → 220. 소파를 다시 122cm까지 쓸 수 있음</li>
+<li><b>B 영상 = 브라운관 TV</b>왼쪽 벽 TV장 위 브라운관(화면 폭 약 52). 소파에서 191cm. 프로젝터(왼쪽 벽 160)로 바꿀 수 있음</li>
+<li><b>문은 집 쪽으로 열림</b>경첩 오른쪽, 도어클로저로 자동 닫힘. 문 열림 범위에는 가구를 두지 않음</li>
+<li><b>천장 CCTV</b>가벽 위쪽 천장에 돔 카메라. 인터랙션(앉기·담요·리모컨 인식, 타임랩스)에 사용</li>
+<li><b>인터랙션 물건</b>소파 위 담요, 팔걸이 위 리모컨을 모든 안에 기본으로 둠</li>
+</ul></section>
+
+<div class="studio">
+ <div>
+  <div id="view"><div class="hud" id="hud">3D 둘러보기 · 드래그해서 돌리기</div><div class="hud2" id="hud2"></div><div class="nogl" id="nogl">이 브라우저에서 3D를 그릴 수 없어요. 아래 평면도와 Unreal 렌더를 봐 주세요.</div></div>
+  <div class="views" id="views"></div>
+ </div>
+ <div class="panel">
+  <div class="grp"><h3>가구 구성 (프리셋)</h3><div class="presets" id="presets"></div></div>
+  <div class="grp"><h3>B 영상</h3><div class="seg"><button id="scrCRT" class="on">브라운관 TV</button><button id="scrPJ">프로젝터</button></div></div>
+  <div class="grp"><h3>앉는 자리</h3><div class="seg"><button id="seatSofa" class="on">러브시트</button><button id="seatRec">1인 리클라이너</button></div></div>
+  <div class="grp"><h3>가구 켜고 끄기</h3><div class="tg" id="toggles"></div></div>
+  <div class="grp"><h3>자동 검사</h3><ul id="checks"></ul></div>
+ </div>
+</div>
+
+<section class="box" style="margin-top:20px"><div class="two">
+ <div><h2>평면도 (지금 구성)</h2><svg id="plan" viewBox="-100 -22 430 420"></svg>
+ <p class="cap">파란 점선 = 관객 동선(워크스루와 같음) · 주황 부채꼴 = 문이 열리는 범위 · 노란 삼각형 = 소파에서 화면을 보는 범위 · 초록 점 = 문 센서 · 보라 점 = CCTV</p></div>
+</div></section>
+
+
+<section class="box" id="unreal"><h2>Unreal 렌더 · 워크스루 (11/15)</h2>
+<p class="cap" style="margin:-4px 0 10px">Unreal에서 같은 스크립트로 지은 레벨 L_Opt5A~D를 카메라 5대로 찍고, 같은 동선으로 30.5초 워크스루를 뽑았습니다.</p>
+<div class="seg" id="galP" style="max-width:520px;margin-bottom:10px"></div>
+<div class="gal"><div><img id="galMain" class="render" alt="Unreal 렌더"><div class="thumbs" id="galT"></div></div>
+<div><video id="galV" controls muted playsinline loop preload="metadata" style="width:100%;border-radius:12px;background:#000"></video><p class="cap" id="galCap"></p>
+<video controls muted playsinline loop preload="none" style="width:100%;border-radius:12px;background:#000;margin-top:10px" src="../assets/2026-11-15_opt5_walk_compare.mp4"></video><p class="cap">4개 안 동시 비교 (같은 동선)</p></div></div>
+</section>
+<section class="box"><h2>가구 프리셋 4가지</h2><div class="pcards" id="pcards"></div></section>
+
+<section class="box"><div class="two">
+ <div class="sub"><h2>사회(A) 지하철 칸 디자인</h2>
+ <ul>
+  <li><b>좁음</b>: 안쪽 폭 70cm, 천장 215cm(집은 240). 어깨가 벽에 닿을 듯한 폭을 그대로 느끼게 함</li>
+  <li><b>차가운 빛</b>: 천장 형광등 띠 2줄(6500K). 집의 2700K와 대비</li>
+  <li><b>손잡이·봉</b>: 30cm 간격 손잡이 2줄(바닥에서 184cm), 세로 기둥 2개. 문 앞 동선이 꺾이는 곳은 머리에 닿지 않게 비움</li>
+  <li><b>광고 라이트박스·노선 LED</b>: 글자 없는 색면 광고 5개, 초록 노선 안내 띠. 영상 없이 '지하철'로 읽히게 하는 장치</li>
+  <li><b>사람 실루엣 판</b>: 검은 판 4개를 벽에 붙여 '꽉 찬 칸'의 압박감. 동선은 막지 않음</li>
+  <li><b>소리</b>: 열차 소음과 안내 방송(소리만). 문을 닫으면 끊김</li>
+ </ul></div>
+ <div><h2>브라운관 vs 프로젝터</h2>
+ <table><thead><tr><th></th><th>브라운관 TV</th><th>프로젝터</th></tr></thead><tbody>
+ <tr><td>느낌</td><td>오래된 '우리 집 TV'. 작아서 가까이 끌림</td><td>몰입감 크고 영상이 잘 보임</td></tr>
+ <tr><td>화면</td><td>폭 약 52cm, 소파에서 191cm</td><td>폭 160cm, 소파에서 242cm</td></tr>
+ <tr><td>인터랙션</td><td>'문 열면 TV가 켜짐'이 자연스러움(지지직 → 영상)</td><td>켜짐 연출이 약함</td></tr>
+ <tr><td>준비물</td><td>중고 브라운관 + AV 입력 변환기, 또는 브라운관 모양 틀 + 작은 모니터</td><td>단초점 프로젝터, 천장 거치</td></tr>
+ <tr><td>심사 시연</td><td>영상 속 TV 화면이 작게 찍혀 클로즈업 컷이 필요</td><td>영상으로 찍기 쉬움</td></tr>
+ </tbody></table></div>
+</div></section>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+const S={"Opt5A":{"name":"기본 (가구 없음)","boxes":[["Floor_A",0,300,0,80,-3,2,"S_Floor"],["Floor_B",0,300,80,300,-3,2,"B_Floor"],["Wall_Top",0,300,-5.0,5.0,2,242,"S_Wall"],["Wall_Left_A_Header",-5.0,5.0,0,80,212,242,"S_Wall"],["Wall_Left_B",-5.0,5.0,80,300,2,242,"B_Wall"],["Wall_Right_A",295.0,305.0,0,80,2,242,"S_Wall"],["Wall_Right_B",295.0,305.0,80,300,2,242,"B_Wall"],["Wall_Bottom_0",0,10,295.0,305.0,2,242,"B_Wall"],["Wall_Bottom_1",90,300,295.0,305.0,2,242,"B_Wall"],["Wall_Bottom_ExitHeader",10,90,295.0,305.0,212,242,"B_Wall"],["Partition_1",0,190,75.0,85.0,2,242,"S_Wall"],["Partition_2",270,300,75.0,85.0,2,242,"S_Wall"],["Partition_DoorHeader",190,270,75.0,85.0,212,242,"S_Wall"],["Door_Partition",264,268,85,165,2,212,"Door"],["Door_Exit",84,88,305.0,385.0,2,212,"Door"],["Speaker_A",270,285,60,74,2,32,"Device"],["Speaker_B_1",10,25,88,103,2,32,"Device"],["Speaker_B_2",275,290,88,103,2,32,"Device"],["Sub_Door_0",100,160,5,7,2,202,"Steel"],["Sub_DoorWin_0",108,152,7,7.6,112,182,"Glass_Dark"],["Sub_LED_0",105,155,5,8,205,211,"Emit_LED"],["Sub_Door_1",220,280,5,7,2,202,"Steel"],["Sub_DoorWin_1",228,272,7,7.6,112,182,"Glass_Dark"],["Sub_LED_1",225,275,5,8,205,211,"Emit_LED"],["Sub_Window_0",12,92,5,6.5,97,177,"Glass_Dark"],["Sub_Ad_Top_0",12,92,5,7,184,209,"Emit_Ad1b"],["Sub_Window_1",168,212,5,6.5,97,177,"Glass_Dark"],["Sub_Ad_Top_1",168,212,5,7,184,209,"Emit_Ad3b"],["Sub_Ad_Wall_0",20,80,72,75,122,187,"Emit_Ad2b"],["Sub_Ad_Wall_1",95,155,72,75,122,187,"Emit_Ad1b"],["Sub_RouteMap",20,180,73,75,194,208,"Emit_LED"],["Sub_Rail_0",8,292,20.5,23.5,206,209,"Steel"],["Sub_Strap_0_0",24,26,21,23,194,206,"Strap"],["Sub_StrapRing_0_0",21,29,21,23,186,194,"Strap"],["Sub_Strap_0_1",54,56,21,23,194,206,"Strap"],["Sub_StrapRing_0_1",51,59,21,23,186,194,"Strap"],["Sub_Strap_0_2",84,86,21,23,194,206,"Strap"],["Sub_StrapRing_0_2",81,89,21,23,186,194,"Strap"],["Sub_Strap_0_3",114,116,21,23,194,206,"Strap"],["Sub_StrapRing_0_3",111,119,21,23,186,194,"Strap"],["Sub_Strap_0_4",144,146,21,23,194,206,"Strap"],["Sub_StrapRing_0_4",141,149,21,23,186,194,"Strap"],["Sub_Strap_0_5",174,176,21,23,194,206,"Strap"],["Sub_StrapRing_0_5",171,179,21,23,186,194,"Strap"],["Sub_Strap_0_8",264,266,21,23,194,206,"Strap"],["Sub_StrapRing_0_8",261,269,21,23,186,194,"Strap"],["Sub_Rail_1",8,292,56.5,59.5,206,209,"Steel"],["Sub_Strap_1_0",24,26,57,59,194,206,"Strap"],["Sub_StrapRing_1_0",21,29,57,59,186,194,"Strap"],["Sub_Strap_1_1",54,56,57,59,194,206,"Strap"],["Sub_StrapRing_1_1",51,59,57,59,186,194,"Strap"],["Sub_Strap_1_2",84,86,57,59,194,206,"Strap"],["Sub_StrapRing_1_2",81,89,57,59,186,194,"Strap"],["Sub_Strap_1_3",114,116,57,59,194,206,"Strap"],["Sub_StrapRing_1_3",111,119,57,59,186,194,"Strap"],["Sub_Strap_1_4",144,146,57,59,194,206,"Strap"],["Sub_StrapRing_1_4",141,149,57,59,186,194,"Strap"],["Sub_Strap_1_5",174,176,57,59,194,206,"Strap"],["Sub_StrapRing_1_5",171,179,57,59,186,194,"Strap"],["Sub_Strap_1_8",264,266,57,59,194,206,"Strap"],["Sub_StrapRing_1_8",261,269,57,59,186,194,"Strap"],["Sub_Pole_0",58,62,7,11,2,217,"Steel"],["Sub_Pole_1",188,192,7,11,2,217,"Steel"],["Sub_Person_LegL_0",27,38,6,9,2,82.83999999999999,"Silhouette"],["Sub_Person_LegR_0",42,53,6,9,2,82.83999999999999,"Silhouette"],["Sub_Person_Body_0",23,57,6,9,82.83999999999999,144.76,"Silhouette"],["Sub_Person_ArmL_0",17,22,6,9,90.83999999999999,140.76,"Silhouette"],["Sub_Person_ArmR_0",58,63,6,9,90.83999999999999,140.76,"Silhouette"],["Sub_Person_Neck_0",36,44,6,9,144.76,148.76,"Silhouette"],["Sub_Person_Head_0",31,49,6,9,148.76,174,"Silhouette"],["Sub_Person_LegL_1",137,148,6,9,2,79.55,"Silhouette"],["Sub_Person_LegR_1",152,163,6,9,2,79.55,"Silhouette"],["Sub_Person_Body_1",133,167,6,9,79.55,138.95,"Silhouette"],["Sub_Person_ArmL_1",127,132,6,9,87.55,134.95,"Silhouette"],["Sub_Person_ArmR_1",168,173,6,9,87.55,134.95,"Silhouette"],["Sub_Person_Neck_1",146,154,6,9,138.95,142.95,"Silhouette"],["Sub_Person_Head_1",141,159,6,9,142.95,167,"Silhouette"],["Sub_Person_LegL_2",72,83,71,74,2,85.66,"Silhouette"],["Sub_Person_LegR_2",87,98,71,74,2,85.66,"Silhouette"],["Sub_Person_Body_2",68,102,71,74,85.66,149.73999999999998,"Silhouette"],["Sub_Person_ArmL_2",62,67,71,74,93.66,145.73999999999998,"Silhouette"],["Sub_Person_ArmR_2",103,108,71,74,93.66,145.73999999999998,"Silhouette"],["Sub_Person_Neck_2",81,89,71,74,149.73999999999998,153.73999999999998,"Silhouette"],["Sub_Person_Head_2",76,94,71,74,153.73999999999998,180,"Silhouette"],["Sub_Person_LegL_3",237,248,6,9,2,80.96,"Silhouette"],["Sub_Person_LegR_3",252,263,6,9,2,80.96,"Silhouette"],["Sub_Person_Body_3",233,267,6,9,80.96,141.44,"Silhouette"],["Sub_Person_ArmL_3",227,232,6,9,88.96,137.44,"Silhouette"],["Sub_Person_ArmR_3",268,273,6,9,88.96,137.44,"Silhouette"],["Sub_Person_Neck_3",246,254,6,9,141.44,145.44,"Silhouette"],["Sub_Person_Head_3",241,259,6,9,145.44,170,"Silhouette"],["Ceiling_A_Low",0,300,0,75,217,222,"S_Ceiling"],["Ceiling_A_Light_0",20,280,25,31,215,217,"Emit_Cold"],["Ceiling_A_Light_1",20,280,49,55,215,217,"Emit_Cold"],["TV_Stand",5,45,158,232,2,50,"Wood"],["TV_CRT_Body",6,52,162,228,50,105,"CRT_Body"],["TV_CRT_Glass",52,53.5,165,225,54,102,"Glass_Dark"],["TV_Antenna_1",25,27,182,184,105,142,"Steel"],["TV_Antenna_2",25,27,206,208,105,142,"Steel"],["CCTV_Dome",145,157,92,104,234,244,"Device"],["Sofa_Seat",215,290,168,290,2,47,"Sofa"],["Sofa_Back",272,290,168,290,47,87,"Sofa"],["Sofa_Arm_1",215,290,168,183,47,67,"Sofa"],["Sofa_Arm_2",215,290,275,290,47,67,"Sofa"],["Blanket",224,280,236,286,47,52,"Blanket"],["Remote",226,240,170,181,67,70,"Remote"]],"screens":[["Screen_B_Home","Movies/B_home.mp4",53.6,195,78,52,29.25,180]],"lights":[["Light_A_Cold_1",90,40,207,6500,2],["Light_A_Cold_2",220,40,207,6500,2],["Light_B_Warm_1",235,255,207,2700,2.2],["Light_B_Ceiling",140,190,217,2700,1.5],["Light_TV_Glow",80,195,82,9000,1.0]],"cams":[["Cam_TopView",150,150,900,-90,-90,24],["Cam_A_Subway",8,40,160,-4,0,13],["Cam_B_Door",232,96,167,-18,120,12],["Cam_B_OverSofa",291,195,152,-14,180,15],["Cam_CCTV",151,98,230,-45,95,8]]},"Opt5B":{"name":"거실","boxes":[["Floor_A",0,300,0,80,-3,2,"S_Floor"],["Floor_B",0,300,80,300,-3,2,"B_Floor"],["Wall_Top",0,300,-5.0,5.0,2,242,"S_Wall"],["Wall_Left_A_Header",-5.0,5.0,0,80,212,242,"S_Wall"],["Wall_Left_B",-5.0,5.0,80,300,2,242,"B_Wall"],["Wall_Right_A",295.0,305.0,0,80,2,242,"S_Wall"],["Wall_Right_B",295.0,305.0,80,300,2,242,"B_Wall"],["Wall_Bottom_0",0,10,295.0,305.0,2,242,"B_Wall"],["Wall_Bottom_1",90,300,295.0,305.0,2,242,"B_Wall"],["Wall_Bottom_ExitHeader",10,90,295.0,305.0,212,242,"B_Wall"],["Partition_1",0,190,75.0,85.0,2,242,"S_Wall"],["Partition_2",270,300,75.0,85.0,2,242,"S_Wall"],["Partition_DoorHeader",190,270,75.0,85.0,212,242,"S_Wall"],["Door_Partition",264,268,85,165,2,212,"Door"],["Door_Exit",84,88,305.0,385.0,2,212,"Door"],["Speaker_A",270,285,60,74,2,32,"Device"],["Speaker_B_1",10,25,88,103,2,32,"Device"],["Speaker_B_2",275,290,88,103,2,32,"Device"],["Sub_Door_0",100,160,5,7,2,202,"Steel"],["Sub_DoorWin_0",108,152,7,7.6,112,182,"Glass_Dark"],["Sub_LED_0",105,155,5,8,205,211,"Emit_LED"],["Sub_Door_1",220,280,5,7,2,202,"Steel"],["Sub_DoorWin_1",228,272,7,7.6,112,182,"Glass_Dark"],["Sub_LED_1",225,275,5,8,205,211,"Emit_LED"],["Sub_Window_0",12,92,5,6.5,97,177,"Glass_Dark"],["Sub_Ad_Top_0",12,92,5,7,184,209,"Emit_Ad1b"],["Sub_Window_1",168,212,5,6.5,97,177,"Glass_Dark"],["Sub_Ad_Top_1",168,212,5,7,184,209,"Emit_Ad3b"],["Sub_Ad_Wall_0",20,80,72,75,122,187,"Emit_Ad2b"],["Sub_Ad_Wall_1",95,155,72,75,122,187,"Emit_Ad1b"],["Sub_RouteMap",20,180,73,75,194,208,"Emit_LED"],["Sub_Rail_0",8,292,20.5,23.5,206,209,"Steel"],["Sub_Strap_0_0",24,26,21,23,194,206,"Strap"],["Sub_StrapRing_0_0",21,29,21,23,186,194,"Strap"],["Sub_Strap_0_1",54,56,21,23,194,206,"Strap"],["Sub_StrapRing_0_1",51,59,21,23,186,194,"Strap"],["Sub_Strap_0_2",84,86,21,23,194,206,"Strap"],["Sub_StrapRing_0_2",81,89,21,23,186,194,"Strap"],["Sub_Strap_0_3",114,116,21,23,194,206,"Strap"],["Sub_StrapRing_0_3",111,119,21,23,186,194,"Strap"],["Sub_Strap_0_4",144,146,21,23,194,206,"Strap"],["Sub_StrapRing_0_4",141,149,21,23,186,194,"Strap"],["Sub_Strap_0_5",174,176,21,23,194,206,"Strap"],["Sub_StrapRing_0_5",171,179,21,23,186,194,"Strap"],["Sub_Strap_0_8",264,266,21,23,194,206,"Strap"],["Sub_StrapRing_0_8",261,269,21,23,186,194,"Strap"],["Sub_Rail_1",8,292,56.5,59.5,206,209,"Steel"],["Sub_Strap_1_0",24,26,57,59,194,206,"Strap"],["Sub_StrapRing_1_0",21,29,57,59,186,194,"Strap"],["Sub_Strap_1_1",54,56,57,59,194,206,"Strap"],["Sub_StrapRing_1_1",51,59,57,59,186,194,"Strap"],["Sub_Strap_1_2",84,86,57,59,194,206,"Strap"],["Sub_StrapRing_1_2",81,89,57,59,186,194,"Strap"],["Sub_Strap_1_3",114,116,57,59,194,206,"Strap"],["Sub_StrapRing_1_3",111,119,57,59,186,194,"Strap"],["Sub_Strap_1_4",144,146,57,59,194,206,"Strap"],["Sub_StrapRing_1_4",141,149,57,59,186,194,"Strap"],["Sub_Strap_1_5",174,176,57,59,194,206,"Strap"],["Sub_StrapRing_1_5",171,179,57,59,186,194,"Strap"],["Sub_Strap_1_8",264,266,57,59,194,206,"Strap"],["Sub_StrapRing_1_8",261,269,57,59,186,194,"Strap"],["Sub_Pole_0",58,62,7,11,2,217,"Steel"],["Sub_Pole_1",188,192,7,11,2,217,"Steel"],["Sub_Person_LegL_0",27,38,6,9,2,82.83999999999999,"Silhouette"],["Sub_Person_LegR_0",42,53,6,9,2,82.83999999999999,"Silhouette"],["Sub_Person_Body_0",23,57,6,9,82.83999999999999,144.76,"Silhouette"],["Sub_Person_ArmL_0",17,22,6,9,90.83999999999999,140.76,"Silhouette"],["Sub_Person_ArmR_0",58,63,6,9,90.83999999999999,140.76,"Silhouette"],["Sub_Person_Neck_0",36,44,6,9,144.76,148.76,"Silhouette"],["Sub_Person_Head_0",31,49,6,9,148.76,174,"Silhouette"],["Sub_Person_LegL_1",137,148,6,9,2,79.55,"Silhouette"],["Sub_Person_LegR_1",152,163,6,9,2,79.55,"Silhouette"],["Sub_Person_Body_1",133,167,6,9,79.55,138.95,"Silhouette"],["Sub_Person_ArmL_1",127,132,6,9,87.55,134.95,"Silhouette"],["Sub_Person_ArmR_1",168,173,6,9,87.55,134.95,"Silhouette"],["Sub_Person_Neck_1",146,154,6,9,138.95,142.95,"Silhouette"],["Sub_Person_Head_1",141,159,6,9,142.95,167,"Silhouette"],["Sub_Person_LegL_2",72,83,71,74,2,85.66,"Silhouette"],["Sub_Person_LegR_2",87,98,71,74,2,85.66,"Silhouette"],["Sub_Person_Body_2",68,102,71,74,85.66,149.73999999999998,"Silhouette"],["Sub_Person_ArmL_2",62,67,71,74,93.66,145.73999999999998,"Silhouette"],["Sub_Person_ArmR_2",103,108,71,74,93.66,145.73999999999998,"Silhouette"],["Sub_Person_Neck_2",81,89,71,74,149.73999999999998,153.73999999999998,"Silhouette"],["Sub_Person_Head_2",76,94,71,74,153.73999999999998,180,"Silhouette"],["Sub_Person_LegL_3",237,248,6,9,2,80.96,"Silhouette"],["Sub_Person_LegR_3",252,263,6,9,2,80.96,"Silhouette"],["Sub_Person_Body_3",233,267,6,9,80.96,141.44,"Silhouette"],["Sub_Person_ArmL_3",227,232,6,9,88.96,137.44,"Silhouette"],["Sub_Person_ArmR_3",268,273,6,9,88.96,137.44,"Silhouette"],["Sub_Person_Neck_3",246,254,6,9,141.44,145.44,"Silhouette"],["Sub_Person_Head_3",241,259,6,9,145.44,170,"Silhouette"],["Ceiling_A_Low",0,300,0,75,217,222,"S_Ceiling"],["Ceiling_A_Light_0",20,280,25,31,215,217,"Emit_Cold"],["Ceiling_A_Light_1",20,280,49,55,215,217,"Emit_Cold"],["TV_Stand",5,45,158,232,2,50,"Wood"],["TV_CRT_Body",6,52,162,228,50,105,"CRT_Body"],["TV_CRT_Glass",52,53.5,165,225,54,102,"Glass_Dark"],["TV_Antenna_1",25,27,182,184,105,142,"Steel"],["TV_Antenna_2",25,27,206,208,105,142,"Steel"],["CCTV_Dome",145,157,92,104,234,244,"Device"],["Sofa_Seat",215,290,168,290,2,47,"Sofa"],["Sofa_Back",272,290,168,290,47,87,"Sofa"],["Sofa_Arm_1",215,290,168,183,47,67,"Sofa"],["Sofa_Arm_2",215,290,275,290,47,67,"Sofa"],["Blanket",224,280,236,286,47,52,"Blanket"],["Remote",226,240,170,181,67,70,"Remote"],["Rug",70,205,140,280,2,3,"Rug"],["Lamp_Pole",38,44,93,99,2,152,"Steel"],["Lamp_Shade",30,52,88,110,152,174,"Emit_LampShade"],["Plant_Pot",62,84,90,112,2,42,"Wood"],["Plant_Leaf",58,88,86,116,42,117,"Plant"],["Shelf",95,160,87,115,2,122,"Wood"]],"screens":[["Screen_B_Home","Movies/B_home.mp4",53.6,195,78,52,29.25,180]],"lights":[["Light_A_Cold_1",90,40,207,6500,2],["Light_A_Cold_2",220,40,207,6500,2],["Light_B_Warm_1",235,255,207,2700,2.2],["Light_B_Ceiling",140,190,217,2700,1.5],["Light_TV_Glow",80,195,82,9000,1.0],["Light_Lamp",41,99,162,2400,2.5]],"cams":[["Cam_TopView",150,150,900,-90,-90,24],["Cam_A_Subway",8,40,160,-4,0,13],["Cam_B_Door",232,96,167,-18,120,12],["Cam_B_OverSofa",291,195,152,-14,180,15],["Cam_CCTV",151,98,230,-45,95,8]]},"Opt5C":{"name":"1인 자리","boxes":[["Floor_A",0,300,0,80,-3,2,"S_Floor"],["Floor_B",0,300,80,300,-3,2,"B_Floor"],["Wall_Top",0,300,-5.0,5.0,2,242,"S_Wall"],["Wall_Left_A_Header",-5.0,5.0,0,80,212,242,"S_Wall"],["Wall_Left_B",-5.0,5.0,80,300,2,242,"B_Wall"],["Wall_Right_A",295.0,305.0,0,80,2,242,"S_Wall"],["Wall_Right_B",295.0,305.0,80,300,2,242,"B_Wall"],["Wall_Bottom_0",0,10,295.0,305.0,2,242,"B_Wall"],["Wall_Bottom_1",90,300,295.0,305.0,2,242,"B_Wall"],["Wall_Bottom_ExitHeader",10,90,295.0,305.0,212,242,"B_Wall"],["Partition_1",0,190,75.0,85.0,2,242,"S_Wall"],["Partition_2",270,300,75.0,85.0,2,242,"S_Wall"],["Partition_DoorHeader",190,270,75.0,85.0,212,242,"S_Wall"],["Door_Partition",264,268,85,165,2,212,"Door"],["Door_Exit",84,88,305.0,385.0,2,212,"Door"],["Speaker_A",270,285,60,74,2,32,"Device"],["Speaker_B_1",10,25,88,103,2,32,"Device"],["Speaker_B_2",275,290,88,103,2,32,"Device"],["Sub_Door_0",100,160,5,7,2,202,"Steel"],["Sub_DoorWin_0",108,152,7,7.6,112,182,"Glass_Dark"],["Sub_LED_0",105,155,5,8,205,211,"Emit_LED"],["Sub_Door_1",220,280,5,7,2,202,"Steel"],["Sub_DoorWin_1",228,272,7,7.6,112,182,"Glass_Dark"],["Sub_LED_1",225,275,5,8,205,211,"Emit_LED"],["Sub_Window_0",12,92,5,6.5,97,177,"Glass_Dark"],["Sub_Ad_Top_0",12,92,5,7,184,209,"Emit_Ad1b"],["Sub_Window_1",168,212,5,6.5,97,177,"Glass_Dark"],["Sub_Ad_Top_1",168,212,5,7,184,209,"Emit_Ad3b"],["Sub_Ad_Wall_0",20,80,72,75,122,187,"Emit_Ad2b"],["Sub_Ad_Wall_1",95,155,72,75,122,187,"Emit_Ad1b"],["Sub_RouteMap",20,180,73,75,194,208,"Emit_LED"],["Sub_Rail_0",8,292,20.5,23.5,206,209,"Steel"],["Sub_Strap_0_0",24,26,21,23,194,206,"Strap"],["Sub_StrapRing_0_0",21,29,21,23,186,194,"Strap"],["Sub_Strap_0_1",54,56,21,23,194,206,"Strap"],["Sub_StrapRing_0_1",51,59,21,23,186,194,"Strap"],["Sub_Strap_0_2",84,86,21,23,194,206,"Strap"],["Sub_StrapRing_0_2",81,89,21,23,186,194,"Strap"],["Sub_Strap_0_3",114,116,21,23,194,206,"Strap"],["Sub_StrapRing_0_3",111,119,21,23,186,194,"Strap"],["Sub_Strap_0_4",144,146,21,23,194,206,"Strap"],["Sub_StrapRing_0_4",141,149,21,23,186,194,"Strap"],["Sub_Strap_0_5",174,176,21,23,194,206,"Strap"],["Sub_StrapRing_0_5",171,179,21,23,186,194,"Strap"],["Sub_Strap_0_8",264,266,21,23,194,206,"Strap"],["Sub_StrapRing_0_8",261,269,21,23,186,194,"Strap"],["Sub_Rail_1",8,292,56.5,59.5,206,209,"Steel"],["Sub_Strap_1_0",24,26,57,59,194,206,"Strap"],["Sub_StrapRing_1_0",21,29,57,59,186,194,"Strap"],["Sub_Strap_1_1",54,56,57,59,194,206,"Strap"],["Sub_StrapRing_1_1",51,59,57,59,186,194,"Strap"],["Sub_Strap_1_2",84,86,57,59,194,206,"Strap"],["Sub_StrapRing_1_2",81,89,57,59,186,194,"Strap"],["Sub_Strap_1_3",114,116,57,59,194,206,"Strap"],["Sub_StrapRing_1_3",111,119,57,59,186,194,"Strap"],["Sub_Strap_1_4",144,146,57,59,194,206,"Strap"],["Sub_StrapRing_1_4",141,149,57,59,186,194,"Strap"],["Sub_Strap_1_5",174,176,57,59,194,206,"Strap"],["Sub_StrapRing_1_5",171,179,57,59,186,194,"Strap"],["Sub_Strap_1_8",264,266,57,59,194,206,"Strap"],["Sub_StrapRing_1_8",261,269,57,59,186,194,"Strap"],["Sub_Pole_0",58,62,7,11,2,217,"Steel"],["Sub_Pole_1",188,192,7,11,2,217,"Steel"],["Sub_Person_LegL_0",27,38,6,9,2,82.83999999999999,"Silhouette"],["Sub_Person_LegR_0",42,53,6,9,2,82.83999999999999,"Silhouette"],["Sub_Person_Body_0",23,57,6,9,82.83999999999999,144.76,"Silhouette"],["Sub_Person_ArmL_0",17,22,6,9,90.83999999999999,140.76,"Silhouette"],["Sub_Person_ArmR_0",58,63,6,9,90.83999999999999,140.76,"Silhouette"],["Sub_Person_Neck_0",36,44,6,9,144.76,148.76,"Silhouette"],["Sub_Person_Head_0",31,49,6,9,148.76,174,"Silhouette"],["Sub_Person_LegL_1",137,148,6,9,2,79.55,"Silhouette"],["Sub_Person_LegR_1",152,163,6,9,2,79.55,"Silhouette"],["Sub_Person_Body_1",133,167,6,9,79.55,138.95,"Silhouette"],["Sub_Person_ArmL_1",127,132,6,9,87.55,134.95,"Silhouette"],["Sub_Person_ArmR_1",168,173,6,9,87.55,134.95,"Silhouette"],["Sub_Person_Neck_1",146,154,6,9,138.95,142.95,"Silhouette"],["Sub_Person_Head_1",141,159,6,9,142.95,167,"Silhouette"],["Sub_Person_LegL_2",72,83,71,74,2,85.66,"Silhouette"],["Sub_Person_LegR_2",87,98,71,74,2,85.66,"Silhouette"],["Sub_Person_Body_2",68,102,71,74,85.66,149.73999999999998,"Silhouette"],["Sub_Person_ArmL_2",62,67,71,74,93.66,145.73999999999998,"Silhouette"],["Sub_Person_ArmR_2",103,108,71,74,93.66,145.73999999999998,"Silhouette"],["Sub_Person_Neck_2",81,89,71,74,149.73999999999998,153.73999999999998,"Silhouette"],["Sub_Person_Head_2",76,94,71,74,153.73999999999998,180,"Silhouette"],["Sub_Person_LegL_3",237,248,6,9,2,80.96,"Silhouette"],["Sub_Person_LegR_3",252,263,6,9,2,80.96,"Silhouette"],["Sub_Person_Body_3",233,267,6,9,80.96,141.44,"Silhouette"],["Sub_Person_ArmL_3",227,232,6,9,88.96,137.44,"Silhouette"],["Sub_Person_ArmR_3",268,273,6,9,88.96,137.44,"Silhouette"],["Sub_Person_Neck_3",246,254,6,9,141.44,145.44,"Silhouette"],["Sub_Person_Head_3",241,259,6,9,145.44,170,"Silhouette"],["Ceiling_A_Low",0,300,0,75,217,222,"S_Ceiling"],["Ceiling_A_Light_0",20,280,25,31,215,217,"Emit_Cold"],["Ceiling_A_Light_1",20,280,49,55,215,217,"Emit_Cold"],["TV_Stand",5,45,158,232,2,50,"Wood"],["TV_CRT_Body",6,52,162,228,50,105,"CRT_Body"],["TV_CRT_Glass",52,53.5,165,225,54,102,"Glass_Dark"],["TV_Antenna_1",25,27,182,184,105,142,"Steel"],["TV_Antenna_2",25,27,206,208,105,142,"Steel"],["CCTV_Dome",145,157,92,104,234,244,"Device"],["Recliner_Seat",210,290,172,248,2,47,"Sofa"],["Recliner_Back",272,290,172,248,47,102,"Sofa"],["Recliner_Arm_1",210,290,172,187,47,64,"Sofa"],["Recliner_Arm_2",210,290,233,248,47,64,"Sofa"],["Blanket",218,262,206,246,47,52,"Blanket"],["SideTable",255,292,252,292,2,57,"Wood"],["Remote",262,276,262,273,57,60,"Remote"],["Lamp_Pole",272,276,270,274,57,122,"Steel"],["Lamp_Shade",264,284,262,282,122,140,"Emit_LampShade"],["Shelf",95,160,87,115,2,122,"Wood"],["Rug",120,205,165,255,2,3,"Rug"]],"screens":[["Screen_B_Home","Movies/B_home.mp4",53.6,195,78,52,29.25,180]],"lights":[["Light_A_Cold_1",90,40,207,6500,2],["Light_A_Cold_2",220,40,207,6500,2],["Light_B_Warm_1",235,255,207,2700,2.2],["Light_B_Ceiling",140,190,217,2700,1.5],["Light_TV_Glow",80,195,82,9000,1.0],["Light_Lamp",274,272,130,2400,2.5]],"cams":[["Cam_TopView",150,150,900,-90,-90,24],["Cam_A_Subway",8,40,160,-4,0,13],["Cam_B_Door",232,96,167,-18,120,12],["Cam_B_OverSofa",291,195,152,-14,180,15],["Cam_CCTV",151,98,230,-45,95,8]]},"Opt5D":{"name":"생활감","boxes":[["Floor_A",0,300,0,80,-3,2,"S_Floor"],["Floor_B",0,300,80,300,-3,2,"B_Floor"],["Wall_Top",0,300,-5.0,5.0,2,242,"S_Wall"],["Wall_Left_A_Header",-5.0,5.0,0,80,212,242,"S_Wall"],["Wall_Left_B",-5.0,5.0,80,300,2,242,"B_Wall"],["Wall_Right_A",295.0,305.0,0,80,2,242,"S_Wall"],["Wall_Right_B",295.0,305.0,80,300,2,242,"B_Wall"],["Wall_Bottom_0",0,10,295.0,305.0,2,242,"B_Wall"],["Wall_Bottom_1",90,300,295.0,305.0,2,242,"B_Wall"],["Wall_Bottom_ExitHeader",10,90,295.0,305.0,212,242,"B_Wall"],["Partition_1",0,190,75.0,85.0,2,242,"S_Wall"],["Partition_2",270,300,75.0,85.0,2,242,"S_Wall"],["Partition_DoorHeader",190,270,75.0,85.0,212,242,"S_Wall"],["Door_Partition",264,268,85,165,2,212,"Door"],["Door_Exit",84,88,305.0,385.0,2,212,"Door"],["Speaker_A",270,285,60,74,2,32,"Device"],["Speaker_B_1",10,25,88,103,2,32,"Device"],["Speaker_B_2",275,290,88,103,2,32,"Device"],["Sub_Door_0",100,160,5,7,2,202,"Steel"],["Sub_DoorWin_0",108,152,7,7.6,112,182,"Glass_Dark"],["Sub_LED_0",105,155,5,8,205,211,"Emit_LED"],["Sub_Door_1",220,280,5,7,2,202,"Steel"],["Sub_DoorWin_1",228,272,7,7.6,112,182,"Glass_Dark"],["Sub_LED_1",225,275,5,8,205,211,"Emit_LED"],["Sub_Window_0",12,92,5,6.5,97,177,"Glass_Dark"],["Sub_Ad_Top_0",12,92,5,7,184,209,"Emit_Ad1b"],["Sub_Window_1",168,212,5,6.5,97,177,"Glass_Dark"],["Sub_Ad_Top_1",168,212,5,7,184,209,"Emit_Ad3b"],["Sub_Ad_Wall_0",20,80,72,75,122,187,"Emit_Ad2b"],["Sub_Ad_Wall_1",95,155,72,75,122,187,"Emit_Ad1b"],["Sub_RouteMap",20,180,73,75,194,208,"Emit_LED"],["Sub_Rail_0",8,292,20.5,23.5,206,209,"Steel"],["Sub_Strap_0_0",24,26,21,23,194,206,"Strap"],["Sub_StrapRing_0_0",21,29,21,23,186,194,"Strap"],["Sub_Strap_0_1",54,56,21,23,194,206,"Strap"],["Sub_StrapRing_0_1",51,59,21,23,186,194,"Strap"],["Sub_Strap_0_2",84,86,21,23,194,206,"Strap"],["Sub_StrapRing_0_2",81,89,21,23,186,194,"Strap"],["Sub_Strap_0_3",114,116,21,23,194,206,"Strap"],["Sub_StrapRing_0_3",111,119,21,23,186,194,"Strap"],["Sub_Strap_0_4",144,146,21,23,194,206,"Strap"],["Sub_StrapRing_0_4",141,149,21,23,186,194,"Strap"],["Sub_Strap_0_5",174,176,21,23,194,206,"Strap"],["Sub_StrapRing_0_5",171,179,21,23,186,194,"Strap"],["Sub_Strap_0_8",264,266,21,23,194,206,"Strap"],["Sub_StrapRing_0_8",261,269,21,23,186,194,"Strap"],["Sub_Rail_1",8,292,56.5,59.5,206,209,"Steel"],["Sub_Strap_1_0",24,26,57,59,194,206,"Strap"],["Sub_StrapRing_1_0",21,29,57,59,186,194,"Strap"],["Sub_Strap_1_1",54,56,57,59,194,206,"Strap"],["Sub_StrapRing_1_1",51,59,57,59,186,194,"Strap"],["Sub_Strap_1_2",84,86,57,59,194,206,"Strap"],["Sub_StrapRing_1_2",81,89,57,59,186,194,"Strap"],["Sub_Strap_1_3",114,116,57,59,194,206,"Strap"],["Sub_StrapRing_1_3",111,119,57,59,186,194,"Strap"],["Sub_Strap_1_4",144,146,57,59,194,206,"Strap"],["Sub_StrapRing_1_4",141,149,57,59,186,194,"Strap"],["Sub_Strap_1_5",174,176,57,59,194,206,"Strap"],["Sub_StrapRing_1_5",171,179,57,59,186,194,"Strap"],["Sub_Strap_1_8",264,266,57,59,194,206,"Strap"],["Sub_StrapRing_1_8",261,269,57,59,186,194,"Strap"],["Sub_Pole_0",58,62,7,11,2,217,"Steel"],["Sub_Pole_1",188,192,7,11,2,217,"Steel"],["Sub_Person_LegL_0",27,38,6,9,2,82.83999999999999,"Silhouette"],["Sub_Person_LegR_0",42,53,6,9,2,82.83999999999999,"Silhouette"],["Sub_Person_Body_0",23,57,6,9,82.83999999999999,144.76,"Silhouette"],["Sub_Person_ArmL_0",17,22,6,9,90.83999999999999,140.76,"Silhouette"],["Sub_Person_ArmR_0",58,63,6,9,90.83999999999999,140.76,"Silhouette"],["Sub_Person_Neck_0",36,44,6,9,144.76,148.76,"Silhouette"],["Sub_Person_Head_0",31,49,6,9,148.76,174,"Silhouette"],["Sub_Person_LegL_1",137,148,6,9,2,79.55,"Silhouette"],["Sub_Person_LegR_1",152,163,6,9,2,79.55,"Silhouette"],["Sub_Person_Body_1",133,167,6,9,79.55,138.95,"Silhouette"],["Sub_Person_ArmL_1",127,132,6,9,87.55,134.95,"Silhouette"],["Sub_Person_ArmR_1",168,173,6,9,87.55,134.95,"Silhouette"],["Sub_Person_Neck_1",146,154,6,9,138.95,142.95,"Silhouette"],["Sub_Person_Head_1",141,159,6,9,142.95,167,"Silhouette"],["Sub_Person_LegL_2",72,83,71,74,2,85.66,"Silhouette"],["Sub_Person_LegR_2",87,98,71,74,2,85.66,"Silhouette"],["Sub_Person_Body_2",68,102,71,74,85.66,149.73999999999998,"Silhouette"],["Sub_Person_ArmL_2",62,67,71,74,93.66,145.73999999999998,"Silhouette"],["Sub_Person_ArmR_2",103,108,71,74,93.66,145.73999999999998,"Silhouette"],["Sub_Person_Neck_2",81,89,71,74,149.73999999999998,153.73999999999998,"Silhouette"],["Sub_Person_Head_2",76,94,71,74,153.73999999999998,180,"Silhouette"],["Sub_Person_LegL_3",237,248,6,9,2,80.96,"Silhouette"],["Sub_Person_LegR_3",252,263,6,9,2,80.96,"Silhouette"],["Sub_Person_Body_3",233,267,6,9,80.96,141.44,"Silhouette"],["Sub_Person_ArmL_3",227,232,6,9,88.96,137.44,"Silhouette"],["Sub_Person_ArmR_3",268,273,6,9,88.96,137.44,"Silhouette"],["Sub_Person_Neck_3",246,254,6,9,141.44,145.44,"Silhouette"],["Sub_Person_Head_3",241,259,6,9,145.44,170,"Silhouette"],["Ceiling_A_Low",0,300,0,75,217,222,"S_Ceiling"],["Ceiling_A_Light_0",20,280,25,31,215,217,"Emit_Cold"],["Ceiling_A_Light_1",20,280,49,55,215,217,"Emit_Cold"],["TV_Stand",5,45,158,232,2,50,"Wood"],["TV_CRT_Body",6,52,162,228,50,105,"CRT_Body"],["TV_CRT_Glass",52,53.5,165,225,54,102,"Glass_Dark"],["TV_Antenna_1",25,27,182,184,105,142,"Steel"],["TV_Antenna_2",25,27,206,208,105,142,"Steel"],["CCTV_Dome",145,157,92,104,234,244,"Device"],["Sofa_Seat",215,290,168,290,2,47,"Sofa"],["Sofa_Back",272,290,168,290,47,87,"Sofa"],["Sofa_Arm_1",215,290,168,183,47,67,"Sofa"],["Sofa_Arm_2",215,290,275,290,47,67,"Sofa"],["Blanket",224,280,236,286,47,52,"Blanket"],["Remote",226,240,170,181,67,70,"Remote"],["Rug",70,205,140,280,2,3,"Rug"],["Box_1",30,72,90,128,2,37,"Box"],["Box_2",34,68,93,125,37,64,"Box"],["Basket",80,115,88,120,2,47,"Basket"],["ClothesRack",130,168,87,110,2,162,"Steel"],["Clothes",132,166,89,108,97,152,"Blanket"],["Slippers",150,176,118,132,2,5,"Remote"]],"screens":[["Screen_B_Home","Movies/B_home.mp4",53.6,195,78,52,29.25,180]],"lights":[["Light_A_Cold_1",90,40,207,6500,2],["Light_A_Cold_2",220,40,207,6500,2],["Light_B_Warm_1",235,255,207,2700,2.2],["Light_B_Ceiling",140,190,217,2700,1.5],["Light_TV_Glow",80,195,82,9000,1.0]],"cams":[["Cam_TopView",150,150,900,-90,-90,24],["Cam_A_Subway",8,40,160,-4,0,13],["Cam_B_Door",232,96,167,-18,120,12],["Cam_B_OverSofa",291,195,152,-14,180,15],["Cam_CCTV",151,98,230,-45,95,8]]},"colors":{"A_Wall":[0.32,0.37,0.42],"A_Floor":[0.18,0.19,0.21],"B_Wall":[0.85,0.74,0.6],"B_Floor":[0.45,0.3,0.18],"Ground":[0.05,0.05,0.05],"Ceiling":[0.8,0.8,0.78],"Door":[0.55,0.35,0.22],"Sofa":[0.65,0.28,0.14],"Rug":[0.9,0.82,0.68],"Device":[0.08,0.08,0.08],"S_Wall":[0.74,0.76,0.77],"S_Floor":[0.25,0.28,0.31],"S_Ceiling":[0.82,0.83,0.84],"Steel":[0.6,0.62,0.64],"Glass_Dark":[0.015,0.02,0.025],"Strap":[0.8,0.78,0.7],"Silhouette":[0.03,0.03,0.035],"CRT_Body":[0.5,0.48,0.43],"Wood":[0.36,0.22,0.12],"Blanket":[0.1,0.42,0.4],"Remote":[0.02,0.02,0.02],"Plant":[0.16,0.33,0.14],"Box":[0.6,0.46,0.28],"Basket":[0.72,0.69,0.62]},"emissive":{"Emit_Cold":[[0.9,0.95,1.0],2.0],"Emit_Ad1b":[[0.9,0.42,0.3],0.35],"Emit_Ad2b":[[0.3,0.58,0.9],0.35],"Emit_Ad3b":[[0.95,0.85,0.4],0.35],"Emit_LED":[[0.2,1.0,0.45],1.2],"Emit_LampShade":[[1.0,0.72,0.4],2.5]}};
+const PATH=[[-90,40],[10,40],[100,40],[180,40],[228,40],[230,40],[230,110],[190,150],[248,195],[246,195],[180,240],[60,272],[60,325]];
+const KEYS=[[0,-90,40,160,0,-4],[2,10,40,160,0,-4],[5,100,40,160,-8,2],[8,180,40,160,12,-2],[10,228,40,160,0,-5],[11.5,230,40,160,90,-5],[13.5,230,110,160,90,-8],[15.5,190,150,160,150,-10],[18,248,195,110,180,-10],[24,246,195,110,180,-11],[26,180,240,160,135,-6],[28.5,60,272,160,90,-5],[30.5,60,325,160,90,-5]];
+const SIT=[248,195],HINGE=[270,85],DOOR_R=80,LEAF=[264,268,85,165];
+const PRESETS={
+ Opt5A:{name:"A 기본",sub:"가구 없음",seat:"sofa",on:["blanket","remote"],stay:"TV와 소파, 담요만 남은 집. 가장 단순하고 인터랙션 물건이 잘 보임",leave:"방이 비어 있어 출구가 늘 시야에 들어옴"},
+ Opt5B:{name:"B 거실",sub:"러그·스탠드·화분·선반",seat:"sofa",on:["blanket","remote","rug","lamp","plant","shelf"],stay:"스탠드 불빛과 TV — 누구나 아는 '거실'",leave:"가구가 모두 가벽 쪽에 있어 출구 쪽은 비어 있음"},
+ Opt5C:{name:"C 1인 자리",sub:"리클라이너·사이드 테이블",seat:"recliner",on:["blanket","remote","sidetable","lamp","shelf","rug"],stay:"손 닿는 곳에 리모컨·스탠드가 있는 '나만의 자리'",leave:"자리가 하나뿐이라 다음 사람에게 비켜 줘야 하는 압박"},
+ Opt5D:{name:"D 생활감",sub:"상자·바구니·행거·슬리퍼",seat:"sofa",on:["blanket","remote","rug","boxes","basket","rack","slippers"],stay:"어수선하지만 내 물건으로 찬 '진짜 내 집'",leave:"문 앞 슬리퍼 ↔ 깨끗하게 비운 출구"}};
+const TOG=[["blanket","담요"],["remote","리모컨"],["rug","러그"],["lamp","스탠드"],["plant","화분"],["shelf","선반"],["sidetable","사이드 테이블"],["boxes","택배 상자"],["basket","빨래 바구니"],["rack","옷 행거"],["slippers","슬리퍼"]];
+const st={preset:"Opt5A",seat:"sofa",screen:"crt",on:new Set(PRESETS.Opt5A.on),door:1,tv:"on",bl:1,view:"orbit"};
+const find=(p,n)=>S[p].boxes.find(b=>b[0]===n);
+const startsAny=(n,arr)=>arr.some(a=>n.startsWith(a));
+function currentBoxes(){
+ const out=[];const sofaNames=["Sofa_","Recliner_","Blanket","Remote","Rug","Lamp_","Plant_","Shelf","SideTable","Box_","Basket","Clothes","Slippers","Door_Partition"];
+ for(const b of S.Opt5A.boxes){ if(startsAny(b[0],sofaNames))continue; if(st.screen==="pj"&&b[0].startsWith("TV_"))continue; out.push(b.concat(["base"])); }
+ const rec=st.seat==="recliner", P=rec?"Opt5C":"Opt5A";
+ for(const b of S[P].boxes) if(b[0].startsWith(rec?"Recliner_":"Sofa_")) out.push(b.concat(["seat"]));
+ const add=(p,names,tag)=>{for(const b of S[p].boxes) if(names.some(n=>b[0]===n||b[0].startsWith(n))) out.push(b.concat([tag]));};
+ if(st.on.has("blanket")) add(rec?"Opt5C":"Opt5A",["Blanket"],"blanket");
+ if(st.on.has("remote")) add(rec?"Opt5C":"Opt5A",["Remote"],"remote");
+ if(st.on.has("rug")) add(rec?"Opt5C":"Opt5B",["Rug"],"rug");
+ if(st.on.has("lamp")) add(rec?"Opt5C":"Opt5B",["Lamp_"],"lamp");
+ if(rec&&(st.on.has("sidetable")||st.on.has("lamp")||st.on.has("remote"))) add("Opt5C",["SideTable"],"sidetable");
+ if(st.on.has("plant")) add("Opt5B",["Plant_"],"plant");
+ if(st.on.has("shelf")) add("Opt5B",["Shelf"],"shelf");
+ if(st.on.has("boxes")) add("Opt5D",["Box_"],"boxes");
+ if(st.on.has("basket")) add("Opt5D",["Basket"],"basket");
+ if(st.on.has("rack")) add("Opt5D",["ClothesRack","Clothes"],"rack");
+ if(st.on.has("slippers")) add("Opt5D",["Slippers"],"slippers");
+ if(st.screen==="pj"){ out.push(["PJ_Device",220,250,182,208,227,239,"Device","pj"]); }
+ return out;
+}
+// ---------- checks ----------
+function segRect(p,q,r){let b=1e9;const n=Math.ceil(Math.hypot(q[0]-p[0],q[1]-p[1]))+1;for(let i=0;i<=n;i++){const t=i/n,x=p[0]+(q[0]-p[0])*t,y=p[1]+(q[1]-p[1])*t;b=Math.min(b,Math.hypot(Math.max(r[0]-x,0,x-r[1]),Math.max(r[2]-y,0,y-r[3])));}return b}
+function clearance(r){let m=1e9;for(let i=0;i<PATH.length-1;i++)m=Math.min(m,segRect(PATH[i],PATH[i+1],r));return m}
+function doorHit(r){if(r[0]<LEAF[1]&&r[1]>LEAF[0]&&r[2]<LEAF[3]&&r[3]>LEAF[2])return true;for(let i=0;i<=20;i++)for(let j=0;j<=20;j++){const x=r[0]+(r[1]-r[0])*i/20,y=r[2]+(r[3]-r[2])*j/20;if(y>=HINGE[1]&&x<=HINGE[0]&&Math.hypot(x-HINGE[0],y-HINGE[1])<DOOR_R)return true}return false}
+function scr(){return st.screen==="crt"?{x:57,hw:28,zb:64}:{x:6,hw:80,zb:77}}
+function blocksTV(r,h){const s=scr();for(const x of [r[0],(r[0]+r[1])/2,r[1]]){if(x>=SIT[0]||x<=s.x)continue;const f=(SIT[0]-x)/(SIT[0]-s.x),lo=195-s.hw*f-2,hi=195+s.hw*f+2,z=110-(110-s.zb)*f;if(r[3]>lo&&r[2]<hi&&h>z)return true}return false}
+const LABEL={rug:"러그",lamp:"스탠드",plant:"화분",shelf:"선반",sidetable:"사이드 테이블",boxes:"택배 상자",basket:"빨래 바구니",rack:"옷 행거",slippers:"슬리퍼",blanket:"담요",remote:"리모컨",seat:"앉는 가구",pj:"프로젝터"};
+function runChecks(bx){
+ const groups={};for(const b of bx){const t=b[8];if(["base","seat"].includes(t))continue;(groups[t]=groups[t]||[]).push(b)}
+ const li=[];let worst=0;
+ const seatR=bx.filter(b=>b[8]==="seat");const seatDoor=seatR.some(b=>doorHit([b[1],b[2],b[3],b[4]]));
+ li.push(seatDoor?`<li class="bad">앉는 가구가 문 열림 범위에 걸림</li>`:`<li class="ok">앉는 가구: 문 열림 범위 밖 · 앉는 위치 그대로</li>`);
+ for(const [t,arr] of Object.entries(groups)){
+  if(["blanket","remote","pj"].includes(t))continue;
+  let c=1e9,dh=false,bv=false;
+  for(const b of arr){const r=[b[1],b[2],b[3],b[4]];if(b[5]<200)c=Math.min(c,clearance(r));const flat=(b[6]-b[5])<4;if(!flat&&doorHit(r))dh=true;if(t==="rug"&&doorHit(r))dh=true;if(!["rug","slippers"].includes(t)&&blocksTV(r,b[6]))bv=true}
+  const cr=Math.round(c),flat=["rug","slippers"].includes(t);
+  let cls="ok",msg=`${LABEL[t]}: `;
+  msg+= flat?"바닥 깔개":`동선에서 ${cr}cm`;
+  if(!flat&&cr<40){cls=cr<30?"bad":"warn"}
+  if(dh){cls="bad";msg+=" · 문에 걸림"} if(bv){cls="bad";msg+=" · 화면을 가림"}
+  li.push(`<li class="${cls}">${msg}</li>`);
+ }
+ li.push(`<li class="ok">화면: ${st.screen==="crt"?"브라운관, 소파에서 191cm":"프로젝터 160, 소파에서 242cm"}</li>`);
+ document.getElementById("checks").innerHTML=li.join("");
+}
+// ---------- plan ----------
+function drawPlan(bx){
+ const o=[];const R=(x0,x1,y0,y1,c,ex="")=>`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="${c}" ${ex}/>`;
+ o.push(R(-100,330,-22,398,"#1b1c1e"));o.push(R(0,300,0,80,"#3e4650"));o.push(R(0,300,80,300,"#6e4b2e"));
+ o.push(`<text x="150" y="-8" fill="#c9d1d9" font-size="10" text-anchor="middle">A · 지하철 칸 (300×80)</text><text x="150" y="314" fill="#c9d1d9" font-size="10" text-anchor="middle">B · 집 (300×220)</text>`);
+ const col={seat:"#c45a2c",rug:"#f1e4cc55",slippers:"#f1e4cc88",blanket:"#1c6b66",remote:"#111",pj:"#333"};
+ for(const b of bx){const n=b[0],t=b[8];if(t==="base"){
+   if(n.startsWith("Sub_")&&b[5]<190&&!n.startsWith("Sub_Person"))o.push(R(b[1],b[2],b[3],b[4],"#8f9cab"));
+   if(n.startsWith("Sub_Person"))o.push(R(b[1],b[2],b[3],b[4],"#000"));
+   if(n.startsWith("Sub_Strap"))o.push(R(b[1],b[2],b[3],b[4],"#d8d2c0"));
+   if(n.startsWith("TV_"))o.push(R(b[1],b[2],b[3],b[4],n==="TV_CRT_Glass"?"#ffe6a0":"#8a7a66"));
+   if(n.startsWith("CCTV"))o.push(`<circle cx="${(b[1]+b[2])/2}" cy="${(b[3]+b[4])/2}" r="6" fill="#b06cff" stroke="#fff"/>`);
+   if(n.startsWith("Speaker"))o.push(R(b[1],b[2],b[3],b[4],"#111"));
+   continue}
+  o.push(R(b[1],b[2],b[3],b[4],col[t]||"#d9bd92",'stroke="#00000033"'));}
+ if(st.screen==="pj")o.push(R(4,8,115,275,"#ffe6a0"));
+ const s=scr();o.push(`<polygon points="${SIT[0]},${SIT[1]} ${s.x},${195-s.hw} ${s.x},${195+s.hw}" fill="#ffe9a8" opacity=".14"/>`);
+ o.push(`<path d="M270,85 L190,85 A80,80 0 0 0 270,165 Z" fill="#ff9a4d" opacity=".3"/>`);
+ const W="#ece6dc";[[-5,305,-5,5],[295,305,-5,305],[-5,5,80,305],[90,305,295,305],[-5,10,295,305],[-5,190,75,85],[270,305,75,85]].forEach(w=>o.push(R(w[0],w[1],w[2],w[3],W)));
+ o.push(R(264,268,85,165,"#e08a4a"));o.push(`<line x1="190" y1="80" x2="270" y2="80" stroke="#ff8a3d" stroke-width="2" stroke-dasharray="4 3"/>`);
+ o.push(`<circle cx="194" cy="80" r="3.2" fill="#3ddc84" stroke="#fff" stroke-width=".8"/>`);
+ o.push(`<rect x="84" y="305" width="4" height="80" fill="#a8774e"/><text x="-60" y="44" fill="#d8d2c8" font-size="11">입구</text><text x="60" y="345" fill="#d8d2c8" font-size="11" text-anchor="middle">출구</text>`);
+ const pts=PATH.map(p=>p.join(",")).join(" ");
+ o.push(`<polyline points="${pts}" fill="none" stroke="#5d9bff" stroke-width="60" opacity=".14" stroke-linejoin="round" stroke-linecap="round"/>`);
+ o.push(`<polyline points="${pts}" fill="none" stroke="#2f6fd6" stroke-width="3" stroke-dasharray="7 5"/>`);
+ o.push(`<circle cx="248" cy="195" r="6" fill="#2f6fd6" stroke="#fff" stroke-width="1.5"/>`);
+ document.getElementById("plan").innerHTML=o.join("");
+}
+// ---------- 3D ----------
+let hemi,cutW=[],renderer,scene,camera,controls,group,doorPivot,tvMat,tvCanvas,tvCtx,tvTex,lightsB=[],lightsA=[],ceilA=[],ceilB,lampLights=[],t0=performance.now(),walk=null,doorAnim=null;
+const v3=(x,y,z)=>new THREE.Vector3(x/100,z/100,y/100);
+function kelvin(k){k/=100;let r,g,b;if(k<=66){r=255;g=99.47*Math.log(k)-161.12;b=k<=19?0:138.52*Math.log(k-10)-305.04}else{r=329.7*Math.pow(k-60,-0.1332);g=288.12*Math.pow(k-60,-0.0755);b=255}return new THREE.Color(Math.min(255,Math.max(0,r))/255,Math.min(255,Math.max(0,g))/255,Math.min(255,Math.max(0,b))/255)}
+const matCache={};
+function mat(key){if(matCache[key])return matCache[key];let m;
+ if(S.emissive[key]){const [c,i]=S.emissive[key];m=new THREE.MeshStandardMaterial({color:new THREE.Color(c[0],c[1],c[2]),emissive:new THREE.Color(c[0],c[1],c[2]),emissiveIntensity:Math.min(1.6,0.35+i*0.5),roughness:.6})}
+ else{const c=S.colors[key]||[.5,.5,.5];m=new THREE.MeshStandardMaterial({color:new THREE.Color(c[0],c[1],c[2]),roughness:key==="Steel"?.35:.85,metalness:key==="Steel"?.5:0})}
+ return matCache[key]=m}
+function boxMesh(b){const [n,x0,x1,y0,y1,z0,z1,m]=b;const g=new THREE.BoxGeometry(Math.max(.5,x1-x0)/100,Math.max(.5,z1-z0)/100,Math.max(.5,y1-y0)/100);const me=new THREE.Mesh(g,mat(m));me.position.copy(v3((x0+x1)/2,(y0+y1)/2,(z0+z1)/2));me.name=n;return me}
+function drawTV(state,t){const c=tvCtx,W=256,H=144;
+ if(state==="off"){c.fillStyle="#050607";c.fillRect(0,0,W,H);c.fillStyle="#ffffff10";c.fillRect(20,10,60,8);}
+ else if(state==="static"){const id=c.createImageData(W,H);for(let i=0;i<id.data.length;i+=4){const v=Math.random()*255|0;id.data[i]=id.data[i+1]=id.data[i+2]=v;id.data[i+3]=255}c.putImageData(id,0,0)}
+ else{const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,"#2a1206");g.addColorStop(1,"#c27a35");c.fillStyle=g;c.fillRect(0,0,W,H);
+  c.fillStyle="#efe0c4";c.beginPath();c.ellipse(W*.5,H*.62,34,22,0,0,7);c.fill();c.fillStyle="#5a2e10";c.beginPath();c.ellipse(W*.5,H*.6,24,14,0,0,7);c.fill();
+  for(let k=0;k<5;k++){const x=W*.5+Math.sin(t*.7+k*1.7)*14,y=H*.42-((t*12+k*18)%60);c.fillStyle=`rgba(255,240,220,${.10+.05*Math.sin(t+k)})`;c.beginPath();c.ellipse(x,y,10+k*2,6,0,0,7);c.fill()}
+  c.fillStyle="#0000001c";for(let y=0;y<H;y+=3)c.fillRect(0,y,W,1);}
+ tvTex.needsUpdate=true}
+function build(){
+ const bx=currentBoxes();runChecks(bx);drawPlan(bx);
+ if(!renderer)return;
+ if(group)scene.remove(group);group=new THREE.Group();ceilA=[];lampLights=[];
+ cutW=[];for(const b of bx){const me=boxMesh(b);group.add(me);if(b[0].startsWith("Ceiling"))ceilA.push(me);if(/^(Wall_Right|Wall_Bottom|Door_Exit|Partition_DoorHeader)/.test(b[0]))cutW.push(me)}
+ // B ceiling (first-person only)
+ ceilB=new THREE.Mesh(new THREE.BoxGeometry(3,.05,2.2),mat("Ceiling"));ceilB.position.copy(v3(150,190,244));group.add(ceilB);
+ // door pivot (closed: along x 190~270 at y 80)
+ doorPivot=new THREE.Group();doorPivot.position.copy(v3(268,82,0));const leaf=new THREE.Mesh(new THREE.BoxGeometry(.8,2.1,.04),mat("Door"));leaf.position.set(-.4,1.05,0);doorPivot.add(leaf);
+ const knob=new THREE.Mesh(new THREE.SphereGeometry(.03),mat("Steel"));knob.position.set(-.72,1.0,-.04);doorPivot.add(knob);group.add(doorPivot);
+ // screen
+ const sw=st.screen==="crt"?52:160,sh=sw*9/16,sx=st.screen==="crt"?53.7:6.6,sz=st.screen==="crt"?78:122;
+ const pl=new THREE.Mesh(new THREE.PlaneGeometry(sw/100,sh/100),tvMat);pl.rotation.y=Math.PI/2;pl.position.copy(v3(sx,195,sz));group.add(pl);
+ if(st.screen==="pj"){const fr=new THREE.Mesh(new THREE.BoxGeometry(.01,(sh+6)/100,(sw+6)/100),mat("Device"));fr.position.copy(v3(5.6,195,sz));group.add(fr)}
+ // path line
+ const pg=new THREE.BufferGeometry().setFromPoints(PATH.map(p=>v3(p[0],p[1],3)));const ln=new THREE.Line(pg,new THREE.LineDashedMaterial({color:0x4d8dff,dashSize:.07,gapSize:.05}));ln.computeLineDistances();ln.name="pathline";group.add(ln);
+ // lamp lights
+ if(st.on.has("lamp")){const rec=st.seat==="recliner";const L=new THREE.PointLight(kelvin(2400),0,3.2,2);L.position.copy(rec?v3(274,272,128):v3(41,99,160));group.add(L);lampLights.push(L)}
+ scene.add(group);applyState();setView(st.view,true);
+}
+function applyState(){
+ if(!renderer)return;
+ doorPivot.rotation.y=st.door*Math.PI/2;
+ lightsB.forEach(l=>l.intensity=l.userData.base*st.bl);lampLights.forEach(l=>l.intensity=1.1*st.bl);if(hemi)hemi.intensity=.03+.13*st.bl;
+}
+function initGL(){
+ const el=document.getElementById("view");
+ try{renderer=new THREE.WebGLRenderer({antialias:true});}catch(e){renderer=null}
+ if(!renderer||typeof THREE==="undefined"){document.getElementById("nogl").style.display="grid";return}
+ renderer.setPixelRatio(Math.min(2,window.devicePixelRatio));renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=0.8;
+ el.appendChild(renderer.domElement);scene=new THREE.Scene();scene.background=new THREE.Color(0x111214);
+ camera=new THREE.PerspectiveCamera(45,16/10,.05,60);
+ camera.position.copy(v3(470,430,520));controls=new THREE.OrbitControls(camera,renderer.domElement);controls.target.copy(v3(150,150,60));controls.enableDamping=true;
+ hemi=new THREE.HemisphereLight(0xdfe6ff,0x2a1a10,.16);scene.add(hemi);
+ const A=S.Opt5A.lights;for(const [n,x,y,z,k,i] of A){const L=new THREE.PointLight(kelvin(k),0,n.includes("TV")?2.2:n.includes("A_Cold")?2.0:4,2);L.position.copy(v3(x,y,z));L.userData.base=(n.includes("A_Cold")?0.9:n.includes("TV")?.5:0.75)*i;if(n.includes("A_Cold")){L.intensity=L.userData.base;lightsA.push(L)}else lightsB.push(L);scene.add(L)}
+ const fillB=new THREE.PointLight(kelvin(2700),0,5,2);fillB.position.copy(v3(150,190,200));fillB.userData.base=0.45;lightsB.push(fillB);scene.add(fillB);
+ tvCanvas=document.createElement("canvas");tvCanvas.width=256;tvCanvas.height=144;tvCtx=tvCanvas.getContext("2d");tvTex=new THREE.CanvasTexture(tvCanvas);tvTex.encoding=THREE.sRGBEncoding;
+ tvMat=new THREE.MeshBasicMaterial({map:tvTex,toneMapped:false});
+ const rs=()=>{const w=el.clientWidth,h=el.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()};window.addEventListener("resize",rs);rs();
+ build();loop();
+}
+const VIEWS=[["orbit","3D 둘러보기"],["TopView","위에서"],["A_Subway","지하철 칸"],["B_Door","문에서 본 집"],["B_OverSofa","소파 뒤에서"],["CCTV","CCTV 시점"],["walk","▶ 워크스루 재생"],["door","▶ 문 여는 순간"]];
+function camLook(x,y,z,yaw,pitch,fovFocal){camera.position.copy(v3(x,y,z));const yr=yaw*Math.PI/180,pr=pitch*Math.PI/180;const d=new THREE.Vector3(Math.cos(yr)*Math.cos(pr),Math.sin(pr),Math.sin(yr)*Math.cos(pr));camera.lookAt(camera.position.clone().add(d));if(fovFocal){camera.fov=2*Math.atan(12.0/fovFocal)*180/Math.PI;camera.updateProjectionMatrix()}}
+function showCeil(fp){ceilA.forEach(m=>m.visible=fp);cutW.forEach(m=>m.visible=fp);if(ceilB)ceilB.visible=fp;const pl=group&&group.getObjectByName("pathline");if(pl)pl.visible=!fp}
+function setView(v,keep){
+ if(!renderer)return;
+ if(v==="walk"){walk={t:0,start:performance.now()};st.door=0;st.bl=.12;st.tv="off";applyState();st.view="walk";hl();return}
+ if(v==="door"){st.view="B_DoorOut";st.door=0;st.bl=.12;st.tv="off";applyState();doorAnim={start:performance.now()};hl();}
+ if(v!=="door")st.view=v;walk=null;
+ if(st.view==="orbit"){controls.enabled=true;camera.fov=45;camera.updateProjectionMatrix();if(!keep){camera.position.copy(v3(470,430,520));controls.target.copy(v3(150,150,60))}showCeil(false);hud("3D 둘러보기 · 드래그해서 돌리기, 휠로 확대")}
+ else{controls.enabled=false;
+  if(st.view==="B_DoorOut"){camLook(230,52,160,90,-10,13);showCeil(true);hud("문 여는 순간 · 문이 열리면 TV가 켜지고 조명이 들어옴")}
+  else{const c=S.Opt5A.cams.find(c=>c[0]==="Cam_"+st.view);if(st.view==="TopView"){camera.position.copy(v3(150,150,720));camera.up.set(0,0,-1);camera.lookAt(v3(150,150,0));camera.up.set(0,1,0);camera.fov=40;camera.updateProjectionMatrix();showCeil(false);hud("위에서")}
+  else{camLook(c[1],c[2],c[3],c[5],c[4],c[6]);showCeil(true);hud({A_Subway:"지하철 칸 입구",B_Door:"문에서 본 집",B_OverSofa:"소파 뒤에서 (브라운관 쪽)",CCTV:"천장 CCTV 시점"}[st.view])}}}
+ hl();
+}
+function hud(t){document.getElementById("hud").textContent=t}
+function hl(){document.querySelectorAll("#views button").forEach(b=>b.classList.toggle("on",b.dataset.v===st.view||(b.dataset.v==="door"&&st.view==="B_DoorOut")))}
+function interp(t){let i=0;while(i<KEYS.length-2&&KEYS[i+1][0]<t)i++;const a=KEYS[i],b=KEYS[i+1],f=Math.min(1,Math.max(0,(t-a[0])/(b[0]-a[0])));let dy=b[4]-a[4];const L=(p,q)=>p+(q-p)*f;return[L(a[1],b[1]),L(a[2],b[2]),L(a[3],b[3]),a[4]+dy*f,L(a[5],b[5])]}
+function loop(){requestAnimationFrame(loop);const now=performance.now(),T=(now-t0)/1000;
+ if(walk){const t=(now-walk.start)/1000;if(t>30.5){walk=null;st.door=1;st.bl=1;st.tv="on";applyState();setView("orbit");}else{const p=interp(t);camLook(p[0],p[1],p[2],p[3],p[4],14);showCeil(true);
+   if(t>11.5){st.door=Math.min(1,(t-11.5)/1.2);if(t>12.2&&st.tv==="off")st.tv="static";if(t>13.2)st.tv="on";st.bl=Math.min(1,.12+(t-11.8)*.6);applyState()}
+   document.getElementById("hud2").textContent=`워크스루 ${t.toFixed(1)} / 30.5초`;}}
+ else document.getElementById("hud2").textContent="";
+ if(doorAnim){const t=(now-doorAnim.start)/1000;if(t>.8){st.door=Math.min(1,(t-.8)/1.3);applyState()}if(t>1.3&&t<2.1)st.tv="static";if(t>=2.1)st.tv="on";if(t>1.6){st.bl=Math.min(1,.12+(t-1.6)*.7);applyState()}if(t>4)doorAnim=null}
+ drawTV(st.tv,T);if(controls.enabled)controls.update();renderer.render(scene,camera)}
+// ---------- UI ----------
+function ui(){
+ const pv=document.getElementById("presets");for(const [k,p] of Object.entries(PRESETS)){const b=document.createElement("button");b.innerHTML=`${p.name}<small>${p.sub}</small>`;b.dataset.k=k;b.onclick=()=>{st.preset=k;st.seat=p.seat;st.on=new Set(p.on);sync();build();if(window.gal){gP=k;gal()}};pv.appendChild(b)}
+ const tg=document.getElementById("toggles");for(const [k,l] of TOG){const lab=document.createElement("label");lab.innerHTML=`<input type="checkbox" data-k="${k}"> ${l}`;lab.querySelector("input").onchange=e=>{e.target.checked?st.on.add(k):st.on.delete(k);st.preset=null;sync();build()};tg.appendChild(lab)}
+ const vw=document.getElementById("views");for(const [k,l] of VIEWS){const b=document.createElement("button");b.textContent=l;b.dataset.v=k;if(k==="walk"||k==="door")b.classList.add("act");b.onclick=()=>setView(k);vw.appendChild(b)}
+ const seg=(a,b,key,va,vb)=>{document.getElementById(a).onclick=()=>{st[key]=va;st.preset=null;sync();build()};document.getElementById(b).onclick=()=>{st[key]=vb;st.preset=null;sync();build()}};
+ seg("scrCRT","scrPJ","screen","crt","pj");seg("seatSofa","seatRec","seat","sofa","recliner");
+ const pc=document.getElementById("pcards");for(const [k,p] of Object.entries(PRESETS)){const d=document.createElement("div");d.className="pcard";d.innerHTML=`<h3>${p.name}<button data-k="${k}">3D로 보기</button></h3><div style="color:var(--mute);font-size:13px">${p.sub}</div><dl><dt>머물게 함</dt><dd>${p.stay}</dd><dt>나가게 함</dt><dd>${p.leave}</dd></dl>`;d.querySelector("button").onclick=()=>{document.querySelector(`#presets button[data-k=${k}]`).click();document.getElementById("view").scrollIntoView({behavior:"smooth"})};pc.appendChild(d)}
+ sync();
+}
+function sync(){
+ document.querySelectorAll("#presets button").forEach(b=>b.classList.toggle("on",b.dataset.k===st.preset));
+ document.querySelectorAll("#toggles input").forEach(i=>{i.checked=st.on.has(i.dataset.k);const dis=i.dataset.k==="sidetable"&&st.seat!=="recliner";i.disabled=dis;i.parentElement.classList.toggle("dis",dis)});
+ document.getElementById("scrCRT").classList.toggle("on",st.screen==="crt");document.getElementById("scrPJ").classList.toggle("on",st.screen==="pj");
+ document.getElementById("seatSofa").classList.toggle("on",st.seat==="sofa");document.getElementById("seatRec").classList.toggle("on",st.seat==="recliner");
+}
+ui();
+const GV={Opt5A:"6_안5A_기본",Opt5B:"7_안5B_거실",Opt5C:"8_안5C_1인자리",Opt5D:"9_안5D_생활감"};
+const GC=[["TopView","위에서"],["A_Subway","지하철 칸"],["B_Door","문에서 본 집"],["B_OverSofa","소파 뒤"],["CCTV","CCTV"]];
+let gP="Opt5A",gC="B_OverSofa";
+function gal(){document.getElementById("galMain").src=`../assets/layout_${gP}_${gC}.jpg`;
+ const T=document.getElementById("galT");T.innerHTML="";for(const [k,l] of GC){const im=document.createElement("img");im.src=`../assets/layout_${gP}_${k}.jpg`;im.alt=l;im.title=l;if(k===gC)im.className="on";im.onclick=()=>{gC=k;gal()};T.appendChild(im)}
+ const v=document.getElementById("galV"),src=`../assets/walk_${gP}.mp4`;if(!v.src.endsWith(src.split("/").pop()))v.src=src;
+ document.getElementById("galCap").textContent=`${PRESETS[gP].name} 워크스루 30.5초 · 지하철 칸 → 문 → 소파에서 브라운관 → 출구`;
+ document.querySelectorAll("#galP button").forEach(b=>b.classList.toggle("on",b.dataset.k===gP))}
+const gp=document.getElementById("galP");for(const [k,p] of Object.entries(PRESETS)){const b=document.createElement("button");b.textContent=p.name;b.dataset.k=k;b.onclick=()=>{gP=k;gal()};gp.appendChild(b)}
+gal();
+if(typeof THREE!=="undefined"){initGL()}else{document.getElementById("nogl").style.display="grid";build()}
+</script></body></html>

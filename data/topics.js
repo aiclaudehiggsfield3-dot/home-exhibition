@@ -3,12 +3,14 @@
 window.PROJECT = {
   title: "home — 인터랙티브 전시 제작 기록",
   subtitle: "AI 기반 영상 제작 워크샵 기말 프로젝트 · Unreal Engine 5.4 · 3m × 3m 체험 전시",
-  status: "5가지 배치 모두 렌더 완료 · 최종안 결정 대기",
-  updated: "2026-11-14 02:00",
+  status: "안 5(지하철 → 집) 렌더·워크스루 완료 · 인터랙션 설계 · 가구 구성 결정 대기",
+  updated: "2026-11-15 14:00",
   next: [
-    "A(사회) 영상을 실제 파일로 교체 (Content/Movies/A_society.mp4)",
-    "5가지 배치 중 최종안 결정 (비교 시트·동시 비교 영상 참고)",
-    "인터랙션 ① 문 센서 → 장면 전환 (키보드로 먼저, 이후 아두이노)"
+    "안 5 가구 구성 고르기 (A 기본 · B 거실 · C 1인 자리 · D 생활감, 섞어도 됨)",
+    "B 영상 표시 방식 결정: 브라운관 TV / 프로젝터",
+    "인터랙션 ① 문 → TV·조명 켜기 (Unreal 키 입력부터)",
+    "천장 CCTV 인식: 노트북 웹캠 + Python으로 '앉음'부터",
+    "사회(지하철 칸) 소리와 집 소리 4단계 준비"
   ]
 };
 
@@ -141,7 +143,37 @@ window.TOPICS = [
     ]
   },
   {
-    id: "media", num: "05", title: "벽면 영상(프로젝션) 설정",
+    id: "subway-home", num: "05", title: "안 5 · 지하철에서 집으로",
+    summary: "사회를 폭 80 지하철 칸으로 줄이고 집을 넓힘 · 브라운관 TV · 가구 구성 4가지",
+    blocks: [
+      { type: "p", text: "사회(A)는 폭 80cm의 좁은 지하철 칸으로 줄이고, 영상 없이 공간 디자인만으로 표현했다. 손잡이와 봉, 글자 없는 광고 라이트박스, 초록 노선 LED, 차가운 형광등, 낮은 천장(215), 벽에 붙인 사람 실루엣 판으로 '꽉 찬 지하철'을 만든다. 그만큼 집(B)은 300×220으로 넓어졌다." },
+      { type: "list", items: [
+        "B 영상은 프로젝터 대신 왼쪽 벽 TV장 위 작은 브라운관 TV로 보여 준다 (소파에서 191cm). 프로젝터 안은 3D 미리보기에서 바꿔 볼 수 있다.",
+        "사회→집 문은 집 쪽으로 열리고(경첩 오른쪽), 도어클로저로 저절로 닫힌다. 문이 열리는 범위에는 가구를 두지 않는다.",
+        "천장 CCTV(가벽 위 돔 카메라)에서 소파·담요·리모컨·TV·출구가 한 화면에 들어온다. 인터랙션에 쓴다.",
+        "가구는 있어도 되고 없어도 되도록 4가지 구성으로 남겼다. 모든 구성에서 소파 위 담요와 리모컨은 기본으로 둔다.",
+        "문 앞 동선이 꺾이는 곳의 손잡이는 키 큰 사람 머리에 닿지 않게 뺐다."
+      ]},
+      { type: "media", items: [{ type: "image", src: "assets/2026-11-15_opt5_compare.jpg", caption: "안 5 가구 구성 4가지 × 카메라 5대 (Unreal)" }] },
+      { type: "links", items: [{ label: "3D 미리보기 · 가구 켜고 끄기 · 브라운관/프로젝터 전환 (HTML)", href: "reports/home_v5_design.html" }] },
+      { type: "table", head: ["구성", "가구", "머물게 하는 것", "나가게 하는 것"], rows: [
+        ["A 기본", "러브시트, 담요, 리모컨", "TV와 소파, 담요만 남은 단순한 집", "방이 비어 출구가 늘 보임"],
+        ["B 거실", "+ 러그, 스탠드, 화분, 선반", "스탠드 불빛과 TV — 누구나 아는 거실", "가구가 가벽 쪽에 몰려 출구 쪽은 비어 있음"],
+        ["C 1인 자리", "리클라이너, 사이드 테이블, 스탠드, 선반", "손 닿는 곳에 다 있는 '나만의 자리'", "자리가 하나라 다음 사람에게 비켜 줘야 함"],
+        ["D 생활감", "+ 택배 상자, 빨래 바구니, 옷 행거, 슬리퍼", "어수선하지만 내 물건으로 찬 집", "문 앞 슬리퍼 ↔ 깨끗한 출구"]
+      ]},
+      { type: "media", items: [
+        { type: "image", src: "assets/layout_Opt5A_A_Subway.jpg", caption: "지하철 칸 입구 (모든 구성 같음)" },
+        { type: "image", src: "assets/layout_Opt5B_B_OverSofa.jpg", caption: "B 거실 · 소파 뒤에서 본 브라운관" },
+        { type: "image", src: "assets/layout_Opt5C_B_Door.jpg", caption: "C 1인 자리 · 문에서 본 집" },
+        { type: "image", src: "assets/layout_Opt5D_TopView.jpg", caption: "D 생활감 · 위에서" }
+      ]},
+      { type: "note", text: "자동 검사: 모든 구성에서 가구가 관객 동선에서 40cm 이상 떨어져 있고, 문이 열리는 범위에 걸리지 않으며, 소파에서 브라운관을 가리지 않는다. 렌더 스크립트(shots5.py)가 같은 카메라를 여러 번 찍던 문제는 카메라 번호를 먼저 올리도록 고쳤다." },
+      { type: "links", items: [{ label: "build_layouts.py (안 5: subway_home)", href: "scripts/build_layouts.py" }, { label: "shots5.py (레벨별 렌더 5장)", href: "scripts/shots5.py" }] }
+    ]
+  },
+  {
+    id: "media", num: "06", title: "벽면 영상(프로젝션) 설정",
     summary: "Media Plate로 벽에 영상 재생 · 파일만 바꾸면 교체",
     blocks: [
       { type: "p", text: "벽면 화면은 Unreal의 Media Plate로 만들었다. Play를 누르면 자동으로 재생되고 끝나면 반복된다. 네 레벨이 같은 영상 파일을 함께 쓴다." },
@@ -162,7 +194,7 @@ window.TOPICS = [
     ]
   },
   {
-    id: "walkthrough", num: "06", title: "관객 시점 워크스루 영상",
+    id: "walkthrough", num: "07", title: "관객 시점 워크스루 영상",
     summary: "배치별 입구 → A → 문 → 소파 → 출구 30초 영상 5종",
     blocks: [
       { type: "p", text: "다섯 배치 모두 같은 동선으로 관객 시점 영상을 렌더했다. 입구로 들어와 A 복도에서 사회 영상을 보고, 문을 지나 B로 들어가 소파에 앉아 약 6초간 영상을 본 뒤 출구로 나간다." },
@@ -176,32 +208,55 @@ window.TOPICS = [
         { type: "video", src: "assets/walk_Opt4.mp4", caption: "안 4. 안 3 수정" }
       ]},
       { type: "note", text: "소파 장면을 보면 기존 계획은 화면이 시야를 꽉 채우고, 안 3은 거실 TV처럼 한눈에 들어온다. 렌더 중 화면 하나가 검게 나오던 문제는 영상 재생을 시퀀스 시간에 맞추는 방식으로 해결했다. 안 4는 소파에서 왼쪽 벽 화면을 정면으로 보며, A 복도 끝(8~10초)에서는 잠깐 막힌 벽을 보고 문 쪽으로 돌아선다." },
+      { type: "h", text: "안 5 · 지하철에서 집으로 (11/15)" },
+      { type: "p", text: "지하철 칸을 지나 문을 밀고 집으로 들어가, 소파에서 브라운관을 보다가 출구로 나간다. 지하철 칸 끝에서 막힌 벽만 보이지 않도록 문 쪽으로 미리 고개를 돌리게 카메라 방향을 고쳤다." },
+      { type: "media", items: [{ type: "video", src: "assets/2026-11-15_opt5_walk_compare.mp4", caption: "안 5 가구 구성 4가지 동시 비교" }] },
+      { type: "media", items: [
+        { type: "video", src: "assets/walk_Opt5A.mp4", caption: "안 5 A 기본" },
+        { type: "video", src: "assets/walk_Opt5B.mp4", caption: "안 5 B 거실" },
+        { type: "video", src: "assets/walk_Opt5C.mp4", caption: "안 5 C 1인 자리" },
+        { type: "video", src: "assets/walk_Opt5D.mp4", caption: "안 5 D 생활감" }
+      ]},
       { type: "links", items: [{ label: "make_walkthrough.py", href: "scripts/make_walkthrough.py" }] }
     ]
   },
   {
-    id: "interaction", num: "07", title: "인터랙션 계획",
-    summary: "문 센서 → 소파 착석 → 체류 시간 비교 순으로 구현 예정",
+    id: "interaction", num: "08", title: "인터랙션 설계",
+    summary: "문 → TV·조명 · 천장 CCTV 인식 → 불편한 소리 · 퇴장 QR 결과 페이지",
     blocks: [
-      { type: "p", text: "팀원 모두 처음 하는 기준으로, 앞 단계가 다음 단계의 기초가 되게 순서를 정했다. 아두이노 Leonardo/Pro Micro를 키보드처럼 인식시키면, Unreal에서는 키 입력만 받으면 되고 시연 때 실물 없이도 키보드로 같은 동작을 보여 줄 수 있다." },
-      { type: "table", head: ["순서", "인터랙션", "방법", "상태"], rows: [
-        ["①", "문을 열면 장면 전환 (A 소리 줄고 B 영상 시작)", "문틀 자석 센서 → 아두이노 → 키 입력", "예정"],
-        ["②", "소파에 앉으면 조명이 따뜻해지고, 일어나면 영상이 멈춤", "방석 밑 압력 센서/버튼", "예정"],
-        ["③", "나갈 때 다른 관객 대비 체류 시간 표시", "SaveGame으로 기록 누적 + 화면 UI", "예정"],
-        ["④", "리모컨 버튼으로 B 영상 장면 바꾸기", "버튼 추가 + B 영상 2~3개", "여유 시"],
-        ["⑤", "움직임 분석 (가만히 있을수록 아늑해짐)", "웹캠 + MediaPipe → OSC", "여유 시"]
+      { type: "p", text: "집은 관객을 반겨 주지만, 편안함에 몸을 맡길수록 조금씩 불편해진다. 천장 CCTV가 관객이 앉고, 담요를 옮기고, 리모컨을 만지는 것을 알아채 소리를 바꾸고, 나갈 때는 QR 코드로 자신이 이 집에서 어떻게 머물렀는지를 돌려받는다." },
+      { type: "table", head: ["#", "트리거", "감지", "반응"], rows: [
+        ["1", "문을 엶", "문틀 자석 센서 → 아두이노", "브라운관 지지직 → 집 영상, 2700K 조명 켜짐, 문이 닫히면 지하철 소리 끊김"],
+        ["2", "편하게 앉음", "CCTV: 소파 영역 3초 + 등받이로 기댐", "편안한 소리에서 시작해 단계가 오름"],
+        ["3", "담요를 옮김", "CCTV: 처음 사진과 담요 영역 비교", "낮은 웅웅거림이 깔림"],
+        ["4", "리모컨을 만짐", "CCTV: 손이 리모컨 영역에 1초 (+ 기울기 센서)", "채널 소리가 일그러지고 같은 영상으로 돌아옴"],
+        ["5", "오래, 편하게 머묾", "머문 시간 + 2·3·4 누적", "소리 4단계: 편안 → 미세함 → 이상함 → 불편"],
+        ["6", "출구로 나감", "출구 문 센서 + CCTV 출구 영역", "QR → 타임랩스, 만진 물건, 다른 관객 평균 대비 머문 시간"]
+      ]},
+      { type: "media", items: [{ type: "image", src: "assets/layout_Opt5A_CCTV.jpg", caption: "Unreal 안 5A 천장 CCTV 시점 — 소파·담요·리모컨·TV·출구가 한 화면에" }] },
+      { type: "links", items: [
+        { label: "인터랙션 설계 전체 (HTML)", href: "reports/home_interaction.html" },
+        { label: "QR 결과 페이지 견본 (예시 데이터)", href: "reports/result_sample.html" }
+      ]},
+      { type: "note", text: "개인정보: 입구에서 촬영을 알리고, 얼굴 없이 위에서 본 움직임만 기록하며, 결과 페이지는 24시간 뒤 삭제한다. 공개 저장소에는 관객 기록을 올리지 않고 예시 데이터만 둔다. 소리는 75dB 이하, 출구는 잠그지 않는다." },
+      { type: "h", text: "시연 (실물 전시 없이)" },
+      { type: "list", items: [
+        "Unreal 워크스루 영상으로 공간과 '문 열면 TV·조명' 장면을 보여 줌",
+        "Unreal에서 1~6 키로 문·앉기·담요·리모컨·소리 단계·퇴장을 차례로 실행",
+        "노트북 웹캠으로 앉기 또는 리모컨 만지기 하나를 실제로 인식시킴",
+        "마지막에 QR을 띄워 심사위원 휴대폰으로 결과 페이지를 열게 함"
       ]}
     ]
   },
   {
-    id: "setup", num: "08", title: "작업 환경 · 실행 방법",
+    id: "setup", num: "09", title: "작업 환경 · 실행 방법",
     summary: "프로젝트 위치, 스크립트 실행, 자주 쓰는 명령",
     blocks: [
       { type: "table", head: ["항목", "위치·방법"], rows: [
         ["프로젝트 폴더", "문서/Unreal Projects/AICLASS_prototype1"],
         ["레벨", "콘텐츠 드로어 → Exhibition → Maps (시작 맵: L_Current)"],
         ["영상 파일", "Content/Movies"],
-        ["스크립트", "Scripts/build_layouts.py, make_walkthrough.py, rebuild_one.py, walk_one.py, go.py"],
+        ["스크립트", "Scripts/build_layouts.py, make_walkthrough.py, rebuild_one.py, walk_one.py, go.py, shots5.py"],
         ["워크스루 영상", "워크스루_영상 폴더"],
         ["진행 기록 저장소", "home-exhibition 폴더 (GitHub Desktop)"]
       ]},
@@ -211,6 +266,7 @@ window.TOPICS = [
         "공간 다시 짓기: build_layouts.py (EX_로 시작하는 물체를 지우고 새로 지음)",
         "워크스루 다시 찍기: make_walkthrough.py (다섯 배치 약 4분)",
         "레벨 하나만: Saved/one.txt에 Opt4처럼 적고 rebuild_one.py(다시 짓기) 또는 walk_one.py(워크스루)",
+        "안 5 렌더 사진: Saved/shots.txt에 Opt5A,Opt5B,Opt5C,Opt5D를 적고 shots5.py를 실행할 때마다 한 레벨씩 카메라 5대 (약 40초)",
         "부감샷 시점 바꾸기: build_layouts.py의 OVERHEAD_EYE 값 수정 후 다시 실행"
       ]}
     ]
@@ -218,6 +274,7 @@ window.TOPICS = [
 ];
 
 window.LOG = [
+  { date: "2026-11-15", time: "14:00", text: "안 5(지하철 칸 → 넓은 집, 브라운관 TV, 가구 4구성) Unreal 렌더 20장·워크스루 4개 완료, 3D 미리보기·인터랙션 설계·QR 결과 견본 페이지 추가" },
   { date: "2026-11-14", time: "02:00", text: "안 4 Unreal 레벨 생성·렌더 4장·워크스루 영상 완료, 5개 배치 비교 시트·동시 비교 영상 갱신" },
   { date: "2026-11-13", time: "22:20", text: "안 4(안 3 수정) 설계: 스케치 기반 배치도·스크립트 추가, 렌더는 맥 연결 복구 후 진행" },
   { date: "2026-11-13", time: "21:55", text: "진행 기록 페이지를 주제별 구성으로 바꾸고 워크스루 영상 5종 전체 업로드" },

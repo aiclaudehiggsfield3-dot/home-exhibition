@@ -11,6 +11,8 @@
   L_Opt2    : 안 2. 가벽 이동 (A 90 / B 210)
   L_Opt3    : 안 3. 가로로 나누기 (A 300x100 / B 300x200)
   L_Opt4    : 안 4. 안 3 수정 (B 영상 왼쪽 벽, 소파 오른쪽, 출구 아래쪽 벽 왼쪽)
+  L_Opt5A~D : 안 5. A 폭 80 지하철 칸(영상 없음) + B 300x220 집, 브라운관 TV, 문은 집 쪽으로 열림
+              A 기본(가구 없음) / B 거실 / C 1인 자리 / D 생활감
 
 영상
   Content/Movies/A_society.mp4 → 모든 레벨의 A(사회) 화면
@@ -26,8 +28,8 @@ import unreal
 # =====================================================================
 # 1. 공통 설정
 # =====================================================================
-BUILD = ["Current", "Opt1", "Opt2", "Opt3", "Opt4"]   # 만들 레벨. 하나만 다시 지으려면 ["Opt3"]처럼
-OPEN_AFTER = "Current"                          # 다 지은 뒤 열어 둘 레벨
+BUILD = ["Opt5A", "Opt5B", "Opt5C", "Opt5D"]   # 만들 레벨. 하나만 다시 지으려면 ["Opt3"]처럼
+OPEN_AFTER = "Opt5A"                          # 다 지은 뒤 열어 둘 레벨
 
 ROOM, T, H, F = 300, 10, 240, 2     # 공간 한 변, 벽 두께, 벽 높이, 바닥 윗면 높이
 DW, DH = 80, 210                    # 문 폭, 문 높이
@@ -47,6 +49,21 @@ COLORS = {
     "Ground": (0.05, 0.05, 0.05), "Ceiling": (0.80, 0.80, 0.78),
     "Door": (0.55, 0.35, 0.22), "Sofa": (0.65, 0.28, 0.14),
     "Rug": (0.90, 0.82, 0.68), "Device": (0.08, 0.08, 0.08),
+    # 안 5 (지하철 + 브라운관)
+    "S_Wall": (0.74, 0.76, 0.77), "S_Floor": (0.25, 0.28, 0.31), "S_Ceiling": (0.82, 0.83, 0.84),
+    "Steel": (0.60, 0.62, 0.64), "Glass_Dark": (0.015, 0.02, 0.025), "Strap": (0.80, 0.78, 0.70),
+    "Silhouette": (0.03, 0.03, 0.035), "CRT_Body": (0.50, 0.48, 0.43), "Wood": (0.36, 0.22, 0.12),
+    "Blanket": (0.10, 0.42, 0.40), "Remote": (0.02, 0.02, 0.02), "Plant": (0.16, 0.33, 0.14),
+    "Box": (0.60, 0.46, 0.28), "Basket": (0.72, 0.69, 0.62),
+}
+# 스스로 빛나는 재질: (색, 세기)
+EMISSIVE = {
+    "Emit_Cold": ((0.90, 0.95, 1.00), 2.0),      # 지하철 형광등 띠
+    "Emit_Ad1b": ((0.90, 0.42, 0.30), 0.35),       # 광고 라이트박스 (글자 없는 색면)
+    "Emit_Ad2b": ((0.30, 0.58, 0.90), 0.35),
+    "Emit_Ad3b": ((0.95, 0.85, 0.40), 0.35),
+    "Emit_LED": ((0.20, 1.00, 0.45), 1.2),       # 노선 안내 LED
+    "Emit_LampShade": ((1.00, 0.72, 0.40), 2.5), # 스탠드 갓
 }
 
 # =====================================================================
@@ -206,12 +223,127 @@ def horizontal_split_v2():
     return dict(boxes=boxes, screens=screens, lights=lights, cams=cams, start=start)
 
 
+# ---------------------------------------------------------------------
+# 안 5 (2026-11-14): A = 폭 80 지하철 칸(영상 없음, 시각 디자인) / B = 300x220 집, 브라운관 TV
+#   사회→집 문은 집 쪽으로 열림(경첩 오른쪽, 도어클로저) / 가구 변형 4종
+# ---------------------------------------------------------------------
+# 공통 + 변형 4종. (이름, x0,x1,y0,y1,z0,z1, 재질키, 종류)  종류: struct/seat/prop/flat/a
+def sofa(x0,x1,y0,y1,seat=45,back=85,arm=65,bd=18,aw=15,mat="Sofa",tag="Sofa"):
+    return [(tag+"_Seat",x0,x1,y0,y1,0,seat,mat,"seat"),(tag+"_Back",x1-bd,x1,y0,y1,seat,back,mat,"seat"),
+            (tag+"_Arm_1",x0,x1,y0,y0+aw,seat,arm,mat,"seat"),(tag+"_Arm_2",x0,x1,y1-aw,y1,seat,arm,mat,"seat")]
+def subway():
+    o=[]
+    # 차량 옆면(위쪽 벽 안쪽 y=5): 출입문 2쌍(스테인리스) + 창문(어두운 유리) + 광고틀 + 노선 LED
+    for i,(a,b) in enumerate([(100,160),(220,280)]):
+        o+= [(f"Sub_Door_{i}",a,b,5,7,0,200,"Steel","a"),(f"Sub_DoorWin_{i}",a+8,b-8,7,7.6,110,180,"Glass_Dark","a"),
+             (f"Sub_LED_{i}",a+5,b-5,5,8,203,209,"Emit_LED","a")]
+    for i,(a,b) in enumerate([(12,92),(168,212)]):
+        o+= [(f"Sub_Window_{i}",a,b,5,6.5,95,175,"Glass_Dark","a"),(f"Sub_Ad_Top_{i}",a,b,5,7,182,207,["Emit_Ad1b","Emit_Ad3b"][i],"a")]
+    # 가벽 쪽(A면 y=75): 광고 라이트박스 + 노선도 띠
+    for i,(a,b,m) in enumerate([(20,80,"Emit_Ad2b"),(95,155,"Emit_Ad1b"),(205,250,"Emit_Ad3b")]):
+        if b<=190 or a>=270: o.append((f"Sub_Ad_Wall_{i}",a,b,72,75,120,185,m,"a"))
+    o.append(("Sub_RouteMap",20,180,73,75,192,206,"Emit_LED","a"))
+    # 손잡이 봉 2줄 + 손잡이(30cm 간격)
+    for j,y in enumerate([22,58]):
+        o.append((f"Sub_Rail_{j}",8,292,y-1.5,y+1.5,204,207,"Steel","a"))
+        for k,x in enumerate(range(25,290,30)):
+            if 200 <= x <= 260: continue      # 문 앞(동선이 꺾이는 곳)은 손잡이 없음
+            o.append((f"Sub_Strap_{j}_{k}",x-1,x+1,y-1,y+1,192,204,"Strap","a"))
+            o.append((f"Sub_StrapRing_{j}_{k}",x-4,x+4,y-1,y+1,184,192,"Strap","a"))
+    # 세로 기둥 (벽에 붙여)
+    for k,x in enumerate([60,190]): o.append((f"Sub_Pole_{k}",x-2,x+2,7,11,0,215,"Steel","a"))
+    # 사람 실루엣 판 (검은 판, 두께 3)
+    for k,(x,y0,y1,h) in enumerate([(40,6,9,172),(150,6,9,165),(85,71,74,178),(250,6,9,168)]):
+        leg=h*0.47; sh=h*0.83
+        o.append((f"Sub_Person_LegL_{k}",x-13,x-2,y0,y1,0,leg,"Silhouette","a"))
+        o.append((f"Sub_Person_LegR_{k}",x+2,x+13,y0,y1,0,leg,"Silhouette","a"))
+        o.append((f"Sub_Person_Body_{k}",x-17,x+17,y0,y1,leg,sh,"Silhouette","a"))
+        o.append((f"Sub_Person_ArmL_{k}",x-23,x-18,y0,y1,leg+8,sh-4,"Silhouette","a"))
+        o.append((f"Sub_Person_ArmR_{k}",x+18,x+23,y0,y1,leg+8,sh-4,"Silhouette","a"))
+        o.append((f"Sub_Person_Neck_{k}",x-4,x+4,y0,y1,sh,sh+4,"Silhouette","a"))
+        o.append((f"Sub_Person_Head_{k}",x-9,x+9,y0,y1,sh+4,h,"Silhouette","a"))
+    # 낮은 천장 + 형광등 띠 (위에서 볼 때는 숨김: 이름이 Ceiling으로 시작)
+    o.append(("Ceiling_A_Low",0,300,0,75,215,220,"S_Ceiling","a"))
+    for j,y in enumerate([28,52]): o.append((f"Ceiling_A_Light_{j}",20,280,y-3,y+3,213,215,"Emit_Cold","a"))
+    return o
+def crt():
+    return [("TV_Stand",5,45,158,232,0,48,"Wood","prop"),
+            ("TV_CRT_Body",6,52,162,228,48,103,"CRT_Body","prop"),
+            ("TV_CRT_Glass",52,53.5,165,225,52,100,"Glass_Dark","prop"),
+            ("TV_Antenna_1",25,27,182,184,103,140,"Steel","prop"),("TV_Antenna_2",25,27,206,208,103,140,"Steel","prop")]
+BASE_B=lambda: crt()+[("CCTV_Dome",145,157,92,104,232,242,"Device","prop")]
+BLANKET=("Blanket",224,280,236,286,45,50,"Blanket","onseat")
+REMOTE=("Remote",226,240,170,181,65,68,"Remote","onseat")
+V={
+"Opt5A":dict(name="기본 (가구 없음)",items=BASE_B()+sofa(215,290,168,290)+[BLANKET,REMOTE]),
+"Opt5B":dict(name="거실",items=BASE_B()+sofa(215,290,168,290)+[BLANKET,REMOTE,
+   ("Rug",70,205,140,280,0,1,"Rug","flat"),("Lamp_Pole",38,44,93,99,0,150,"Steel","prop"),("Lamp_Shade",30,52,88,110,150,172,"Emit_LampShade","prop"),
+   ("Plant_Pot",62,84,90,112,0,40,"Wood","prop"),("Plant_Leaf",58,88,86,116,40,115,"Plant","prop"),
+   ("Shelf",95,160,87,115,0,120,"Wood","prop")]),
+"Opt5C":dict(name="1인 자리",items=BASE_B()+sofa(210,290,172,248,back=100,arm=62,tag="Recliner")+[
+   ("Blanket",218,262,206,246,45,50,"Blanket","onseat"),
+   ("SideTable",255,292,252,292,0,55,"Wood","prop"),("Remote",262,276,262,273,55,58,"Remote","onseat"),
+   ("Lamp_Pole",272,276,270,274,55,120,"Steel","prop"),("Lamp_Shade",264,284,262,282,120,138,"Emit_LampShade","prop"),
+   ("Shelf",95,160,87,115,0,120,"Wood","prop"),("Rug",120,205,165,255,0,1,"Rug","flat")]),
+"Opt5D":dict(name="생활감",items=BASE_B()+sofa(215,290,168,290)+[BLANKET,REMOTE,
+   ("Rug",70,205,140,280,0,1,"Rug","flat"),("Box_1",30,72,90,128,0,35,"Box","prop"),("Box_2",34,68,93,125,35,62,"Box","prop"),
+   ("Basket",80,115,88,120,0,45,"Basket","prop"),("ClothesRack",130,168,87,110,0,160,"Steel","prop"),
+   ("Clothes",132,166,89,108,95,150,"Blanket","prop"),("Slippers",150,176,118,132,0,3,"Remote","flat")]),
+}
+
+
+def subway_home(var):
+    S = 80                  # 가벽 위치 (A 폭 80)
+    PD, EX = (190, 270), (10, 90)
+    boxes = [
+        ("Floor_A", 0, ROOM, 0, S, F - 5, F, "S_Floor"),
+        ("Floor_B", 0, ROOM, S, ROOM, F - 5, F, "B_Floor"),
+        wall_y("Wall_Top", 0, 0, ROOM, "S_Wall"),
+        wall_x("Wall_Left_A_Header", 0, 0, S, "S_Wall", z0=F + DH),   # 입구: 왼쪽 벽 A 전체 폭
+        wall_x("Wall_Left_B", 0, S, ROOM, "B_Wall"),
+        wall_x("Wall_Right_A", ROOM, 0, S, "S_Wall"),
+        wall_x("Wall_Right_B", ROOM, S, ROOM, "B_Wall"),
+        wall_y("Wall_Bottom_0", ROOM, 0, EX[0], "B_Wall"),
+        wall_y("Wall_Bottom_1", ROOM, EX[1], ROOM, "B_Wall"),
+        wall_y("Wall_Bottom_ExitHeader", ROOM, EX[0], EX[1], "B_Wall", z0=F + DH),
+        wall_y("Partition_1", S, 0, PD[0], "S_Wall"),
+        wall_y("Partition_2", S, PD[1], ROOM, "S_Wall"),
+        wall_y("Partition_DoorHeader", S, PD[0], PD[1], "S_Wall", z0=F + DH),
+        ("Door_Partition", PD[1] - 6, PD[1] - 2, S + 5, S + 5 + DW, F, F + DH, "Door"),   # 집 쪽으로 열림
+        ("Door_Exit", EX[1] - 6, EX[1] - 2, ROOM + T / 2, ROOM + T / 2 + DW, F, F + DH, "Door"),
+        ("Speaker_A", 270, 285, 60, 74, F, F + 30, "Device"),
+        ("Speaker_B_1", 10, 25, 88, 103, F, F + 30, "Device"),
+        ("Speaker_B_2", 275, 290, 88, 103, F, F + 30, "Device"),
+    ]
+    for n, x0, x1, y0, y1, z0, z1, m, kind in subway() + V[var]["items"]:
+        boxes.append((n, x0, x1, y0, y1, F + z0, F + z1, m))
+    screens = [("Screen_B_Home", VIDEO_B, 53.6, 195, F + 76, 52, 52 * 9 / 16, 180)]   # 브라운관 유리 안 16:9
+    lights = [("Light_A_Cold_1", 90, 40, F + 205, 6500, 2), ("Light_A_Cold_2", 220, 40, F + 205, 6500, 2),
+              ("Light_B_Warm_1", 235, 255, TOP - 35, 2700, 2.2), ("Light_B_Ceiling", 140, 190, TOP - 25, 2700, 1.5),
+              ("Light_TV_Glow", 80, 195, F + 80, 9000, 1.0)]
+    if var == "Opt5B":
+        lights.append(("Light_Lamp", 41, 99, F + 160, 2400, 2.5))
+    if var == "Opt5C":
+        lights.append(("Light_Lamp", 274, 272, F + 128, 2400, 2.5))
+    cams = [("Cam_TopView", 150, 150, 900, -90, -90, 24),
+            ("Cam_A_Subway", 8, 40, F + 158, -4, 0, 13),
+            ("Cam_B_Door", 232, 96, F + 165, -18, 120, 12),
+            ("Cam_B_OverSofa", 291, 195, F + 150, -14, 180, 15),
+            ("Cam_CCTV", 151, 98, TOP - 12, -45, 95, 8)]
+    start = (20, 40, 90)
+    return dict(boxes=boxes, screens=screens, lights=lights, cams=cams, start=start)
+
+
 LAYOUTS = {
     "Current": lambda: vertical_split(120, 220),
     "Opt1":    lambda: vertical_split(120, 150),
     "Opt2":    lambda: vertical_split(90, 180),
     "Opt3":    horizontal_split,
     "Opt4":    horizontal_split_v2,
+    "Opt5A":   lambda: subway_home("Opt5A"),
+    "Opt5B":   lambda: subway_home("Opt5B"),
+    "Opt5C":   lambda: subway_home("Opt5C"),
+    "Opt5D":   lambda: subway_home("Opt5D"),
 }
 
 # =====================================================================
@@ -237,6 +369,22 @@ def get_material(name, color):
     r = mel.create_material_expression(mat, unreal.MaterialExpressionConstant, -400, 200)
     r.set_editor_property("r", 0.8)
     mel.connect_material_property(r, "", unreal.MaterialProperty.MP_ROUGHNESS)
+    mel.recompile_material(mat)
+    lib.save_asset(path)
+    return mat
+
+
+def get_emissive(name, color, strength):
+    path = "{}/Materials/M_{}".format(ROOT, name)
+    if lib.does_asset_exist(path):
+        return lib.load_asset(path)
+    mat = tools.create_asset("M_" + name, ROOT + "/Materials", unreal.Material, unreal.MaterialFactoryNew())
+    b = mel.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -400, 0)
+    b.set_editor_property("constant", unreal.LinearColor(color[0] * 0.3, color[1] * 0.3, color[2] * 0.3, 1.0))
+    mel.connect_material_property(b, "", unreal.MaterialProperty.MP_BASE_COLOR)
+    e = mel.create_material_expression(mat, unreal.MaterialExpressionConstant3Vector, -400, 200)
+    e.set_editor_property("constant", unreal.LinearColor(color[0] * strength, color[1] * strength, color[2] * strength, 1.0))
+    mel.connect_material_property(e, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     mel.recompile_material(mat)
     lib.save_asset(path)
     return mat
@@ -316,6 +464,9 @@ def light(spec):
     c.set_editor_property("use_temperature", True)
     c.set_editor_property("temperature", float(kelvin))
     c.set_editor_property("attenuation_radius", 350.0)
+    if "Glow" in name:          # 브라운관 빛: 그림자 없이 은은하게
+        c.set_cast_shadows(False)
+        c.set_editor_property("attenuation_radius", 180.0)
     label(a, name, "Lights")
 
 
@@ -383,7 +534,7 @@ def build_level(key, mats, playlists):
         camera(c)
     exposure()
     x, y, z = spec["start"]
-    yaw = 0.0 if key in ("Opt3", "Opt4") else 90.0
+    yaw = 0.0 if key in ("Opt3", "Opt4") or key.startswith("Opt5") else 90.0
     ps = actors.spawn_actor_from_class(unreal.PlayerStart, unreal.Vector(x, y, z),
                                        unreal.Rotator(roll=0.0, pitch=0.0, yaw=yaw))
     label(ps, "PlayerStart", "Start")
@@ -396,6 +547,7 @@ def build_level(key, mats, playlists):
 
 def main():
     mats = {k: get_material(k, v) for k, v in COLORS.items()}
+    mats.update({k: get_emissive(k, c, st) for k, (c, st) in EMISSIVE.items()})
     playlists = {VIDEO_A: get_playlist("A_society", VIDEO_A),
                  VIDEO_B: get_playlist("B_home", VIDEO_B)}
     for key in BUILD:

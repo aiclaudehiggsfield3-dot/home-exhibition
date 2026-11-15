@@ -8,7 +8,7 @@
 """
 import unreal
 
-LAYOUTS = ["Current", "Opt1", "Opt2", "Opt3", "Opt4"]
+LAYOUTS = ["Opt5A", "Opt5B", "Opt5C", "Opt5D"]
 FPS = 30
 RES = (1280, 720)
 EYE, SIT = 160, 110          # 서 있을 때 / 앉았을 때 눈높이
@@ -80,9 +80,28 @@ def path_v2():
     ]
 
 
+def path_v5():
+    """안 5: 지하철 칸(폭 80) → 집 쪽으로 열리는 문 → 소파에서 브라운관 시청 → 출구"""
+    return [
+        (0,  -90, 40, EYE,   0, -4),      # 입구 밖
+        (2,   10, 40, EYE,   0, -4),      # 지하철 칸 진입
+        (5,  100, 40, EYE,  -8, 2),       # 손잡이·광고를 올려다봄
+        (8,  180, 40, EYE,  25, -3),      # 문 쪽으로 고개를 돌리기 시작 (막힌 벽만 보이지 않게)
+        (10, 228, 40, EYE,  70, -5),
+        (11.5, 230, 40, EYE, 90, -5),     # 문 앞
+        (13.5, 230, 110, EYE, 125, -8),   # 문 밀고 집으로, 브라운관 쪽을 봄
+        (15.5, 190, 150, EYE, 150, -10),  # 브라운관 쪽으로
+        (18, 248, 195, SIT, 180, -10),    # 소파에 앉음 (왼쪽 벽 브라운관)
+        (24, 246, 195, SIT, 180, -11),    # TV 시청
+        (26, 180, 240, EYE, 135, -6),     # 일어남
+        (28.5, 60, 272, EYE, 90, -5),     # 출구 앞
+        (30.5, 60, 325, EYE, 90, -5),     # 출구 통과
+    ]
+
+
 PATHS = {"Current": lambda: path_vertical(120), "Opt1": lambda: path_vertical(120),
          "Opt2": lambda: path_vertical(90), "Opt3": path_horizontal,
-         "Opt4": path_v2}
+         "Opt4": path_v2, "Opt5A": path_v5, "Opt5B": path_v5, "Opt5C": path_v5, "Opt5D": path_v5}
 
 
 def manual_exposure(ps):
