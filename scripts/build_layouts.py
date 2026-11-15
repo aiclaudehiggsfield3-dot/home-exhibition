@@ -28,8 +28,8 @@ import unreal
 # =====================================================================
 # 1. 공통 설정
 # =====================================================================
-BUILD = ["Opt5A", "Opt5B", "Opt5C", "Opt5D"]   # 만들 레벨. 하나만 다시 지으려면 ["Opt3"]처럼
-OPEN_AFTER = "Opt5A"                          # 다 지은 뒤 열어 둘 레벨
+BUILD = ["Opt5A", "Opt5B", "Opt5C", "Opt5D", "Opt5PA", "Opt5PB"]   # 만들 레벨. 하나만 다시 지으려면 ["Opt3"]처럼
+OPEN_AFTER = "Opt5PB"                         # 다 지은 뒤 열어 둘 레벨
 
 ROOM, T, H, F = 300, 10, 240, 2     # 공간 한 변, 벽 두께, 벽 높이, 바닥 윗면 높이
 DW, DH = 80, 210                    # 문 폭, 문 높이
@@ -293,6 +293,10 @@ V={
 
 
 def subway_home(var):
+    # 안 5 프로젝터 변형: "Opt5PA" = 프로젝터 + Opt5A 가구, "Opt5PB" = 프로젝터 + Opt5B 가구
+    proj = var.startswith("Opt5P")
+    if proj:
+        var = "Opt5" + var[5:]
     S = 80                  # 가벽 위치 (A 폭 80)
     PD, EX = (190, 270), (10, 90)
     boxes = [
@@ -316,8 +320,14 @@ def subway_home(var):
         ("Speaker_B_2", 275, 290, 88, 103, F, F + 30, "Device"),
     ]
     for n, x0, x1, y0, y1, z0, z1, m, kind in subway() + V[var]["items"]:
+        if proj and n.startswith("TV_"):
+            continue                                   # 프로젝터 안: 브라운관·TV장 없음
         boxes.append((n, x0, x1, y0, y1, F + z0, F + z1, m))
-    screens = [("Screen_B_Home", VIDEO_B, 53.6, 195, F + 76, 52, 52 * 9 / 16, 180)]   # 브라운관 유리 안 16:9
+    if proj:
+        boxes.append(("Projector_B", 220, 250, 182, 208, TOP - 25, TOP - 13, "Device"))   # 소파 위 천장
+        screens = [("Screen_B_Home", VIDEO_B, T / 2 + 1, 195, F + 122, 160, 160 * 9 / 16, 180)]   # 왼쪽 벽 폭 160
+    else:
+        screens = [("Screen_B_Home", VIDEO_B, 53.6, 195, F + 76, 52, 52 * 9 / 16, 180)]   # 브라운관 유리 안 16:9
     lights = [("Light_A_Cold_1", 90, 40, F + 205, 6500, 2), ("Light_A_Cold_2", 220, 40, F + 205, 6500, 2),
               ("Light_B_Warm_1", 235, 255, TOP - 35, 2700, 2.2), ("Light_B_Ceiling", 140, 190, TOP - 25, 2700, 1.5),
               ("Light_TV_Glow", 80, 195, F + 80, 9000, 1.0)]
@@ -344,6 +354,8 @@ LAYOUTS = {
     "Opt5B":   lambda: subway_home("Opt5B"),
     "Opt5C":   lambda: subway_home("Opt5C"),
     "Opt5D":   lambda: subway_home("Opt5D"),
+    "Opt5PA":  lambda: subway_home("Opt5PA"),
+    "Opt5PB":  lambda: subway_home("Opt5PB"),
 }
 
 # =====================================================================
@@ -409,6 +421,9 @@ def get_playlist(key, video):
 def label(a, name, folder):
     a.set_actor_label(PREFIX + name)
     a.set_folder_path("Exhibition/" + folder)
+    # 블루프린트에서 찾을 수 있게 태그를 붙인다 (Get All Actors with Tag "Light_B_Warm_1" 등).
+    # 레벨을 다시 지으면 EX_ 물체가 새로 생겨 직접 연결한 참조는 끊기지만, 태그로 찾으면 그대로 동작한다.
+    a.set_editor_property("tags", [unreal.Name(name), unreal.Name("EX")])
 
 
 def box(spec, mats):

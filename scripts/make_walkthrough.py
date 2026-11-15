@@ -8,7 +8,7 @@
 """
 import unreal
 
-LAYOUTS = ["Opt5A", "Opt5B", "Opt5C", "Opt5D"]
+LAYOUTS = ["Opt5PA", "Opt5PB"]
 FPS = 30
 RES = (1280, 720)
 EYE, SIT = 160, 110          # 서 있을 때 / 앉았을 때 눈높이
@@ -101,7 +101,8 @@ def path_v5():
 
 PATHS = {"Current": lambda: path_vertical(120), "Opt1": lambda: path_vertical(120),
          "Opt2": lambda: path_vertical(90), "Opt3": path_horizontal,
-         "Opt4": path_v2, "Opt5A": path_v5, "Opt5B": path_v5, "Opt5C": path_v5, "Opt5D": path_v5}
+         "Opt4": path_v2, "Opt5A": path_v5, "Opt5B": path_v5, "Opt5C": path_v5, "Opt5D": path_v5,
+         "Opt5PA": path_v5, "Opt5PB": path_v5}
 
 
 def manual_exposure(ps):

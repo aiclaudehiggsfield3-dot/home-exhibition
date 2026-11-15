@@ -46,7 +46,7 @@ img.render{width:100%;border-radius:12px;display:block}
 @media (max-width:980px){.studio,.two{grid-template-columns:1fr}}
 </style></head><body><div class="wrap">
 <h1>안 5 · 지하철에서 집으로 <small>공간 설계 · 3D 미리보기 · Unreal 렌더</small></h1>
-<p class="lead">사회(A)는 폭 80cm의 좁은 지하철 칸으로 줄이고 <b>영상 없이 공간 디자인만으로</b> 표현합니다. 그만큼 집(B)을 300×220으로 넓혔고, B 영상은 <b>작은 브라운관 TV</b>로 보여 줍니다(프로젝터로 바꿔 볼 수 있음). 가구는 있어도 되고 없어도 되도록 켜고 끌 수 있게 했습니다. 아래 3D는 Unreal 스크립트와 같은 치수로 그렸습니다.</p>
+<p class="lead"><b>추천 본안: 브라운관 + 거실(B).</b> 8가지 변형 비교와 추천 이유는 '변형 비교' 페이지에 있습니다. 사회(A)는 폭 80cm의 좁은 지하철 칸으로 줄이고 <b>영상 없이 공간 디자인만으로</b> 표현합니다. 그만큼 집(B)을 300×220으로 넓혔고, B 영상은 <b>작은 브라운관 TV</b>로 보여 줍니다(프로젝터로 바꿔 볼 수 있음). 가구는 있어도 되고 없어도 되도록 켜고 끌 수 있게 했습니다. 아래 3D는 Unreal 스크립트와 같은 치수로 그렸습니다.</p>
 
 <section class="box"><h2>안 4에서 바뀐 것</h2><ul class="chg">
 <li><b>사회 = 지하철 칸</b>폭 100 → 80(안쪽 70). 영상 대신 손잡이, 광고 라이트박스, 노선 LED, 차가운 형광등, 낮은 천장(215), 사람 실루엣 판</li>
@@ -77,9 +77,9 @@ img.render{width:100%;border-radius:12px;display:block}
 </div></section>
 
 
-<section class="box" id="unreal"><h2>Unreal 렌더 · 워크스루 (11/15)</h2>
-<p class="cap" style="margin:-4px 0 10px">Unreal에서 같은 스크립트로 지은 레벨 L_Opt5A~D를 카메라 5대로 찍고, 같은 동선으로 30.5초 워크스루를 뽑았습니다.</p>
-<div class="seg" id="galP" style="max-width:520px;margin-bottom:10px"></div>
+<section class="box" id="unreal"><h2>Unreal 렌더 · 워크스루 (11/15) <small style="font-size:13px;color:var(--mute);font-weight:400">★ 추천 본안 · 비교와 추천 이유는 변형 비교 페이지</small></h2>
+<p class="cap" style="margin:-4px 0 10px">Unreal에서 같은 스크립트로 지은 레벨 L_Opt5A~D(브라운관)와 L_Opt5PA·PB(프로젝터)를 카메라 5대로 찍고, 같은 동선으로 30.5초 워크스루를 뽑았습니다.</p>
+<div class="seg" id="galP" style="flex-wrap:wrap;margin-bottom:10px"></div>
 <div class="gal"><div><img id="galMain" class="render" alt="Unreal 렌더"><div class="thumbs" id="galT"></div></div>
 <div><video id="galV" controls muted playsinline loop preload="metadata" style="width:100%;border-radius:12px;background:#000"></video><p class="cap" id="galCap"></p>
 <video controls muted playsinline loop preload="none" style="width:100%;border-radius:12px;background:#000;margin-top:10px" src="../assets/2026-11-15_opt5_walk_compare.mp4"></video><p class="cap">4개 안 동시 비교 (같은 동선)</p></div></div>
@@ -282,7 +282,7 @@ function loop(){requestAnimationFrame(loop);const now=performance.now(),T=(now-t
  drawTV(st.tv,T);if(controls.enabled)controls.update();renderer.render(scene,camera)}
 // ---------- UI ----------
 function ui(){
- const pv=document.getElementById("presets");for(const [k,p] of Object.entries(PRESETS)){const b=document.createElement("button");b.innerHTML=`${p.name}<small>${p.sub}</small>`;b.dataset.k=k;b.onclick=()=>{st.preset=k;st.seat=p.seat;st.on=new Set(p.on);sync();build();if(window.gal){gP=k;gal()}};pv.appendChild(b)}
+ const pv=document.getElementById("presets");for(const [k,p] of Object.entries(PRESETS)){const b=document.createElement("button");b.innerHTML=`${p.name}<small>${p.sub}</small>`;b.dataset.k=k;b.onclick=()=>{st.preset=k;st.seat=p.seat;st.on=new Set(p.on);sync();build();if(window.gal){gP=(st.screen==="pj"&&(k==="Opt5A"||k==="Opt5B"))?k.replace("Opt5","Opt5P"):k;gal()}};pv.appendChild(b)}
  const tg=document.getElementById("toggles");for(const [k,l] of TOG){const lab=document.createElement("label");lab.innerHTML=`<input type="checkbox" data-k="${k}"> ${l}`;lab.querySelector("input").onchange=e=>{e.target.checked?st.on.add(k):st.on.delete(k);st.preset=null;sync();build()};tg.appendChild(lab)}
  const vw=document.getElementById("views");for(const [k,l] of VIEWS){const b=document.createElement("button");b.textContent=l;b.dataset.v=k;if(k==="walk"||k==="door")b.classList.add("act");b.onclick=()=>setView(k);vw.appendChild(b)}
  const seg=(a,b,key,va,vb)=>{document.getElementById(a).onclick=()=>{st[key]=va;st.preset=null;sync();build()};document.getElementById(b).onclick=()=>{st[key]=vb;st.preset=null;sync();build()}};
@@ -297,15 +297,15 @@ function sync(){
  document.getElementById("seatSofa").classList.toggle("on",st.seat==="sofa");document.getElementById("seatRec").classList.toggle("on",st.seat==="recliner");
 }
 ui();
-const GV={Opt5A:"6_안5A_기본",Opt5B:"7_안5B_거실",Opt5C:"8_안5C_1인자리",Opt5D:"9_안5D_생활감"};
+const GL=[["Opt5A","브라운관 · 기본"],["Opt5B","브라운관 · 거실 ★"],["Opt5C","브라운관 · 1인 자리"],["Opt5D","브라운관 · 생활감"],["Opt5PA","프로젝터 · 기본"],["Opt5PB","프로젝터 · 거실"]];const GN=Object.fromEntries(GL);
 const GC=[["TopView","위에서"],["A_Subway","지하철 칸"],["B_Door","문에서 본 집"],["B_OverSofa","소파 뒤"],["CCTV","CCTV"]];
 let gP="Opt5A",gC="B_OverSofa";
 function gal(){document.getElementById("galMain").src=`../assets/layout_${gP}_${gC}.jpg`;
  const T=document.getElementById("galT");T.innerHTML="";for(const [k,l] of GC){const im=document.createElement("img");im.src=`../assets/layout_${gP}_${k}.jpg`;im.alt=l;im.title=l;if(k===gC)im.className="on";im.onclick=()=>{gC=k;gal()};T.appendChild(im)}
  const v=document.getElementById("galV"),src=`../assets/walk_${gP}.mp4`;if(!v.src.endsWith(src.split("/").pop()))v.src=src;
- document.getElementById("galCap").textContent=`${PRESETS[gP].name} 워크스루 30.5초 · 지하철 칸 → 문 → 소파에서 브라운관 → 출구`;
+ document.getElementById("galCap").textContent=`${GN[gP]} 워크스루 30.5초 · 지하철 칸 → 문 → 소파 → 출구`;
  document.querySelectorAll("#galP button").forEach(b=>b.classList.toggle("on",b.dataset.k===gP))}
-const gp=document.getElementById("galP");for(const [k,p] of Object.entries(PRESETS)){const b=document.createElement("button");b.textContent=p.name;b.dataset.k=k;b.onclick=()=>{gP=k;gal()};gp.appendChild(b)}
+const gp=document.getElementById("galP");for(const [k,n] of GL){const b=document.createElement("button");b.textContent=n;b.dataset.k=k;b.onclick=()=>{gP=k;gal()};gp.appendChild(b)}
 gal();
 if(typeof THREE!=="undefined"){initGL()}else{document.getElementById("nogl").style.display="grid";build()}
 </script></body></html>

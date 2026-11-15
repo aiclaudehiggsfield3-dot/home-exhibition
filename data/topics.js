@@ -3,14 +3,14 @@
 window.PROJECT = {
   title: "home — 인터랙티브 전시 제작 기록",
   subtitle: "AI 기반 영상 제작 워크샵 기말 프로젝트 · Unreal Engine 5.4 · 3m × 3m 체험 전시",
-  status: "안 5(지하철 → 집) 렌더·워크스루 완료 · 인터랙션 설계 · 가구 구성 결정 대기",
-  updated: "2026-11-15 14:00",
+  status: "안 5 변형 8가지 비교 → 본안 추천(브라운관 + 거실) · 인터랙션은 블루프린트로 설계",
+  updated: "2026-11-15 14:30",
   next: [
-    "안 5 가구 구성 고르기 (A 기본 · B 거실 · C 1인 자리 · D 생활감, 섞어도 됨)",
-    "B 영상 표시 방식 결정: 브라운관 TV / 프로젝터",
-    "인터랙션 ① 문 → TV·조명 켜기 (Unreal 키 입력부터)",
-    "천장 CCTV 인식: 노트북 웹캠 + Python으로 '앉음'부터",
-    "사회(지하철 칸) 소리와 집 소리 4단계 준비"
+    "본안 확정: 브라운관 + 거실 (또는 생활감·프로젝터 안과 비교해 팀 결정)",
+    "블루프린트 0~2단계: 입력(키 1~6) → BP_HomeDirector → 문 열면 TV·조명",
+    "소리 파일 5개 준비 (지하철 + 집 0~3단계) → 블루프린트 3단계",
+    "크브페 지원서에 인터랙션 문단 넣기 (인터랙션 페이지에 붙여넣기용 있음)",
+    "아두이노 Leonardo + 자석 센서 1개로 문 열림 테스트"
   ]
 };
 
@@ -169,7 +169,21 @@ window.TOPICS = [
         { type: "image", src: "assets/layout_Opt5D_TopView.jpg", caption: "D 생활감 · 위에서" }
       ]},
       { type: "note", text: "자동 검사: 모든 구성에서 가구가 관객 동선에서 40cm 이상 떨어져 있고, 문이 열리는 범위에 걸리지 않으며, 소파에서 브라운관을 가리지 않는다. 렌더 스크립트(shots5.py)가 같은 카메라를 여러 번 찍던 문제는 카메라 번호를 먼저 올리도록 고쳤다." },
-      { type: "links", items: [{ label: "build_layouts.py (안 5: subway_home)", href: "scripts/build_layouts.py" }, { label: "shots5.py (레벨별 렌더 5장)", href: "scripts/shots5.py" }] }
+      { type: "h", text: "브라운관 / 프로젝터 × 가구 변형 비교 (11/15)" },
+      { type: "p", text: "B 영상을 브라운관으로 볼 때와 프로젝터(왼쪽 벽 160)로 볼 때를 각각, 가구를 거의 비운 안(기본)부터 많이 채운 안(생활감)까지 4가지씩 8가지로 만들어 비교했다. 집다움·안주 메시지·'문 열면 TV가 켜지는' 연출을 두 배로 계산해 점수를 매겼고, 추천한 안은 Unreal에서 실제로 지었다(프로젝터 안은 새 레벨 L_Opt5PA·L_Opt5PB)." },
+      { type: "table", head: ["", "안", "이유"], rows: [
+        ["추천 1 · 본안", "브라운관 + 거실", "가구를 가벽 쪽에만 둬 집다움은 높고 소파 주변은 깨끗함. 문 열면 TV가 켜지는 장면과 가장 잘 맞고 CCTV에서 담요·리모컨이 잘 보임"],
+        ["추천 2", "브라운관 + 생활감", "익숙해진 집을 가장 직접적으로 보여 줌. 준비물이 많고 화면이 어수선해 보일 수 있음"],
+        ["추천 3", "프로젝터 + 거실", "화면 각도가 브라운관의 2배 이상(약 37° vs 16°)이라 영상이 잘 보이고 시연 영상으로 찍기 쉬움. 'TV가 켜진다'는 느낌은 약함"],
+        ["참고", "프로젝터 + 기본", "가장 단순하지만 상영실처럼 보여 메시지가 약함"]
+      ]},
+      { type: "media", items: [{ type: "image", src: "assets/2026-11-15_opt5_reco_compare.jpg", caption: "추천 4가지 Unreal 렌더 — 소파 뒤 / 문에서 본 집 / CCTV" }] },
+      { type: "note", text: "채울까 비울까: 비우면 상영실처럼 보이고, 거실 가구와 생활감 물건을 한꺼번에 넣으면 가벽 쪽 같은 자리에서 서로 겹친다. 가구를 가벽 쪽 벽에만 붙이는 '거실' 정도가 동선·문·CCTV에 영향 없이 집다움을 가장 크게 올린다." },
+      { type: "links", items: [
+        { label: "8가지 변형 비교·점수·추천 (HTML)", href: "reports/home_v5_variants.html" },
+        { label: "build_layouts.py (안 5: subway_home, 프로젝터 변형 포함)", href: "scripts/build_layouts.py" },
+        { label: "shots5.py (레벨별 렌더 5장)", href: "scripts/shots5.py" }
+      ]}
     ]
   },
   {
@@ -217,13 +231,20 @@ window.TOPICS = [
         { type: "video", src: "assets/walk_Opt5C.mp4", caption: "안 5 C 1인 자리" },
         { type: "video", src: "assets/walk_Opt5D.mp4", caption: "안 5 D 생활감" }
       ]},
+      { type: "h", text: "추천안 비교 (11/15)" },
+      { type: "media", items: [{ type: "video", src: "assets/2026-11-15_opt5_reco_walk.mp4", caption: "추천 1 브라운관+거실 · 추천 2 브라운관+생활감 · 추천 3 프로젝터+거실 · 참고 프로젝터+기본" }] },
+      { type: "media", items: [
+        { type: "video", src: "assets/walk_Opt5PB.mp4", caption: "프로젝터 + 거실" },
+        { type: "video", src: "assets/walk_Opt5PA.mp4", caption: "프로젝터 + 기본" }
+      ]},
       { type: "links", items: [{ label: "make_walkthrough.py", href: "scripts/make_walkthrough.py" }] }
     ]
   },
   {
-    id: "interaction", num: "08", title: "인터랙션 설계",
-    summary: "문 → TV·조명 · 천장 CCTV 인식 → 불편한 소리 · 퇴장 QR 결과 페이지",
+    id: "interaction", num: "08", title: "인터랙션 설계 (블루프린트)",
+    summary: "문 → TV·조명 · 천장 CCTV 인식 → 불편한 소리 · 퇴장 QR · 모두 Unreal 블루프린트로",
     blocks: [
+      { type: "note", text: "교수님 의견에 따라 인터랙션은 Unreal Engine 5 블루프린트로 구현한다. 문·TV·조명·소리 단계·기록·결과 화면은 모두 블루프린트가 처리하고, 센서(아두이노 Leonardo를 키보드처럼)와 웹캠 인식(OSC)은 블루프린트에 신호만 넣는다." },
       { type: "p", text: "집은 관객을 반겨 주지만, 편안함에 몸을 맡길수록 조금씩 불편해진다. 천장 CCTV가 관객이 앉고, 담요를 옮기고, 리모컨을 만지는 것을 알아채 소리를 바꾸고, 나갈 때는 QR 코드로 자신이 이 집에서 어떻게 머물렀는지를 돌려받는다." },
       { type: "table", head: ["#", "트리거", "감지", "반응"], rows: [
         ["1", "문을 엶", "문틀 자석 센서 → 아두이노", "브라운관 지지직 → 집 영상, 2700K 조명 켜짐, 문이 닫히면 지하철 소리 끊김"],
@@ -234,17 +255,27 @@ window.TOPICS = [
         ["6", "출구로 나감", "출구 문 센서 + CCTV 출구 영역", "QR → 타임랩스, 만진 물건, 다른 관객 평균 대비 머문 시간"]
       ]},
       { type: "media", items: [{ type: "image", src: "assets/layout_Opt5A_CCTV.jpg", caption: "Unreal 안 5A 천장 CCTV 시점 — 소파·담요·리모컨·TV·출구가 한 화면에" }] },
+      { type: "h", text: "블루프린트 구성" },
+      { type: "table", head: ["블루프린트", "하는 일"], rows: [
+        ["BP_HomeDirector", "상태·기록·소리 단계, 입력 받기, 조명·TV·소리 제어, 퇴장 처리 (레벨에 1개)"],
+        ["BP_HomeDoor", "경첩이 원점인 문. Timeline으로 집 쪽 90° 열림 → 3초 뒤 저절로 닫힘"],
+        ["BP_SitZone · BP_ExitZone", "소파·출구 위 충돌 박스 → OnSeated / OnStoodUp / OnExit"],
+        ["BP_Blanket · BP_Remote", "바라보고 E 키(또는 3·4 키)로 만짐 → Director에 알림"],
+        ["BP_CCTV", "Scene Capture 2D로 2초마다 타임랩스 프레임 저장"],
+        ["SG_Visitors · WBP_Result", "머문 시간 저장(SaveGame) → 평균·순위 → 결과 화면(UMG)과 QR"]
+      ]},
+      { type: "p", text: "Python으로 지은 레벨의 벽·조명·화면에는 이름과 같은 태그(Light_B_Warm_1, Screen_B_Home, Door_Partition, Blanket, Remote 등)를 붙여 두었다. 블루프린트는 Get All Actors with Tag로 찾기 때문에, 레벨을 다시 지어도 연결이 끊기지 않는다." },
       { type: "links", items: [
-        { label: "인터랙션 설계 전체 (HTML)", href: "reports/home_interaction.html" },
+        { label: "인터랙션 설계 + 블루프린트 단계별 가이드 + 아두이노 코드 + 지원서 문단 (HTML)", href: "reports/home_interaction.html" },
         { label: "QR 결과 페이지 견본 (예시 데이터)", href: "reports/result_sample.html" }
       ]},
       { type: "note", text: "개인정보: 입구에서 촬영을 알리고, 얼굴 없이 위에서 본 움직임만 기록하며, 결과 페이지는 24시간 뒤 삭제한다. 공개 저장소에는 관객 기록을 올리지 않고 예시 데이터만 둔다. 소리는 75dB 이하, 출구는 잠그지 않는다." },
       { type: "h", text: "시연 (실물 전시 없이)" },
       { type: "list", items: [
-        "Unreal 워크스루 영상으로 공간과 '문 열면 TV·조명' 장면을 보여 줌",
-        "Unreal에서 1~6 키로 문·앉기·담요·리모컨·소리 단계·퇴장을 차례로 실행",
-        "노트북 웹캠으로 앉기 또는 리모컨 만지기 하나를 실제로 인식시킴",
-        "마지막에 QR을 띄워 심사위원 휴대폰으로 결과 페이지를 열게 함"
+        "Unreal 워크스루 영상으로 지하철 칸 → 문 → 집 → 출구를 보여 줌",
+        "블루프린트 라이브: 플레이 상태에서 1~6 키로 문·앉기·담요·리모컨·소리 단계·퇴장을 차례로 실행",
+        "아두이노 + 자석 센서를 붙인 작은 문을 열면 Unreal 속 문이 열림",
+        "퇴장 결과 화면(머문 시간·평균·만진 물건)과 QR → 심사위원 휴대폰으로 견본 결과 페이지"
       ]}
     ]
   },
@@ -266,7 +297,8 @@ window.TOPICS = [
         "공간 다시 짓기: build_layouts.py (EX_로 시작하는 물체를 지우고 새로 지음)",
         "워크스루 다시 찍기: make_walkthrough.py (다섯 배치 약 4분)",
         "레벨 하나만: Saved/one.txt에 Opt4처럼 적고 rebuild_one.py(다시 짓기) 또는 walk_one.py(워크스루)",
-        "안 5 렌더 사진: Saved/shots.txt에 Opt5A,Opt5B,Opt5C,Opt5D를 적고 shots5.py를 실행할 때마다 한 레벨씩 카메라 5대 (약 40초)",
+        "안 5 렌더 사진: Saved/shots.txt에 Opt5A,Opt5B,Opt5C,Opt5D,Opt5PA,Opt5PB 중 원하는 레벨을 적고 shots5.py를 실행할 때마다 한 레벨씩 카메라 5대 (약 40초)",
+        "레벨 물체에는 이름과 같은 태그가 붙음 → 블루프린트에서 Get All Actors with Tag로 찾기 (BP_로 시작하는 블루프린트는 다시 지어도 지워지지 않음)",
         "부감샷 시점 바꾸기: build_layouts.py의 OVERHEAD_EYE 값 수정 후 다시 실행"
       ]}
     ]
@@ -274,6 +306,7 @@ window.TOPICS = [
 ];
 
 window.LOG = [
+  { date: "2026-11-15", time: "14:30", text: "브라운관/프로젝터 × 가구 8가지 비교 → 본안 브라운관+거실 추천, 프로젝터 레벨 2개 Unreal 렌더·워크스루, 인터랙션을 블루프린트 구현으로 개편(단계별 가이드·아두이노 코드·지원서 문단)" },
   { date: "2026-11-15", time: "14:00", text: "안 5(지하철 칸 → 넓은 집, 브라운관 TV, 가구 4구성) Unreal 렌더 20장·워크스루 4개 완료, 3D 미리보기·인터랙션 설계·QR 결과 견본 페이지 추가" },
   { date: "2026-11-14", time: "02:00", text: "안 4 Unreal 레벨 생성·렌더 4장·워크스루 영상 완료, 5개 배치 비교 시트·동시 비교 영상 갱신" },
   { date: "2026-11-13", time: "22:20", text: "안 4(안 3 수정) 설계: 스케치 기반 배치도·스크립트 추가, 렌더는 맥 연결 복구 후 진행" },
