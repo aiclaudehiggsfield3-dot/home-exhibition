@@ -3,40 +3,41 @@
 window.PROJECT = {
   title: "home — 인터랙티브 전시 제작 기록",
   subtitle: "AI 기반 영상 제작 워크샵 기말 프로젝트 · Unreal Engine 5.4 · 3m × 3m 체험 전시",
-  status: "브라운관·지하철(영상 없음) 확정 → 앉는 가구(소파/리클라이너)만 남음 · 크브페 마감 11/23",
-  updated: "2026-11-15 16:10",
+  status: "본안 확정(11/15 카톡): 브라운관 + 작은 소파 + 모닥불 영상 · 다음은 최종 렌더 → 크브페 지원서(마감 11/23)",
+  updated: "2026-11-15 16:50",
   // 큰 흐름. state: done(끝) / now(진행 중) / todo(아직)
   phases: [
     { name: "기획·공간 구조", state: "done" },
     { name: "배치안 5종 + 안 5 변형 8가지", state: "done" },
-    { name: "본안 결정 (가구만 남음)", state: "now" },
+    { name: "본안 결정", state: "done" },
+    { name: "최종 렌더 · 크브페 지원서", state: "now" },
     { name: "인터랙션 구현 (블루프린트)", state: "todo" },
     { name: "소리·센서·QR", state: "todo" },
     { name: "리허설 · 시연", state: "todo" }
   ],
   // 지금 정해야 하는 것 (홈 화면 상단 카드)
   decision: {
-    q: "앉는 가구: 2인 소파 vs 1인 리클라이너",
-    pick: "추천: 1인 리클라이너",
-    why: "1인 체험이라 자리가 하나면 충분하고, 등받이를 젖히는 동작 자체가 '안주'를 보여 준다. 실물 2인 소파는 폭 140~160이라 자리(122)에 안 들어갈 수 있다.",
-    alt: "브라운관 TV · 지하철 칸(손잡이, 영상 없음)은 확정 · 조명은 3500K로 더 희게",
-    img: "assets/prev_Opt5C_crt_B_OverSofa.jpg",
-    link: "reports/status.html#seat"
+    q: "본안 확정 (11/15 팀 카톡)",
+    pick: "브라운관 + 작은 소파 + 모닥불 영상",
+    why: "문 열면 TV 켜짐 · 리모컨은 영상 그대로 사운드만 추가 · 물건마다 센서 · QR은 화면 · 배경음 불멍 · 영상은 저작권 없는 모닥불, 사운드는 AI 생성.",
+    alt: "남은 확인: 조명 3500K, 불편한 소리 종류, 실행 컴퓨터, 전시 기간",
+    img: "assets/prev_Opt5B_crt_B_OverSofa.jpg",
+    link: "reports/status.html#decide"
   },
   // 다음 할 일. who: 팀 / 지원 / Claude, state: now / todo / done
   next: [
-    { title: "앉는 가구 결정 (소파 vs 리클라이너)", detail: "브라운관은 확정. 앉는 가구 하나만 고르면 조명 3500K로 최종 렌더를 뽑는다. 나머지 추천안도 다르면 같이 알려 주기.", who: "팀", time: "10분", state: "now", link: "reports/status.html#decide", linkLabel: "결정 현황 보기" },
-    { title: "크브페 지원서 완성·제출 (11/23 23:59)", detail: "채움본을 HWP에 붙이고 사진 11장 넣고 HWP + PDF로 메일 제출.", who: "지원", time: "11/22까지", state: "todo", link: "https://claude.ai/artifact/53y4wg4Gp9aoq7Mgd13yaY", linkLabel: "채움본" },
-    { title: "블루프린트 0~2단계", detail: "키 입력 설정(IMC_Home) → 문 열면 TV·조명 켜짐(BP_HomeDoor) → 소파 착석 감지(BP_SitZone).", who: "지원 + Claude", time: "1~2시간", state: "todo", link: "reports/home_interaction.html#guide", linkLabel: "단계별 안내" },
-    { title: "소리 파일 5개", detail: "지하철 칸 소리 1개 + 집 소리 0~3단계(점점 이상하고 불편하게) 4개.", who: "팀", time: "반나절", state: "todo" },
-    { title: "크브페 지원서 인터랙션 문단", detail: "인터랙션 페이지 맨 아래 긴/짧은 문단을 복사해 붙인다. HWP를 주면 Claude가 채워 줄 수 있다.", who: "지원", time: "20분", state: "todo", link: "reports/home_interaction.html#cbf", linkLabel: "문단 복사하기" },
-    { title: "아두이노 문 센서 테스트", detail: "Leonardo + 자석(리드) 스위치 1개 → 문이 열리면 키보드 키 입력처럼 Unreal에 전달.", who: "팀", time: "1시간", state: "todo", link: "reports/home_interaction.html#guide", linkLabel: "아두이노 코드" },
-    { title: "CCTV용 마네킹", detail: "Unreal만으로 시연할 때 CCTV 화면에 사람이 보이도록 움직이는 마네킹을 넣는다.", who: "Claude", time: "30분", state: "todo" },
-    { title: "결과 QR 이미지", detail: "관객별 QR은 블루프린트로 못 만들어서, 결과 견본 페이지 주소로 QR 하나를 만들어 시연한다.", who: "Claude", time: "10분", state: "todo", link: "reports/result_sample.html", linkLabel: "결과 견본" },
-    { title: "(선택) 워크스루 끝 출구 밝히기", detail: "워크스루 영상 끝부분에서 출구 바깥이 어둡게 나온다.", who: "Claude", time: "20분", state: "todo" }
+    { title: "본안 최종 렌더", detail: "작은 소파 + 조명 3500K + 브라운관 모닥불 화면으로 관객 시점 6장, 설치 도면 5장, 워크스루 영상을 다시 뽑는다.", who: "Claude", time: "1시간", state: "now", link: "reports/status.html#todo", linkLabel: "전체 현황" },
+    { title: "크브페 지원서 완성·제출 (11/23 23:59)", detail: "채움본(카톡 결정 반영됨)을 HWP에 붙이고 사진 11장 넣고 HWP + PDF로 메일 제출.", who: "지원", time: "11/22까지", state: "todo", link: "https://claude.ai/artifact/53y4wg4Gp9aoq7Mgd13yaY", linkLabel: "채움본" },
+    { title: "모닥불 영상 고르기", detail: "저작권 문제 없는 모닥불 루프 영상, 라이선스 출처 보관.", who: "팀", time: "30분", state: "todo" },
+    { title: "AI 사운드 5개 생성", detail: "지하철 칸 1 + 불멍 배경 1 + 리모컨 추가음 + 불편한 소리 3단계.", who: "팀", time: "반나절", state: "todo" },
+    { title: "블루프린트 0~2단계", detail: "키 입력 → 문 열면 TV 켜짐 → 앉음 감지.", who: "지원 + Claude", time: "1~2시간", state: "todo", link: "reports/home_interaction.html#guide", linkLabel: "단계별 안내" },
+    { title: "작은 소파·장비 구하기", detail: "폭 120 이하 소파, 브라운관 + HDMI→AV, Leonardo, 센서들, USB 카메라, 스피커 2, QR 화면.", who: "팀", time: "", state: "todo", link: "reports/status.html#gear", linkLabel: "장비 목록" },
+    { title: "아두이노 문 센서 테스트", detail: "자석 센서로 문 열림 → 키 입력 확인.", who: "팀", time: "1시간", state: "todo" },
+    { title: "실행 컴퓨터·전시 기간 확인", detail: "누구 노트북을 둘지, 전시 기간·운영 시간.", who: "팀", time: "", state: "todo" }
   ],
   // 최근에 끝낸 것
   done: [
+    "본안 확정: 브라운관 + 작은 소파 + 모닥불 영상 (팀 카톡)",
     "전체 현황 한 페이지 (ver7)",
     "브라운관 TV 확정 · 지하철 칸 영상 없이 손잡이로 확정",
     "안 5 치수표 (가벽·지하철 칸·가구) 만들기",
@@ -340,6 +341,7 @@ window.TOPICS = [
 ];
 
 window.LOG = [
+  { date: "2026-11-15", time: "16:50", text: "ver8: 팀 카톡 결정 반영(작은 소파, 문→TV, 리모컨→사운드만, 센서 감지, QR 화면, 모닥불 영상 + AI 사운드), 전체 현황 페이지에 이전 렌더·영상·HTML 자료 전부 첨부" },
   { date: "2026-11-15", time: "16:10", text: "ver7: 전체 현황 한 페이지(status.html) — 결정 현황 15개, 진행률, 다음 할 일, 장비, 크브페 진행, 설계 과정, 버전 기록" },
   { date: "2026-11-15", time: "15:20", text: "안 5 치수표 HTML: 가벽 제작 치수(순수 290 = 185 + 문 80 + 25), 지하철 칸 단면·손잡이, 소파/리클라이너별 가구 치수" },
   { date: "2026-11-15", time: "14:40", text: "홈 화면 개편: 지금 할 일·결정할 것·진행 단계가 첫 화면에 바로 보이게" },
