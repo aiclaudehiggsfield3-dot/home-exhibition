@@ -97,12 +97,20 @@ details.sub>summary{cursor:pointer;padding:10px 14px;font-weight:600}
 details.sub iframe{width:100%;height:900px;border:0;border-top:1px solid var(--line);background:#fff;display:block}
 .ifr-foot{padding:8px 14px;font-size:13.5px}
 @media(max-width:820px){.g5,.g4,.g3{grid-template-columns:repeat(2,1fr)!important}}
+.dl{display:inline-block;margin-top:4px;font-size:12.5px;font-weight:700;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:#fff;border-radius:99px;padding:2px 10px}
+.dl:hover{border-color:var(--accent)}
+.dlbox{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:10px 0}
+.dlbox a{display:block;text-decoration:none;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.dlbox a:hover{border-color:var(--accent)}
+.dlbox b{display:block;font-size:17px;color:var(--accent)}
+.dlbox span{font-size:13.5px;color:var(--sub)}
+@media(max-width:820px){.dlbox{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <nav class="top"><div class="in">
   <a class="home" href="../index.html">← 홈</a>
-  <a href="#now">한눈에</a><a href="#decide">결정 현황</a><a href="#todo">다음 할 일</a><a href="#concept">작품 개념</a>
+  <a href="#download">다운로드</a><a href="#now">한눈에</a><a href="#decide">결정 현황</a><a href="#todo">다음 할 일</a><a href="#concept">작품 개념</a>
   <a href="#space">공간</a><a href="#seat">가구</a><a href="#media">영상·소리</a><a href="#inter">인터랙션</a>
   <a href="#gear">장비</a><a href="#cbf">크브페</a><a href="#history">설계 과정</a><a href="#ver">버전 기록</a><a href="#all">자료 전체</a>
 </div></nav>
@@ -111,8 +119,16 @@ details.sub iframe{width:100%;height:900px;border:0;border-top:1px solid var(--l
 <p class="kicker">전체 현황 · 한 페이지</p>
 <h1>home — 인터랙티브 전시 '지하철에서 집으로'</h1>
 <p class="lead">AI 기반 영상 제작 워크샵 기말 프로젝트 · 크리에이티브 브릿지 페스티벌(크브페) 지원작 「Home Sweet Home」 · 3m × 3m 체험 전시 · Unreal Engine 5.4</p>
-<div class="meta"><span><b>ver8</b></span><span>업데이트 <b>2026-11-15 16:50</b></span><span>크브페 마감 <b>11/23(월) 23:59 · D-8</b></span><span>팀 지원선배 최고 (정지원·서지오·최아원)</span></div>
+<div class="meta"><span><b>ver8.1</b></span><span>업데이트 <b>2026-11-15 19:10</b></span><span>크브페 마감 <b>11/23(월) 23:59 · D-8</b></span><span>팀 지원선배 최고 (정지원·서지오·최아원)</span></div>
 <p class="sum" style="margin-top:10px">버전이 올라갈 때마다 이 페이지 한 장에 계속 덧붙여 갑니다. 지난 버전에 확정된 내용은 그대로 두고, 바뀐 부분에는 <span class="chip c-new">ver8</span> 처럼 그 버전 표시를 붙입니다. 지금까지 만든 렌더·영상·HTML 자료도 모두 맨 아래 <a href="#all">13. 자료 전체</a>에 이 페이지 안으로 넣어 두었어요.</p>
+
+<h2 id="download"><span class="no">↓</span>사진·영상 다운로드</h2>
+<p class="sum">발표 자료에 쓸 수 있게 묶음으로 받을 수 있어요. 페이지 안의 사진·영상 아래에도 하나씩 받는 버튼이 있어요(렌더 사진은 고화질 1920×1080로 받아져요).</p>
+<div class="dlbox">
+  <a href="../downloads/home_renders_HD.zip" download><b>Unreal 렌더 고화질 50장</b><span>1920 × 1080 JPG · 약 5MB · 처음 계획 ~ 안 5 전체</span></a>
+  <a href="../downloads/home_videos.zip" download><b>워크스루 영상 18개</b><span>MP4 1280 × 720 · 약 60MB</span></a>
+  <a href="../downloads/home_images_web.zip" download><b>웹용 사진 전체</b><span>비교 시트·미리보기 포함 · 약 4MB</span></a>
+</div>
 
 <!-- ============ 0. 한눈에 ============ -->
 <h2 id="now"><span class="no">0</span>한눈에 보기</h2>
@@ -367,7 +383,8 @@ details.sub iframe{width:100%;height:900px;border:0;border-top:1px solid var(--l
 <!-- ============ 11. 버전 기록 ============ -->
 <h2 id="ver"><span class="no">11</span>버전 기록</h2>
 <div class="ver">
-  <div class="v cur"><b>ver8</b><span>11/15 16:50</span><p>팀 카톡 결정 반영: 작은 소파, 문 열면 TV, 리모컨은 사운드만 추가, 센서 감지, QR은 화면, 모닥불 영상(저작권 무관) + AI 사운드. 이전 자료 전부(렌더·영상·HTML)를 이 페이지 안에 첨부.</p></div>
+  <div class="v cur"><b>ver8.1</b><span>11/15 19:10</span><p>사진·영상 다운로드: 사진마다 받기 버튼(렌더는 고화질 1920×1080), 묶음 3개(고화질 렌더 50장, 영상 18개, 웹용 사진 전체).</p></div>
+  <div class="v"><b>ver8</b><span>11/15 16:50</span><p>팀 카톡 결정 반영: 작은 소파, 문 열면 TV, 리모컨은 사운드만 추가, 센서 감지, QR은 화면, 모닥불 영상(저작권 무관) + AI 사운드. 이전 자료 전부(렌더·영상·HTML)를 이 페이지 안에 첨부.</p></div>
   <div class="v"><b>ver7</b><span>11/15 16:10</span><p>전체 현황 한 페이지로 통합. 브라운관·지하철(영상 없음) 확정, 조명 흰색 쪽으로, 결정 현황 15개·진행률·장비 목록·크브페 진행 표 추가.</p></div>
   <div class="v"><b>ver6.2</b><span>11/15 15:20</span><p>안 5 치수표: 가벽 제작 치수(순수 290), 지하철 칸 단면·손잡이, 소파/리클라이너 치수.</p></div>
   <div class="v"><b>ver6.1</b><span>11/15 14:40</span><p>홈 화면 개편: 지금 할 일·결정할 것·진행 단계를 첫 화면에.</p></div>
@@ -390,6 +407,18 @@ details.sub iframe{width:100%;height:900px;border:0;border-top:1px solid var(--l
 </div>
 <script>
 document.querySelectorAll("details.sub").forEach(d=>d.addEventListener("toggle",()=>{const f=d.querySelector("iframe");if(d.open&&!f.src)f.src=d.dataset.src}));
+</script>
+<script>
+(function(){
+  const hd=src=>{const m=src.match(/assets\/layout_(.+)\.jpg$/);return m?src.replace(/layout_(.+)\.jpg$/,'hd/$1.jpg'):src};
+  document.querySelectorAll('figure').forEach(f=>{
+    const v=f.querySelector('video'), i=f.querySelector('img'); if(!v&&!i) return;
+    const raw=v?v.getAttribute('src'):i.getAttribute('src'); const url=v?raw:hd(raw);
+    const a=document.createElement('a'); a.className='dl'; a.href=url; a.setAttribute('download',''); 
+    a.textContent=v?'↓ 영상 받기':(url!==raw?'↓ 고화질 받기':'↓ 사진 받기');
+    const cap=f.querySelector('figcaption'); if(cap){cap.appendChild(document.createTextNode(' '));cap.appendChild(a)} else f.appendChild(a);
+  });
+})();
 </script>
 </body>
 </html>

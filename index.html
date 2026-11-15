@@ -108,6 +108,7 @@
   figure img,figure video{width:100%;display:block;border-radius:10px;border:1px solid var(--line);background:#111}
   .media:not(.one) img{aspect-ratio:16/9;object-fit:contain}
   figcaption{font-size:13.5px;color:var(--sub);margin-top:6px}
+  .dl{font-size:12.5px;font-weight:700;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:#fff;border-radius:99px;padding:1px 9px;white-space:nowrap}
   .links{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
   .links a{font-size:14px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 14px}
   .pager{display:flex;justify-content:space-between;margin-top:40px;gap:10px}
@@ -138,6 +139,8 @@ function countMedia(t){
   return [img && `사진 ${img}`, vid && `영상 ${vid}`].filter(Boolean).join(" · ");
 }
 
+const dlUrl = m => m.type==="video" ? m.src : m.src.replace(/assets\/layout_(.+)\.jpg$/, "assets/hd/$1.jpg");
+
 function block(b){
   switch(b.type){
     case "h": return `<h4>${esc(b.text)}</h4>`;
@@ -150,7 +153,7 @@ function block(b){
       m.type==="video"
         ? `<video src="${esc(m.src)}" controls muted playsinline preload="metadata"></video>`
         : `<a href="${esc(m.src)}" target="_blank"><img src="${esc(m.src)}" alt="${esc(m.caption||"")}" loading="lazy"></a>`
-    }<figcaption>${esc(m.caption||"")}</figcaption></figure>`).join("")}</div>`;
+    }<figcaption>${esc(m.caption||"")} <a class="dl" href="${esc(dlUrl(m))}" download>↓ ${m.type==="video"?"영상":(dlUrl(m)!==m.src?"고화질":"사진")} 받기</a></figcaption></figure>`).join("")}</div>`;
     case "links": return `<div class="links">${b.items.map(l => `<a href="${esc(l.href)}" target="_blank">${esc(l.label)} ↗</a>`).join("")}</div>`;
   }
   return "";
@@ -204,7 +207,7 @@ function todoList(){
 
 function home(){
   app.innerHTML = header()
-    + `<a class="full" href="reports/status.html"><div><b>전체 현황 한 페이지 보기</b><span>확정된 것 · 고민 중인 것 · 남은 일 · 진행률 · 버전 기록을 한 장에</span></div><i>열기 →</i></a>`
+    + `<a class="full" href="reports/status.html"><div><b>전체 현황 한 페이지 보기</b><span>확정된 것 · 남은 일 · 진행률 · 버전 기록 · 사진·영상 다운로드까지 한 장에</span></div><i>열기 →</i></a>`
     + `<div class="sec">진행 단계</div>` + phases()
     + `<div class="sec">지금</div>` + hero()
     + `<div class="sec">할 일 순서</div>` + todoList()
