@@ -112,6 +112,10 @@
   .links a{font-size:14px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 14px}
   .pager{display:flex;justify-content:space-between;margin-top:40px;gap:10px}
   .pager a{text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 16px;font-size:14.5px}
+  .full{display:flex;align-items:center;justify-content:space-between;gap:14px;text-decoration:none;background:var(--ink);color:#fff;border-radius:16px;padding:18px 22px;margin:0 0 6px}
+  .full b{font-size:19px;display:block}
+  .full span{font-size:14px;opacity:.75}
+  .full i{font-style:normal;font-weight:800;background:var(--accent);border-radius:10px;padding:8px 14px;white-space:nowrap}
   .topbar{display:none;margin:0 0 18px;background:var(--accent-soft);border-radius:12px;padding:10px 14px;font-size:14.5px}
   .topbar a{color:var(--accent);font-weight:700;text-decoration:none}
   @media(max-width:860px){.hero,.detail{grid-template-columns:1fr}.side{position:static;flex-direction:row;flex-wrap:wrap}.topbar{display:block}}
@@ -200,6 +204,7 @@ function todoList(){
 
 function home(){
   app.innerHTML = header()
+    + `<a class="full" href="reports/status.html"><div><b>전체 현황 한 페이지 보기</b><span>확정된 것 · 고민 중인 것 · 남은 일 · 진행률 · 버전 기록을 한 장에</span></div><i>열기 →</i></a>`
     + `<div class="sec">진행 단계</div>` + phases()
     + `<div class="sec">지금</div>` + hero()
     + `<div class="sec">할 일 순서</div>` + todoList()

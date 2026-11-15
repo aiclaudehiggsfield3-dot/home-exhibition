@@ -3,29 +3,30 @@
 window.PROJECT = {
   title: "home — 인터랙티브 전시 제작 기록",
   subtitle: "AI 기반 영상 제작 워크샵 기말 프로젝트 · Unreal Engine 5.4 · 3m × 3m 체험 전시",
-  status: "공간 설계 끝 → 본안 결정과 인터랙션(블루프린트) 구현 시작",
-  updated: "2026-11-15 15:20",
+  status: "브라운관·지하철(영상 없음) 확정 → 앉는 가구(소파/리클라이너)만 남음 · 크브페 마감 11/23",
+  updated: "2026-11-15 16:10",
   // 큰 흐름. state: done(끝) / now(진행 중) / todo(아직)
   phases: [
     { name: "기획·공간 구조", state: "done" },
     { name: "배치안 5종 + 안 5 변형 8가지", state: "done" },
-    { name: "본안 결정", state: "now" },
+    { name: "본안 결정 (가구만 남음)", state: "now" },
     { name: "인터랙션 구현 (블루프린트)", state: "todo" },
     { name: "소리·센서·QR", state: "todo" },
     { name: "리허설 · 시연", state: "todo" }
   ],
   // 지금 정해야 하는 것 (홈 화면 상단 카드)
   decision: {
-    q: "본안을 무엇으로 할까?",
-    pick: "추천: 브라운관 TV + 거실 가구",
-    why: "가구가 있어야 '안주하게 되는 집'이 바로 읽히고, 작은 브라운관은 문을 열면 켜지는 연출이 또렷하다. 점수 45점(공동 1위).",
-    alt: "다른 후보: 브라운관 + 생활감 45점 · 프로젝터 + 거실 43점",
-    img: "assets/prev_Opt5B_crt_B_OverSofa.jpg",
-    link: "reports/home_v5_variants.html"
+    q: "앉는 가구: 2인 소파 vs 1인 리클라이너",
+    pick: "추천: 1인 리클라이너",
+    why: "1인 체험이라 자리가 하나면 충분하고, 등받이를 젖히는 동작 자체가 '안주'를 보여 준다. 실물 2인 소파는 폭 140~160이라 자리(122)에 안 들어갈 수 있다.",
+    alt: "브라운관 TV · 지하철 칸(손잡이, 영상 없음)은 확정 · 조명은 3500K로 더 희게",
+    img: "assets/prev_Opt5C_crt_B_OverSofa.jpg",
+    link: "reports/status.html#seat"
   },
   // 다음 할 일. who: 팀 / 지원 / Claude, state: now / todo / done
   next: [
-    { title: "본안 확정", detail: "브라운관 + 거실로 갈지 팀에서 결정한다. 정해지면 그 안만 다듬어 최종 렌더를 뽑는다.", who: "팀", time: "10분", state: "now", link: "reports/home_v5_variants.html", linkLabel: "8가지 비교 보기" },
+    { title: "앉는 가구 결정 (소파 vs 리클라이너)", detail: "브라운관은 확정. 앉는 가구 하나만 고르면 조명 3500K로 최종 렌더를 뽑는다. 나머지 추천안도 다르면 같이 알려 주기.", who: "팀", time: "10분", state: "now", link: "reports/status.html#decide", linkLabel: "결정 현황 보기" },
+    { title: "크브페 지원서 완성·제출 (11/23 23:59)", detail: "채움본을 HWP에 붙이고 사진 11장 넣고 HWP + PDF로 메일 제출.", who: "지원", time: "11/22까지", state: "todo", link: "https://claude.ai/artifact/53y4wg4Gp9aoq7Mgd13yaY", linkLabel: "채움본" },
     { title: "블루프린트 0~2단계", detail: "키 입력 설정(IMC_Home) → 문 열면 TV·조명 켜짐(BP_HomeDoor) → 소파 착석 감지(BP_SitZone).", who: "지원 + Claude", time: "1~2시간", state: "todo", link: "reports/home_interaction.html#guide", linkLabel: "단계별 안내" },
     { title: "소리 파일 5개", detail: "지하철 칸 소리 1개 + 집 소리 0~3단계(점점 이상하고 불편하게) 4개.", who: "팀", time: "반나절", state: "todo" },
     { title: "크브페 지원서 인터랙션 문단", detail: "인터랙션 페이지 맨 아래 긴/짧은 문단을 복사해 붙인다. HWP를 주면 Claude가 채워 줄 수 있다.", who: "지원", time: "20분", state: "todo", link: "reports/home_interaction.html#cbf", linkLabel: "문단 복사하기" },
@@ -36,6 +37,8 @@ window.PROJECT = {
   ],
   // 최근에 끝낸 것
   done: [
+    "전체 현황 한 페이지 (ver7)",
+    "브라운관 TV 확정 · 지하철 칸 영상 없이 손잡이로 확정",
     "안 5 치수표 (가벽·지하철 칸·가구) 만들기",
     "브라운관/프로젝터 × 가구 4종 = 8가지 비교·점수표",
     "프로젝터 레벨 2개 렌더·워크스루, 추천 4개 동시 비교 영상",
@@ -337,6 +340,7 @@ window.TOPICS = [
 ];
 
 window.LOG = [
+  { date: "2026-11-15", time: "16:10", text: "ver7: 전체 현황 한 페이지(status.html) — 결정 현황 15개, 진행률, 다음 할 일, 장비, 크브페 진행, 설계 과정, 버전 기록" },
   { date: "2026-11-15", time: "15:20", text: "안 5 치수표 HTML: 가벽 제작 치수(순수 290 = 185 + 문 80 + 25), 지하철 칸 단면·손잡이, 소파/리클라이너별 가구 치수" },
   { date: "2026-11-15", time: "14:40", text: "홈 화면 개편: 지금 할 일·결정할 것·진행 단계가 첫 화면에 바로 보이게" },
   { date: "2026-11-15", time: "14:30", text: "브라운관/프로젝터 × 가구 8가지 비교 → 본안 브라운관+거실 추천, 프로젝터 레벨 2개 Unreal 렌더·워크스루, 인터랙션을 블루프린트 구현으로 개편(단계별 가이드·아두이노 코드·지원서 문단)" },
