@@ -4,7 +4,7 @@ window.PROJECT = {
   title: "home — 인터랙티브 전시 제작 기록",
   subtitle: "AI 기반 영상 제작 워크샵 기말 프로젝트 · Unreal Engine 5.4 · 3m × 3m 체험 전시",
   status: "공간 설계 끝 → 본안 결정과 인터랙션(블루프린트) 구현 시작",
-  updated: "2026-11-15 14:40",
+  updated: "2026-11-15 15:20",
   // 큰 흐름. state: done(끝) / now(진행 중) / todo(아직)
   phases: [
     { name: "기획·공간 구조", state: "done" },
@@ -36,6 +36,7 @@ window.PROJECT = {
   ],
   // 최근에 끝낸 것
   done: [
+    "안 5 치수표 (가벽·지하철 칸·가구) 만들기",
     "브라운관/프로젝터 × 가구 4종 = 8가지 비교·점수표",
     "프로젝터 레벨 2개 렌더·워크스루, 추천 4개 동시 비교 영상",
     "인터랙션을 블루프린트 구조로 다시 설계 + 단계별 안내",
@@ -91,7 +92,7 @@ window.TOPICS = [
       ]},
       { type: "note", text: "처음에는 실내가 하얗게 날아가서 노출을 고정하는 설정을 추가했고, 눈높이에서 시야를 가리던 A 프로젝터는 천장 쪽으로 올렸다." },
       { type: "links", items: [
-        { label: "오브젝트별 크기·위치 정리 (HTML)", href: "reports/objects_current.html" },
+        { label: "오브젝트별 크기·위치 정리 — 처음 계획 (HTML)", href: "reports/objects_current.html" },
         { label: "첫 버전 스크립트", href: "scripts/build_exhibition_v1.py" }
       ]}
     ]
@@ -184,6 +185,7 @@ window.TOPICS = [
         "문 앞 동선이 꺾이는 곳의 손잡이는 키 큰 사람 머리에 닿지 않게 뺐다."
       ]},
       { type: "media", items: [{ type: "image", src: "assets/2026-11-15_opt5_compare.jpg", caption: "안 5 가구 구성 4가지 × 카메라 5대 (Unreal)" }] },
+      { type: "links", items: [{ label: "안 5 치수표: 가벽·지하철 칸·가구 (HTML)", href: "reports/objects_v5.html" }] },
       { type: "links", items: [{ label: "3D 미리보기 · 가구 켜고 끄기 · 브라운관/프로젝터 전환 (HTML)", href: "reports/home_v5_design.html" }] },
       { type: "table", head: ["구성", "가구", "머물게 하는 것", "나가게 하는 것"], rows: [
         ["A 기본", "러브시트, 담요, 리모컨", "TV와 소파, 담요만 남은 단순한 집", "방이 비어 출구가 늘 보임"],
@@ -335,6 +337,7 @@ window.TOPICS = [
 ];
 
 window.LOG = [
+  { date: "2026-11-15", time: "15:20", text: "안 5 치수표 HTML: 가벽 제작 치수(순수 290 = 185 + 문 80 + 25), 지하철 칸 단면·손잡이, 소파/리클라이너별 가구 치수" },
   { date: "2026-11-15", time: "14:40", text: "홈 화면 개편: 지금 할 일·결정할 것·진행 단계가 첫 화면에 바로 보이게" },
   { date: "2026-11-15", time: "14:30", text: "브라운관/프로젝터 × 가구 8가지 비교 → 본안 브라운관+거실 추천, 프로젝터 레벨 2개 Unreal 렌더·워크스루, 인터랙션을 블루프린트 구현으로 개편(단계별 가이드·아두이노 코드·지원서 문단)" },
   { date: "2026-11-15", time: "14:00", text: "안 5(지하철 칸 → 넓은 집, 브라운관 TV, 가구 4구성) Unreal 렌더 20장·워크스루 4개 완료, 3D 미리보기·인터랙션 설계·QR 결과 견본 페이지 추가" },

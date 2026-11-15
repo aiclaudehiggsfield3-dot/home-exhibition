@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>안 5 오브젝트 치수 — 가벽·지하철 칸·가구</title>
+<style>
+:root{--bg:#faf8f5;--ink:#26221e;--sub:#6b645c;--line:#e3ddd3;--accent:#c0562a;--soft:#fbe9df;--warm:#f7e3c4;--cold:#dfe6ec}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",sans-serif;line-height:1.65;font-size:15.5px;word-break:keep-all}
+.wrap{max-width:1100px;margin:0 auto;padding:36px 20px 80px}
+.kicker{font-size:13px;letter-spacing:.08em;color:var(--accent);font-weight:700;margin:0 0 4px}
+h1{font-size:28px;margin:0 0 6px;letter-spacing:-.02em}
+.lead{color:var(--sub);margin:0 0 18px}
+h2{font-size:21px;margin:42px 0 6px;display:flex;align-items:center;gap:10px}
+h2 .no{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:inline-grid;place-items:center;font-size:15px}
+.sum{color:var(--sub);margin:0 0 14px}
+.bar{position:sticky;top:0;z-index:5;background:rgba(250,248,245,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);margin:0 -20px;padding:10px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.seg button{border:0;background:none;padding:7px 14px;font:inherit;font-size:14px;cursor:pointer;color:var(--sub)}
+.seg button.on{background:var(--ink);color:#fff}
+.bar .hint{font-size:13px;color:var(--sub)}
+.key{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:14px 0}
+.k{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.k b{display:block;font-size:22px;letter-spacing:-.02em}
+.k span{font-size:13px;color:var(--sub)}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+.two{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;align-items:start}
+svg text{font-family:inherit}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);font-size:14px;margin:8px 0}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+td.wrap{white-space:normal;min-width:200px}
+th{background:#f1ede6;font-weight:600;font-size:13px}
+td.n{font-variant-numeric:tabular-nums;text-align:right}
+tr.hl td{background:var(--soft)}
+tr.grp td{background:#f7f4ef;font-weight:700;font-size:13px;color:var(--sub)}
+.note{background:var(--warm);color:#6a4210;border-radius:12px;padding:11px 15px;margin:12px 0;font-size:14.5px}
+.note.cold{background:var(--cold);color:#2f4658}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:700}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px;border:1px solid rgba(0,0,0,.15)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--sub);margin-top:8px}
+@media(max-width:860px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<p class="kicker">안 5 · 지하철에서 집으로 · 치수표</p>
+<h1>오브젝트 치수 — 가벽·지하철 칸·가구</h1>
+<p class="lead">Unreal 스크립트(build_layouts.py)가 짓는 값을 그대로 옮겼어요. 단위는 모두 cm, 높이는 바닥 윗면에서 잰 값이에요. 브라운관 TV는 확정, 앉는 가구는 위 버튼으로 소파/리클라이너를 바꿔 볼 수 있어요.</p>
+
+<div class="bar">
+  <div class="seg" id="seat"><button data-v="Opt5B" class="on">2인 소파 (거실)</button><button data-v="Opt5C">1인 리클라이너</button></div>
+  <span class="hint">표의 줄이나 배치도의 도형에 마우스를 올리면 서로 표시돼요.</span>
+</div>
+
+<div class="key" id="key"></div>
+
+<h2><span class="no">1</span>위에서 본 배치도</h2>
+<p class="sum">좌표 기준점 (0, 0)은 입구 쪽 왼쪽 위 모서리. X는 오른쪽(0~300), Y는 아래쪽(0~300). 위쪽 띠가 지하철 칸, 아래가 집이에요.</p>
+<div class="card"><svg id="plan" viewBox="-75 -40 400 380" width="100%" style="max-width:720px;display:block;margin:auto"></svg>
+<div class="legend" id="legend"></div></div>
+
+<h2><span class="no">2</span>사회–집 사이 가벽 (제작 치수)</h2>
+<p class="sum">가벽은 Y=80 선에 서는 두께 10짜리 벽이에요. 문 개구부(X 190~270)를 사이에 두고 판 2장 + 문 위 막음 판 1장으로 나뉘어요.</p>
+<div class="two">
+  <div class="card"><svg id="elev" viewBox="-30 -30 360 310" width="100%"></svg></div>
+  <div>
+    <div class="tw"><table id="parttab"></table></div>
+    <div class="note"><b>실물로 자를 때:</b> Unreal 모델은 외벽 중심선을 0과 300에 두어서 가벽이 외벽 속으로 5cm씩 겹쳐 있어요. 외벽 안쪽 면(X 5~295) 사이에 끼워 세우면 판 ①은 <b>185</b>, 판 ②는 <b>25</b>, 전체 순수 길이는 <b>290</b>(판 185 + 문 80 + 판 25)이에요. 전시장 바깥 벽을 그대로 쓰면 전체 300 기준으로 판 ① 190, 판 ② 30이에요.</div>
+    <div class="note cold">문은 집 쪽으로 열리고(경첩 X=270 쪽), 도어클로저로 닫혀요. 문짝 80 × 210 × 4는 개구부 기준이라, 기성 문틀을 쓰면 문틀 바깥 치수가 80 × 210에 맞도록 개구부를 키우거나 문짝을 76 정도로 줄여야 해요.</div>
+  </div>
+</div>
+
+<h2><span class="no">3</span>지하철 칸 단면</h2>
+<p class="sum">영상 없이 손잡이·차창·광고·노선도·사람 실루엣으로 지하철 칸을 표현해요. 아래는 칸을 옆에서 자른 단면(Y 방향)이에요.</p>
+<div class="two" style="grid-template-columns:320px 1fr">
+  <div class="card"><svg id="sec" viewBox="-40 -20 200 270" width="100%"></svg></div>
+  <div class="tw"><table id="subtab"></table></div>
+</div>
+
+<h2><span class="no">4</span>가구·장비 치수</h2>
+<p class="sum">가구 한 덩어리 기준(겉치수)으로 묶었어요. 크기는 가로(X) × 세로(Y) × 높이(Z), 위치는 배치도 좌표 범위예요.</p>
+<div class="tw"><table id="furn"></table></div>
+<div class="note" id="dist"></div>
+
+<h2><span class="no">5</span>조명</h2>
+<div class="tw"><table id="lighttab"></table></div>
+<div class="note">집 조명이 지금 2700K라 붉게 보여요. 다음 렌더부터 3500K 웜화이트로 바꿀 예정이에요(크브페 결정 2번).</div>
+
+<details><summary>전체 오브젝트 목록 (Unreal 아웃라이너 이름 그대로)</summary>
+<div class="tw"><table id="all"></table></div></details>
+</div>
+
+<script>
+const DATA={"Opt5B": {"rows": [{"n": "Floor_A", "k": "지하철 칸 바닥", "c": "struct", "x0": 0, "x1": 300, "y0": 0, "y1": 80, "z0": -5, "z1": 0}, {"n": "Floor_B", "k": "집 바닥", "c": "struct", "x0": 0, "x1": 300, "y0": 80, "y1": 300, "z0": -5, "z1": 0}, {"n": "Wall_Top", "k": "위쪽 외벽 (지하철 차량 옆면)", "c": "struct", "x0": 0, "x1": 300, "y0": -5.0, "y1": 5.0, "z0": 0, "z1": 240}, {"n": "Wall_Left_A_Header", "k": "입구 위 막음 벽", "c": "struct", "x0": -5.0, "x1": 5.0, "y0": 0, "y1": 80, "z0": 210, "z1": 240}, {"n": "Wall_Left_B", "k": "왼쪽 외벽 (집, TV 쪽)", "c": "struct", "x0": -5.0, "x1": 5.0, "y0": 80, "y1": 300, "z0": 0, "z1": 240}, {"n": "Wall_Right_A", "k": "오른쪽 외벽 (지하철 칸 끝)", "c": "struct", "x0": 295.0, "x1": 305.0, "y0": 0, "y1": 80, "z0": 0, "z1": 240}, {"n": "Wall_Right_B", "k": "오른쪽 외벽 (집, 소파 뒤)", "c": "struct", "x0": 295.0, "x1": 305.0, "y0": 80, "y1": 300, "z0": 0, "z1": 240}, {"n": "Wall_Bottom_0", "k": "아래쪽 외벽 (출구 왼쪽 모서리)", "c": "struct", "x0": 0, "x1": 10, "y0": 295.0, "y1": 305.0, "z0": 0, "z1": 240}, {"n": "Wall_Bottom_1", "k": "아래쪽 외벽 (출구 오른쪽)", "c": "struct", "x0": 90, "x1": 300, "y0": 295.0, "y1": 305.0, "z0": 0, "z1": 240}, {"n": "Wall_Bottom_ExitHeader", "k": "출구 위 막음 벽", "c": "struct", "x0": 10, "x1": 90, "y0": 295.0, "y1": 305.0, "z0": 210, "z1": 240}, {"n": "Partition_1", "k": "가벽 ① 문 왼쪽 (긴 판)", "c": "part", "x0": 0, "x1": 190, "y0": 75.0, "y1": 85.0, "z0": 0, "z1": 240}, {"n": "Partition_2", "k": "가벽 ② 문 오른쪽 (짧은 판)", "c": "part", "x0": 270, "x1": 300, "y0": 75.0, "y1": 85.0, "z0": 0, "z1": 240}, {"n": "Partition_DoorHeader", "k": "가벽 ③ 문 위 막음 판", "c": "part", "x0": 190, "x1": 270, "y0": 75.0, "y1": 85.0, "z0": 210, "z1": 240}, {"n": "Door_Partition", "k": "사회→집 문짝 (집 쪽으로 90° 열린 모습)", "c": "part", "x0": 264, "x1": 268, "y0": 85, "y1": 165, "z0": 0, "z1": 210}, {"n": "Door_Exit", "k": "출구 문짝 (바깥으로 열린 모습)", "c": "struct", "x0": 84, "x1": 88, "y0": 305.0, "y1": 385.0, "z0": 0, "z1": 210}, {"n": "Speaker_A", "k": "스피커 (지하철 칸)", "c": "dev", "x0": 270, "x1": 285, "y0": 60, "y1": 74, "z0": 0, "z1": 30}, {"n": "Speaker_B_1", "k": "스피커 (집 1)", "c": "dev", "x0": 10, "x1": 25, "y0": 88, "y1": 103, "z0": 0, "z1": 30}, {"n": "Speaker_B_2", "k": "스피커 (집 2)", "c": "dev", "x0": 275, "x1": 290, "y0": 88, "y1": 103, "z0": 0, "z1": 30}, {"n": "Sub_Door_0", "k": "차량 출입문 그림 1", "c": "sub", "x0": 100, "x1": 160, "y0": 5, "y1": 7, "z0": 0, "z1": 200}, {"n": "Sub_DoorWin_0", "k": "출입문 창 1", "c": "sub", "x0": 108, "x1": 152, "y0": 7, "y1": 7.6, "z0": 110, "z1": 180}, {"n": "Sub_LED_0", "k": "출입문 위 LED 안내 1", "c": "sub", "x0": 105, "x1": 155, "y0": 5, "y1": 8, "z0": 203, "z1": 209}, {"n": "Sub_Door_1", "k": "차량 출입문 그림 2", "c": "sub", "x0": 220, "x1": 280, "y0": 5, "y1": 7, "z0": 0, "z1": 200}, {"n": "Sub_DoorWin_1", "k": "출입문 창 2", "c": "sub", "x0": 228, "x1": 272, "y0": 7, "y1": 7.6, "z0": 110, "z1": 180}, {"n": "Sub_LED_1", "k": "출입문 위 LED 안내 2", "c": "sub", "x0": 225, "x1": 275, "y0": 5, "y1": 8, "z0": 203, "z1": 209}, {"n": "Sub_Window_0", "k": "차창 1", "c": "sub", "x0": 12, "x1": 92, "y0": 5, "y1": 6.5, "z0": 95, "z1": 175}, {"n": "Sub_Ad_Top_0", "k": "차창 위 광고 1", "c": "sub", "x0": 12, "x1": 92, "y0": 5, "y1": 7, "z0": 182, "z1": 207}, {"n": "Sub_Window_1", "k": "차창 2", "c": "sub", "x0": 168, "x1": 212, "y0": 5, "y1": 6.5, "z0": 95, "z1": 175}, {"n": "Sub_Ad_Top_1", "k": "차창 위 광고 2", "c": "sub", "x0": 168, "x1": 212, "y0": 5, "y1": 7, "z0": 182, "z1": 207}, {"n": "Sub_Ad_Wall_0", "k": "가벽 광고판 1", "c": "sub", "x0": 20, "x1": 80, "y0": 72, "y1": 75, "z0": 120, "z1": 185}, {"n": "Sub_Ad_Wall_1", "k": "가벽 광고판 2", "c": "sub", "x0": 95, "x1": 155, "y0": 72, "y1": 75, "z0": 120, "z1": 185}, {"n": "Sub_RouteMap", "k": "노선도 띠", "c": "sub", "x0": 20, "x1": 180, "y0": 73, "y1": 75, "z0": 192, "z1": 206}, {"n": "Sub_Rail_0", "k": "손잡이 봉 1 (바깥쪽)", "c": "sub", "x0": 8, "x1": 292, "y0": 20.5, "y1": 23.5, "z0": 204, "z1": 207}, {"n": "Sub_Strap_0_0", "k": "손잡이", "c": "sub", "x0": 24, "x1": 26, "y0": 21, "y1": 23, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_0_0", "k": "손잡이", "c": "sub", "x0": 21, "x1": 29, "y0": 21, "y1": 23, "z0": 184, "z1": 192}, {"n": "Sub_Strap_0_1", "k": "손잡이", "c": "sub", "x0": 54, "x1": 56, "y0": 21, "y1": 23, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_0_1", "k": "손잡이", "c": "sub", "x0": 51, "x1": 59, "y0": 21, "y1": 23, "z0": 184, "z1": 192}, {"n": "Sub_Strap_0_2", "k": "손잡이", "c": "sub", "x0": 84, "x1": 86, "y0": 21, "y1": 23, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_0_2", "k": "손잡이", "c": "sub", "x0": 81, "x1": 89, "y0": 21, "y1": 23, "z0": 184, "z1": 192}, {"n": "Sub_Strap_0_3", "k": "손잡이", "c": "sub", "x0": 114, "x1": 116, "y0": 21, "y1": 23, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_0_3", "k": "손잡이", "c": "sub", "x0": 111, "x1": 119, "y0": 21, "y1": 23, "z0": 184, "z1": 192}, {"n": "Sub_Strap_0_4", "k": "손잡이", "c": "sub", "x0": 144, "x1": 146, "y0": 21, "y1": 23, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_0_4", "k": "손잡이", "c": "sub", "x0": 141, "x1": 149, "y0": 21, "y1": 23, "z0": 184, "z1": 192}, {"n": "Sub_Strap_0_5", "k": "손잡이", "c": "sub", "x0": 174, "x1": 176, "y0": 21, "y1": 23, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_0_5", "k": "손잡이", "c": "sub", "x0": 171, "x1": 179, "y0": 21, "y1": 23, "z0": 184, "z1": 192}, {"n": "Sub_Strap_0_8", "k": "손잡이", "c": "sub", "x0": 264, "x1": 266, "y0": 21, "y1": 23, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_0_8", "k": "손잡이", "c": "sub", "x0": 261, "x1": 269, "y0": 21, "y1": 23, "z0": 184, "z1": 192}, {"n": "Sub_Rail_1", "k": "손잡이 봉 2 (가벽 쪽)", "c": "sub", "x0": 8, "x1": 292, "y0": 56.5, "y1": 59.5, "z0": 204, "z1": 207}, {"n": "Sub_Strap_1_0", "k": "손잡이", "c": "sub", "x0": 24, "x1": 26, "y0": 57, "y1": 59, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_1_0", "k": "손잡이", "c": "sub", "x0": 21, "x1": 29, "y0": 57, "y1": 59, "z0": 184, "z1": 192}, {"n": "Sub_Strap_1_1", "k": "손잡이", "c": "sub", "x0": 54, "x1": 56, "y0": 57, "y1": 59, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_1_1", "k": "손잡이", "c": "sub", "x0": 51, "x1": 59, "y0": 57, "y1": 59, "z0": 184, "z1": 192}, {"n": "Sub_Strap_1_2", "k": "손잡이", "c": "sub", "x0": 84, "x1": 86, "y0": 57, "y1": 59, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_1_2", "k": "손잡이", "c": "sub", "x0": 81, "x1": 89, "y0": 57, "y1": 59, "z0": 184, "z1": 192}, {"n": "Sub_Strap_1_3", "k": "손잡이", "c": "sub", "x0": 114, "x1": 116, "y0": 57, "y1": 59, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_1_3", "k": "손잡이", "c": "sub", "x0": 111, "x1": 119, "y0": 57, "y1": 59, "z0": 184, "z1": 192}, {"n": "Sub_Strap_1_4", "k": "손잡이", "c": "sub", "x0": 144, "x1": 146, "y0": 57, "y1": 59, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_1_4", "k": "손잡이", "c": "sub", "x0": 141, "x1": 149, "y0": 57, "y1": 59, "z0": 184, "z1": 192}, {"n": "Sub_Strap_1_5", "k": "손잡이", "c": "sub", "x0": 174, "x1": 176, "y0": 57, "y1": 59, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_1_5", "k": "손잡이", "c": "sub", "x0": 171, "x1": 179, "y0": 57, "y1": 59, "z0": 184, "z1": 192}, {"n": "Sub_Strap_1_8", "k": "손잡이", "c": "sub", "x0": 264, "x1": 266, "y0": 57, "y1": 59, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_1_8", "k": "손잡이", "c": "sub", "x0": 261, "x1": 269, "y0": 57, "y1": 59, "z0": 184, "z1": 192}, {"n": "Sub_Pole_0", "k": "세로 기둥 1", "c": "sub", "x0": 58, "x1": 62, "y0": 7, "y1": 11, "z0": 0, "z1": 215}, {"n": "Sub_Pole_1", "k": "세로 기둥 2", "c": "sub", "x0": 188, "x1": 192, "y0": 7, "y1": 11, "z0": 0, "z1": 215}, {"n": "Sub_Person_LegL_0", "k": "사람 실루엣 판", "c": "sub", "x0": 27, "x1": 38, "y0": 6, "y1": 9, "z0": 0, "z1": 80.8}, {"n": "Sub_Person_LegR_0", "k": "사람 실루엣 판", "c": "sub", "x0": 42, "x1": 53, "y0": 6, "y1": 9, "z0": 0, "z1": 80.8}, {"n": "Sub_Person_Body_0", "k": "사람 실루엣 판", "c": "sub", "x0": 23, "x1": 57, "y0": 6, "y1": 9, "z0": 80.8, "z1": 142.8}, {"n": "Sub_Person_ArmL_0", "k": "사람 실루엣 판", "c": "sub", "x0": 17, "x1": 22, "y0": 6, "y1": 9, "z0": 88.8, "z1": 138.8}, {"n": "Sub_Person_ArmR_0", "k": "사람 실루엣 판", "c": "sub", "x0": 58, "x1": 63, "y0": 6, "y1": 9, "z0": 88.8, "z1": 138.8}, {"n": "Sub_Person_Neck_0", "k": "사람 실루엣 판", "c": "sub", "x0": 36, "x1": 44, "y0": 6, "y1": 9, "z0": 142.8, "z1": 146.8}, {"n": "Sub_Person_Head_0", "k": "사람 실루엣 판", "c": "sub", "x0": 31, "x1": 49, "y0": 6, "y1": 9, "z0": 146.8, "z1": 172}, {"n": "Sub_Person_LegL_1", "k": "사람 실루엣 판", "c": "sub", "x0": 137, "x1": 148, "y0": 6, "y1": 9, "z0": 0, "z1": 77.5}, {"n": "Sub_Person_LegR_1", "k": "사람 실루엣 판", "c": "sub", "x0": 152, "x1": 163, "y0": 6, "y1": 9, "z0": 0, "z1": 77.5}, {"n": "Sub_Person_Body_1", "k": "사람 실루엣 판", "c": "sub", "x0": 133, "x1": 167, "y0": 6, "y1": 9, "z0": 77.5, "z1": 136.9}, {"n": "Sub_Person_ArmL_1", "k": "사람 실루엣 판", "c": "sub", "x0": 127, "x1": 132, "y0": 6, "y1": 9, "z0": 85.5, "z1": 132.9}, {"n": "Sub_Person_ArmR_1", "k": "사람 실루엣 판", "c": "sub", "x0": 168, "x1": 173, "y0": 6, "y1": 9, "z0": 85.5, "z1": 132.9}, {"n": "Sub_Person_Neck_1", "k": "사람 실루엣 판", "c": "sub", "x0": 146, "x1": 154, "y0": 6, "y1": 9, "z0": 136.9, "z1": 140.9}, {"n": "Sub_Person_Head_1", "k": "사람 실루엣 판", "c": "sub", "x0": 141, "x1": 159, "y0": 6, "y1": 9, "z0": 140.9, "z1": 165}, {"n": "Sub_Person_LegL_2", "k": "사람 실루엣 판", "c": "sub", "x0": 72, "x1": 83, "y0": 71, "y1": 74, "z0": 0, "z1": 83.7}, {"n": "Sub_Person_LegR_2", "k": "사람 실루엣 판", "c": "sub", "x0": 87, "x1": 98, "y0": 71, "y1": 74, "z0": 0, "z1": 83.7}, {"n": "Sub_Person_Body_2", "k": "사람 실루엣 판", "c": "sub", "x0": 68, "x1": 102, "y0": 71, "y1": 74, "z0": 83.7, "z1": 147.7}, {"n": "Sub_Person_ArmL_2", "k": "사람 실루엣 판", "c": "sub", "x0": 62, "x1": 67, "y0": 71, "y1": 74, "z0": 91.7, "z1": 143.7}, {"n": "Sub_Person_ArmR_2", "k": "사람 실루엣 판", "c": "sub", "x0": 103, "x1": 108, "y0": 71, "y1": 74, "z0": 91.7, "z1": 143.7}, {"n": "Sub_Person_Neck_2", "k": "사람 실루엣 판", "c": "sub", "x0": 81, "x1": 89, "y0": 71, "y1": 74, "z0": 147.7, "z1": 151.7}, {"n": "Sub_Person_Head_2", "k": "사람 실루엣 판", "c": "sub", "x0": 76, "x1": 94, "y0": 71, "y1": 74, "z0": 151.7, "z1": 178}, {"n": "Sub_Person_LegL_3", "k": "사람 실루엣 판", "c": "sub", "x0": 237, "x1": 248, "y0": 6, "y1": 9, "z0": 0, "z1": 79.0}, {"n": "Sub_Person_LegR_3", "k": "사람 실루엣 판", "c": "sub", "x0": 252, "x1": 263, "y0": 6, "y1": 9, "z0": 0, "z1": 79.0}, {"n": "Sub_Person_Body_3", "k": "사람 실루엣 판", "c": "sub", "x0": 233, "x1": 267, "y0": 6, "y1": 9, "z0": 79.0, "z1": 139.4}, {"n": "Sub_Person_ArmL_3", "k": "사람 실루엣 판", "c": "sub", "x0": 227, "x1": 232, "y0": 6, "y1": 9, "z0": 87.0, "z1": 135.4}, {"n": "Sub_Person_ArmR_3", "k": "사람 실루엣 판", "c": "sub", "x0": 268, "x1": 273, "y0": 6, "y1": 9, "z0": 87.0, "z1": 135.4}, {"n": "Sub_Person_Neck_3", "k": "사람 실루엣 판", "c": "sub", "x0": 246, "x1": 254, "y0": 6, "y1": 9, "z0": 139.4, "z1": 143.4}, {"n": "Sub_Person_Head_3", "k": "사람 실루엣 판", "c": "sub", "x0": 241, "x1": 259, "y0": 6, "y1": 9, "z0": 143.4, "z1": 168}, {"n": "Ceiling_A_Low", "k": "지하철 칸 낮은 천장", "c": "sub", "x0": 0, "x1": 300, "y0": 0, "y1": 75, "z0": 215, "z1": 220}, {"n": "Ceiling_A_Light_0", "k": "지하철 형광등 띠 1", "c": "sub", "x0": 20, "x1": 280, "y0": 25, "y1": 31, "z0": 213, "z1": 215}, {"n": "Ceiling_A_Light_1", "k": "지하철 형광등 띠 2", "c": "sub", "x0": 20, "x1": 280, "y0": 49, "y1": 55, "z0": 213, "z1": 215}, {"n": "TV_Stand", "k": "TV장", "c": "furn", "x0": 5, "x1": 45, "y0": 158, "y1": 232, "z0": 0, "z1": 48}, {"n": "TV_CRT_Body", "k": "브라운관 TV 본체", "c": "dev", "x0": 6, "x1": 52, "y0": 162, "y1": 228, "z0": 48, "z1": 103}, {"n": "TV_CRT_Glass", "k": "브라운관 화면 유리", "c": "dev", "x0": 52, "x1": 53.5, "y0": 165, "y1": 225, "z0": 52, "z1": 100}, {"n": "TV_Antenna_1", "k": "TV 안테나 1", "c": "dev", "x0": 25, "x1": 27, "y0": 182, "y1": 184, "z0": 103, "z1": 140}, {"n": "TV_Antenna_2", "k": "TV 안테나 2", "c": "dev", "x0": 25, "x1": 27, "y0": 206, "y1": 208, "z0": 103, "z1": 140}, {"n": "CCTV_Dome", "k": "CCTV 카메라 (천장 모서리)", "c": "dev", "x0": 145, "x1": 157, "y0": 92, "y1": 104, "z0": 232, "z1": 242}, {"n": "Sofa_Seat", "k": "소파 좌판", "c": "seat", "x0": 215, "x1": 290, "y0": 168, "y1": 290, "z0": 0, "z1": 45}, {"n": "Sofa_Back", "k": "소파 등받이", "c": "seat", "x0": 272, "x1": 290, "y0": 168, "y1": 290, "z0": 45, "z1": 85}, {"n": "Sofa_Arm_1", "k": "소파 팔걸이 1", "c": "seat", "x0": 215, "x1": 290, "y0": 168, "y1": 183, "z0": 45, "z1": 65}, {"n": "Sofa_Arm_2", "k": "소파 팔걸이 2", "c": "seat", "x0": 215, "x1": 290, "y0": 275, "y1": 290, "z0": 45, "z1": 65}, {"n": "Blanket", "k": "담요", "c": "furn", "x0": 224, "x1": 280, "y0": 236, "y1": 286, "z0": 45, "z1": 50}, {"n": "Remote", "k": "리모컨", "c": "furn", "x0": 226, "x1": 240, "y0": 170, "y1": 181, "z0": 65, "z1": 68}, {"n": "Rug", "k": "러그", "c": "furn", "x0": 70, "x1": 205, "y0": 140, "y1": 280, "z0": 0, "z1": 1}, {"n": "Lamp_Pole", "k": "스탠드 기둥", "c": "furn", "x0": 38, "x1": 44, "y0": 93, "y1": 99, "z0": 0, "z1": 150}, {"n": "Lamp_Shade", "k": "스탠드 갓", "c": "furn", "x0": 30, "x1": 52, "y0": 88, "y1": 110, "z0": 150, "z1": 172}, {"n": "Plant_Pot", "k": "화분", "c": "furn", "x0": 62, "x1": 84, "y0": 90, "y1": 112, "z0": 0, "z1": 40}, {"n": "Plant_Leaf", "k": "식물 잎", "c": "furn", "x0": 58, "x1": 88, "y0": 86, "y1": 116, "z0": 40, "z1": 115}, {"n": "Shelf", "k": "선반", "c": "furn", "x0": 95, "x1": 160, "y0": 87, "y1": 115, "z0": 0, "z1": 120}], "lights": [["Light_A_Cold_1", 90, 40, 207, 6500, 2], ["Light_A_Cold_2", 220, 40, 207, 6500, 2], ["Light_B_Warm_1", 235, 255, 207, 2700, 2.2], ["Light_B_Ceiling", 140, 190, 217, 2700, 1.5], ["Light_TV_Glow", 80, 195, 82, 9000, 1.0], ["Light_Lamp", 41, 99, 162, 2400, 2.5]], "screens": [["Screen_B_Home", "Movies/B_home.mp4", 53.6, 195, 78, 52, 29.25, 180]]}, "Opt5C": {"rows": [{"n": "Floor_A", "k": "지하철 칸 바닥", "c": "struct", "x0": 0, "x1": 300, "y0": 0, "y1": 80, "z0": -5, "z1": 0}, {"n": "Floor_B", "k": "집 바닥", "c": "struct", "x0": 0, "x1": 300, "y0": 80, "y1": 300, "z0": -5, "z1": 0}, {"n": "Wall_Top", "k": "위쪽 외벽 (지하철 차량 옆면)", "c": "struct", "x0": 0, "x1": 300, "y0": -5.0, "y1": 5.0, "z0": 0, "z1": 240}, {"n": "Wall_Left_A_Header", "k": "입구 위 막음 벽", "c": "struct", "x0": -5.0, "x1": 5.0, "y0": 0, "y1": 80, "z0": 210, "z1": 240}, {"n": "Wall_Left_B", "k": "왼쪽 외벽 (집, TV 쪽)", "c": "struct", "x0": -5.0, "x1": 5.0, "y0": 80, "y1": 300, "z0": 0, "z1": 240}, {"n": "Wall_Right_A", "k": "오른쪽 외벽 (지하철 칸 끝)", "c": "struct", "x0": 295.0, "x1": 305.0, "y0": 0, "y1": 80, "z0": 0, "z1": 240}, {"n": "Wall_Right_B", "k": "오른쪽 외벽 (집, 소파 뒤)", "c": "struct", "x0": 295.0, "x1": 305.0, "y0": 80, "y1": 300, "z0": 0, "z1": 240}, {"n": "Wall_Bottom_0", "k": "아래쪽 외벽 (출구 왼쪽 모서리)", "c": "struct", "x0": 0, "x1": 10, "y0": 295.0, "y1": 305.0, "z0": 0, "z1": 240}, {"n": "Wall_Bottom_1", "k": "아래쪽 외벽 (출구 오른쪽)", "c": "struct", "x0": 90, "x1": 300, "y0": 295.0, "y1": 305.0, "z0": 0, "z1": 240}, {"n": "Wall_Bottom_ExitHeader", "k": "출구 위 막음 벽", "c": "struct", "x0": 10, "x1": 90, "y0": 295.0, "y1": 305.0, "z0": 210, "z1": 240}, {"n": "Partition_1", "k": "가벽 ① 문 왼쪽 (긴 판)", "c": "part", "x0": 0, "x1": 190, "y0": 75.0, "y1": 85.0, "z0": 0, "z1": 240}, {"n": "Partition_2", "k": "가벽 ② 문 오른쪽 (짧은 판)", "c": "part", "x0": 270, "x1": 300, "y0": 75.0, "y1": 85.0, "z0": 0, "z1": 240}, {"n": "Partition_DoorHeader", "k": "가벽 ③ 문 위 막음 판", "c": "part", "x0": 190, "x1": 270, "y0": 75.0, "y1": 85.0, "z0": 210, "z1": 240}, {"n": "Door_Partition", "k": "사회→집 문짝 (집 쪽으로 90° 열린 모습)", "c": "part", "x0": 264, "x1": 268, "y0": 85, "y1": 165, "z0": 0, "z1": 210}, {"n": "Door_Exit", "k": "출구 문짝 (바깥으로 열린 모습)", "c": "struct", "x0": 84, "x1": 88, "y0": 305.0, "y1": 385.0, "z0": 0, "z1": 210}, {"n": "Speaker_A", "k": "스피커 (지하철 칸)", "c": "dev", "x0": 270, "x1": 285, "y0": 60, "y1": 74, "z0": 0, "z1": 30}, {"n": "Speaker_B_1", "k": "스피커 (집 1)", "c": "dev", "x0": 10, "x1": 25, "y0": 88, "y1": 103, "z0": 0, "z1": 30}, {"n": "Speaker_B_2", "k": "스피커 (집 2)", "c": "dev", "x0": 275, "x1": 290, "y0": 88, "y1": 103, "z0": 0, "z1": 30}, {"n": "Sub_Door_0", "k": "차량 출입문 그림 1", "c": "sub", "x0": 100, "x1": 160, "y0": 5, "y1": 7, "z0": 0, "z1": 200}, {"n": "Sub_DoorWin_0", "k": "출입문 창 1", "c": "sub", "x0": 108, "x1": 152, "y0": 7, "y1": 7.6, "z0": 110, "z1": 180}, {"n": "Sub_LED_0", "k": "출입문 위 LED 안내 1", "c": "sub", "x0": 105, "x1": 155, "y0": 5, "y1": 8, "z0": 203, "z1": 209}, {"n": "Sub_Door_1", "k": "차량 출입문 그림 2", "c": "sub", "x0": 220, "x1": 280, "y0": 5, "y1": 7, "z0": 0, "z1": 200}, {"n": "Sub_DoorWin_1", "k": "출입문 창 2", "c": "sub", "x0": 228, "x1": 272, "y0": 7, "y1": 7.6, "z0": 110, "z1": 180}, {"n": "Sub_LED_1", "k": "출입문 위 LED 안내 2", "c": "sub", "x0": 225, "x1": 275, "y0": 5, "y1": 8, "z0": 203, "z1": 209}, {"n": "Sub_Window_0", "k": "차창 1", "c": "sub", "x0": 12, "x1": 92, "y0": 5, "y1": 6.5, "z0": 95, "z1": 175}, {"n": "Sub_Ad_Top_0", "k": "차창 위 광고 1", "c": "sub", "x0": 12, "x1": 92, "y0": 5, "y1": 7, "z0": 182, "z1": 207}, {"n": "Sub_Window_1", "k": "차창 2", "c": "sub", "x0": 168, "x1": 212, "y0": 5, "y1": 6.5, "z0": 95, "z1": 175}, {"n": "Sub_Ad_Top_1", "k": "차창 위 광고 2", "c": "sub", "x0": 168, "x1": 212, "y0": 5, "y1": 7, "z0": 182, "z1": 207}, {"n": "Sub_Ad_Wall_0", "k": "가벽 광고판 1", "c": "sub", "x0": 20, "x1": 80, "y0": 72, "y1": 75, "z0": 120, "z1": 185}, {"n": "Sub_Ad_Wall_1", "k": "가벽 광고판 2", "c": "sub", "x0": 95, "x1": 155, "y0": 72, "y1": 75, "z0": 120, "z1": 185}, {"n": "Sub_RouteMap", "k": "노선도 띠", "c": "sub", "x0": 20, "x1": 180, "y0": 73, "y1": 75, "z0": 192, "z1": 206}, {"n": "Sub_Rail_0", "k": "손잡이 봉 1 (바깥쪽)", "c": "sub", "x0": 8, "x1": 292, "y0": 20.5, "y1": 23.5, "z0": 204, "z1": 207}, {"n": "Sub_Strap_0_0", "k": "손잡이", "c": "sub", "x0": 24, "x1": 26, "y0": 21, "y1": 23, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_0_0", "k": "손잡이", "c": "sub", "x0": 21, "x1": 29, "y0": 21, "y1": 23, "z0": 184, "z1": 192}, {"n": "Sub_Strap_0_1", "k": "손잡이", "c": "sub", "x0": 54, "x1": 56, "y0": 21, "y1": 23, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_0_1", "k": "손잡이", "c": "sub", "x0": 51, "x1": 59, "y0": 21, "y1": 23, "z0": 184, "z1": 192}, {"n": "Sub_Strap_0_2", "k": "손잡이", "c": "sub", "x0": 84, "x1": 86, "y0": 21, "y1": 23, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_0_2", "k": "손잡이", "c": "sub", "x0": 81, "x1": 89, "y0": 21, "y1": 23, "z0": 184, "z1": 192}, {"n": "Sub_Strap_0_3", "k": "손잡이", "c": "sub", "x0": 114, "x1": 116, "y0": 21, "y1": 23, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_0_3", "k": "손잡이", "c": "sub", "x0": 111, "x1": 119, "y0": 21, "y1": 23, "z0": 184, "z1": 192}, {"n": "Sub_Strap_0_4", "k": "손잡이", "c": "sub", "x0": 144, "x1": 146, "y0": 21, "y1": 23, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_0_4", "k": "손잡이", "c": "sub", "x0": 141, "x1": 149, "y0": 21, "y1": 23, "z0": 184, "z1": 192}, {"n": "Sub_Strap_0_5", "k": "손잡이", "c": "sub", "x0": 174, "x1": 176, "y0": 21, "y1": 23, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_0_5", "k": "손잡이", "c": "sub", "x0": 171, "x1": 179, "y0": 21, "y1": 23, "z0": 184, "z1": 192}, {"n": "Sub_Strap_0_8", "k": "손잡이", "c": "sub", "x0": 264, "x1": 266, "y0": 21, "y1": 23, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_0_8", "k": "손잡이", "c": "sub", "x0": 261, "x1": 269, "y0": 21, "y1": 23, "z0": 184, "z1": 192}, {"n": "Sub_Rail_1", "k": "손잡이 봉 2 (가벽 쪽)", "c": "sub", "x0": 8, "x1": 292, "y0": 56.5, "y1": 59.5, "z0": 204, "z1": 207}, {"n": "Sub_Strap_1_0", "k": "손잡이", "c": "sub", "x0": 24, "x1": 26, "y0": 57, "y1": 59, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_1_0", "k": "손잡이", "c": "sub", "x0": 21, "x1": 29, "y0": 57, "y1": 59, "z0": 184, "z1": 192}, {"n": "Sub_Strap_1_1", "k": "손잡이", "c": "sub", "x0": 54, "x1": 56, "y0": 57, "y1": 59, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_1_1", "k": "손잡이", "c": "sub", "x0": 51, "x1": 59, "y0": 57, "y1": 59, "z0": 184, "z1": 192}, {"n": "Sub_Strap_1_2", "k": "손잡이", "c": "sub", "x0": 84, "x1": 86, "y0": 57, "y1": 59, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_1_2", "k": "손잡이", "c": "sub", "x0": 81, "x1": 89, "y0": 57, "y1": 59, "z0": 184, "z1": 192}, {"n": "Sub_Strap_1_3", "k": "손잡이", "c": "sub", "x0": 114, "x1": 116, "y0": 57, "y1": 59, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_1_3", "k": "손잡이", "c": "sub", "x0": 111, "x1": 119, "y0": 57, "y1": 59, "z0": 184, "z1": 192}, {"n": "Sub_Strap_1_4", "k": "손잡이", "c": "sub", "x0": 144, "x1": 146, "y0": 57, "y1": 59, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_1_4", "k": "손잡이", "c": "sub", "x0": 141, "x1": 149, "y0": 57, "y1": 59, "z0": 184, "z1": 192}, {"n": "Sub_Strap_1_5", "k": "손잡이", "c": "sub", "x0": 174, "x1": 176, "y0": 57, "y1": 59, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_1_5", "k": "손잡이", "c": "sub", "x0": 171, "x1": 179, "y0": 57, "y1": 59, "z0": 184, "z1": 192}, {"n": "Sub_Strap_1_8", "k": "손잡이", "c": "sub", "x0": 264, "x1": 266, "y0": 57, "y1": 59, "z0": 192, "z1": 204}, {"n": "Sub_StrapRing_1_8", "k": "손잡이", "c": "sub", "x0": 261, "x1": 269, "y0": 57, "y1": 59, "z0": 184, "z1": 192}, {"n": "Sub_Pole_0", "k": "세로 기둥 1", "c": "sub", "x0": 58, "x1": 62, "y0": 7, "y1": 11, "z0": 0, "z1": 215}, {"n": "Sub_Pole_1", "k": "세로 기둥 2", "c": "sub", "x0": 188, "x1": 192, "y0": 7, "y1": 11, "z0": 0, "z1": 215}, {"n": "Sub_Person_LegL_0", "k": "사람 실루엣 판", "c": "sub", "x0": 27, "x1": 38, "y0": 6, "y1": 9, "z0": 0, "z1": 80.8}, {"n": "Sub_Person_LegR_0", "k": "사람 실루엣 판", "c": "sub", "x0": 42, "x1": 53, "y0": 6, "y1": 9, "z0": 0, "z1": 80.8}, {"n": "Sub_Person_Body_0", "k": "사람 실루엣 판", "c": "sub", "x0": 23, "x1": 57, "y0": 6, "y1": 9, "z0": 80.8, "z1": 142.8}, {"n": "Sub_Person_ArmL_0", "k": "사람 실루엣 판", "c": "sub", "x0": 17, "x1": 22, "y0": 6, "y1": 9, "z0": 88.8, "z1": 138.8}, {"n": "Sub_Person_ArmR_0", "k": "사람 실루엣 판", "c": "sub", "x0": 58, "x1": 63, "y0": 6, "y1": 9, "z0": 88.8, "z1": 138.8}, {"n": "Sub_Person_Neck_0", "k": "사람 실루엣 판", "c": "sub", "x0": 36, "x1": 44, "y0": 6, "y1": 9, "z0": 142.8, "z1": 146.8}, {"n": "Sub_Person_Head_0", "k": "사람 실루엣 판", "c": "sub", "x0": 31, "x1": 49, "y0": 6, "y1": 9, "z0": 146.8, "z1": 172}, {"n": "Sub_Person_LegL_1", "k": "사람 실루엣 판", "c": "sub", "x0": 137, "x1": 148, "y0": 6, "y1": 9, "z0": 0, "z1": 77.5}, {"n": "Sub_Person_LegR_1", "k": "사람 실루엣 판", "c": "sub", "x0": 152, "x1": 163, "y0": 6, "y1": 9, "z0": 0, "z1": 77.5}, {"n": "Sub_Person_Body_1", "k": "사람 실루엣 판", "c": "sub", "x0": 133, "x1": 167, "y0": 6, "y1": 9, "z0": 77.5, "z1": 136.9}, {"n": "Sub_Person_ArmL_1", "k": "사람 실루엣 판", "c": "sub", "x0": 127, "x1": 132, "y0": 6, "y1": 9, "z0": 85.5, "z1": 132.9}, {"n": "Sub_Person_ArmR_1", "k": "사람 실루엣 판", "c": "sub", "x0": 168, "x1": 173, "y0": 6, "y1": 9, "z0": 85.5, "z1": 132.9}, {"n": "Sub_Person_Neck_1", "k": "사람 실루엣 판", "c": "sub", "x0": 146, "x1": 154, "y0": 6, "y1": 9, "z0": 136.9, "z1": 140.9}, {"n": "Sub_Person_Head_1", "k": "사람 실루엣 판", "c": "sub", "x0": 141, "x1": 159, "y0": 6, "y1": 9, "z0": 140.9, "z1": 165}, {"n": "Sub_Person_LegL_2", "k": "사람 실루엣 판", "c": "sub", "x0": 72, "x1": 83, "y0": 71, "y1": 74, "z0": 0, "z1": 83.7}, {"n": "Sub_Person_LegR_2", "k": "사람 실루엣 판", "c": "sub", "x0": 87, "x1": 98, "y0": 71, "y1": 74, "z0": 0, "z1": 83.7}, {"n": "Sub_Person_Body_2", "k": "사람 실루엣 판", "c": "sub", "x0": 68, "x1": 102, "y0": 71, "y1": 74, "z0": 83.7, "z1": 147.7}, {"n": "Sub_Person_ArmL_2", "k": "사람 실루엣 판", "c": "sub", "x0": 62, "x1": 67, "y0": 71, "y1": 74, "z0": 91.7, "z1": 143.7}, {"n": "Sub_Person_ArmR_2", "k": "사람 실루엣 판", "c": "sub", "x0": 103, "x1": 108, "y0": 71, "y1": 74, "z0": 91.7, "z1": 143.7}, {"n": "Sub_Person_Neck_2", "k": "사람 실루엣 판", "c": "sub", "x0": 81, "x1": 89, "y0": 71, "y1": 74, "z0": 147.7, "z1": 151.7}, {"n": "Sub_Person_Head_2", "k": "사람 실루엣 판", "c": "sub", "x0": 76, "x1": 94, "y0": 71, "y1": 74, "z0": 151.7, "z1": 178}, {"n": "Sub_Person_LegL_3", "k": "사람 실루엣 판", "c": "sub", "x0": 237, "x1": 248, "y0": 6, "y1": 9, "z0": 0, "z1": 79.0}, {"n": "Sub_Person_LegR_3", "k": "사람 실루엣 판", "c": "sub", "x0": 252, "x1": 263, "y0": 6, "y1": 9, "z0": 0, "z1": 79.0}, {"n": "Sub_Person_Body_3", "k": "사람 실루엣 판", "c": "sub", "x0": 233, "x1": 267, "y0": 6, "y1": 9, "z0": 79.0, "z1": 139.4}, {"n": "Sub_Person_ArmL_3", "k": "사람 실루엣 판", "c": "sub", "x0": 227, "x1": 232, "y0": 6, "y1": 9, "z0": 87.0, "z1": 135.4}, {"n": "Sub_Person_ArmR_3", "k": "사람 실루엣 판", "c": "sub", "x0": 268, "x1": 273, "y0": 6, "y1": 9, "z0": 87.0, "z1": 135.4}, {"n": "Sub_Person_Neck_3", "k": "사람 실루엣 판", "c": "sub", "x0": 246, "x1": 254, "y0": 6, "y1": 9, "z0": 139.4, "z1": 143.4}, {"n": "Sub_Person_Head_3", "k": "사람 실루엣 판", "c": "sub", "x0": 241, "x1": 259, "y0": 6, "y1": 9, "z0": 143.4, "z1": 168}, {"n": "Ceiling_A_Low", "k": "지하철 칸 낮은 천장", "c": "sub", "x0": 0, "x1": 300, "y0": 0, "y1": 75, "z0": 215, "z1": 220}, {"n": "Ceiling_A_Light_0", "k": "지하철 형광등 띠 1", "c": "sub", "x0": 20, "x1": 280, "y0": 25, "y1": 31, "z0": 213, "z1": 215}, {"n": "Ceiling_A_Light_1", "k": "지하철 형광등 띠 2", "c": "sub", "x0": 20, "x1": 280, "y0": 49, "y1": 55, "z0": 213, "z1": 215}, {"n": "TV_Stand", "k": "TV장", "c": "furn", "x0": 5, "x1": 45, "y0": 158, "y1": 232, "z0": 0, "z1": 48}, {"n": "TV_CRT_Body", "k": "브라운관 TV 본체", "c": "dev", "x0": 6, "x1": 52, "y0": 162, "y1": 228, "z0": 48, "z1": 103}, {"n": "TV_CRT_Glass", "k": "브라운관 화면 유리", "c": "dev", "x0": 52, "x1": 53.5, "y0": 165, "y1": 225, "z0": 52, "z1": 100}, {"n": "TV_Antenna_1", "k": "TV 안테나 1", "c": "dev", "x0": 25, "x1": 27, "y0": 182, "y1": 184, "z0": 103, "z1": 140}, {"n": "TV_Antenna_2", "k": "TV 안테나 2", "c": "dev", "x0": 25, "x1": 27, "y0": 206, "y1": 208, "z0": 103, "z1": 140}, {"n": "CCTV_Dome", "k": "CCTV 카메라 (천장 모서리)", "c": "dev", "x0": 145, "x1": 157, "y0": 92, "y1": 104, "z0": 232, "z1": 242}, {"n": "Recliner_Seat", "k": "리클라이너 좌판", "c": "seat", "x0": 210, "x1": 290, "y0": 172, "y1": 248, "z0": 0, "z1": 45}, {"n": "Recliner_Back", "k": "리클라이너 등받이", "c": "seat", "x0": 272, "x1": 290, "y0": 172, "y1": 248, "z0": 45, "z1": 100}, {"n": "Recliner_Arm_1", "k": "리클라이너 팔걸이 1", "c": "seat", "x0": 210, "x1": 290, "y0": 172, "y1": 187, "z0": 45, "z1": 62}, {"n": "Recliner_Arm_2", "k": "리클라이너 팔걸이 2", "c": "seat", "x0": 210, "x1": 290, "y0": 233, "y1": 248, "z0": 45, "z1": 62}, {"n": "Blanket", "k": "담요", "c": "furn", "x0": 218, "x1": 262, "y0": 206, "y1": 246, "z0": 45, "z1": 50}, {"n": "SideTable", "k": "사이드 테이블", "c": "furn", "x0": 255, "x1": 292, "y0": 252, "y1": 292, "z0": 0, "z1": 55}, {"n": "Remote", "k": "리모컨", "c": "furn", "x0": 262, "x1": 276, "y0": 262, "y1": 273, "z0": 55, "z1": 58}, {"n": "Lamp_Pole", "k": "스탠드 기둥", "c": "furn", "x0": 272, "x1": 276, "y0": 270, "y1": 274, "z0": 55, "z1": 120}, {"n": "Lamp_Shade", "k": "스탠드 갓", "c": "furn", "x0": 264, "x1": 284, "y0": 262, "y1": 282, "z0": 120, "z1": 138}, {"n": "Shelf", "k": "선반", "c": "furn", "x0": 95, "x1": 160, "y0": 87, "y1": 115, "z0": 0, "z1": 120}, {"n": "Rug", "k": "러그", "c": "furn", "x0": 120, "x1": 205, "y0": 165, "y1": 255, "z0": 0, "z1": 1}], "lights": [["Light_A_Cold_1", 90, 40, 207, 6500, 2], ["Light_A_Cold_2", 220, 40, 207, 6500, 2], ["Light_B_Warm_1", 235, 255, 207, 2700, 2.2], ["Light_B_Ceiling", 140, 190, 217, 2700, 1.5], ["Light_TV_Glow", 80, 195, 82, 9000, 1.0], ["Light_Lamp", 274, 272, 130, 2400, 2.5]], "screens": [["Screen_B_Home", "Movies/B_home.mp4", 53.6, 195, 78, 52, 29.25, 180]]}};
+const COL={struct:"#b9b1a6",part:"#c0562a",sub:"#7d93a6",seat:"#8c5a3c",furn:"#c9a26b",dev:"#3a3a3a"};
+const CAT={struct:"외벽·바닥",part:"가벽·문",sub:"지하철 칸",seat:"앉는 가구",furn:"집 가구·소품",dev:"장비"};
+let V="Opt5B";
+const f=n=>Math.round(n*10)/10;
+const sz=r=>`${f(r.x1-r.x0)} × ${f(r.y1-r.y0)} × ${f(r.z1-r.z0)}`;
+const rng=(a,b)=>`${f(a)}~${f(b)}`;
+const $=id=>document.getElementById(id);
+function rows(){return DATA[V].rows}
+function find(n){return rows().find(r=>r.n===n)}
+function bbox(list){const rs=list.filter(Boolean);return {x0:Math.min(...rs.map(r=>r.x0)),x1:Math.max(...rs.map(r=>r.x1)),y0:Math.min(...rs.map(r=>r.y0)),y1:Math.max(...rs.map(r=>r.y1)),z0:Math.min(...rs.map(r=>r.z0)),z1:Math.max(...rs.map(r=>r.z1))}}
+function hl(id,on){document.querySelectorAll(`[data-id="${id}"]`).forEach(e=>{if(e.tagName==="TR")e.classList.toggle("hl",on);else{e.setAttribute("stroke",on?"#c0562a":e.dataset.st||"none");e.setAttribute("stroke-width",on?2.5:e.dataset.sw||0)}})}
+function bindHover(root){root.querySelectorAll("[data-id]").forEach(e=>{e.onmouseenter=()=>hl(e.dataset.id,1);e.onmouseleave=()=>hl(e.dataset.id,0)})}
+
+// 가구 묶음
+function groups(){
+  const seatTag=V==="Opt5C"?"Recliner":"Sofa", seatName=V==="Opt5C"?"1인 리클라이너":"2인 소파";
+  const seatParts=rows().filter(r=>r.n.startsWith(seatTag+"_"));
+  const s=bbox(seatParts), seatTop=seatParts.find(r=>r.n.endsWith("_Seat")), back=seatParts.find(r=>r.n.endsWith("_Back")), arm=seatParts.find(r=>r.n.includes("_Arm_1"));
+  const G=[
+   ["앉는 가구",[{id:seatTag,k:seatName,b:s,memo:`좌판 높이 ${f(seatTop.z1)} · 팔걸이 ${f(arm.z1)} · 등받이 ${f(back.z1)} · 팔걸이 두께 ${f(arm.y1-arm.y0)}`}]],
+   ["브라운관 TV (확정)",[
+     {id:"TV_Stand",k:"TV장",b:find("TV_Stand")},
+     {id:"TV_CRT_Body",k:"브라운관 TV 본체",b:find("TV_CRT_Body"),memo:"깊이 46 · 폭 66 · 높이 55 (약 25인치급 크기)"},
+     {id:"TV_CRT_Glass",k:"화면 유리",b:find("TV_CRT_Glass"),memo:`화면 중심 높이 76 · 영상 52 × ${f(52*9/16)} (16:9)`},
+     {id:"TV_Antenna_1",k:"안테나 2개",b:bbox([find("TV_Antenna_1"),find("TV_Antenna_2")]),memo:"높이 37, 간격 24"}]],
+   ["집 가구·소품",rows().filter(r=>r.c==="furn"&&r.n!=="TV_Stand"&&!r.n.startsWith("Lamp")&&!r.n.startsWith("Plant")).map(r=>({id:r.n,k:r.k,b:r}))
+      .concat(find("Lamp_Pole")?[{id:"Lamp_Pole",k:"스탠드 조명 (기둥+갓)",b:bbox([find("Lamp_Pole"),find("Lamp_Shade")]),memo:`갓 지름 ${f(find("Lamp_Shade").x1-find("Lamp_Shade").x0)}, 갓 아래 높이 ${f(find("Lamp_Shade").z0)}`}]:[])
+      .concat(find("Plant_Pot")?[{id:"Plant_Pot",k:"화분 식물",b:bbox([find("Plant_Pot"),find("Plant_Leaf")]),memo:`화분 ${sz(find("Plant_Pot"))}`}]:[])],
+   ["장비",["CCTV_Dome","Speaker_A","Speaker_B_1","Speaker_B_2"].map(n=>({id:n,k:find(n).k,b:find(n),memo:n==="CCTV_Dome"?"천장 아래 모서리, 집 전체를 내려다봄":""}))]
+  ];
+  return G;
+}
+function key(){
+  const seat=V==="Opt5C"?bbox(rows().filter(r=>r.n.startsWith("Recliner_"))):bbox(rows().filter(r=>r.n.startsWith("Sofa_")));
+  $("key").innerHTML=[
+   ["300 × 300","전체 · 벽 높이 240 · 두께 10"],["80 / 220","지하철 칸 / 집 (가벽 Y=80)"],["안쪽 폭 70","지하철 칸 통로 · 천장 215"],
+   ["290","가벽 순수 길이 (185 + 문 80 + 25)"],[`${f(seat.x1-seat.x0)} × ${f(seat.y1-seat.y0)}`,(V==="Opt5C"?"리클라이너":"소파")+" 바닥 면적"],["약 "+dist().d,"앉은 자리 → 브라운관 화면"]]
+   .map(([b,s])=>`<div class="k"><b>${b}</b><span>${s}</span></div>`).join("");
+}
+function dist(){
+  const back=rows().find(r=>/_(Back)$/.test(r.n)&&(r.n.startsWith("Sofa")||r.n.startsWith("Recliner")));
+  const seat=rows().find(r=>/_(Seat)$/.test(r.n)&&(r.n.startsWith("Sofa")||r.n.startsWith("Recliner")));
+  const ex=back.x0-22, ey=(seat.y0+seat.y1)/2, gx=53.6, gy=195;
+  return {ex,ey,d:Math.round(Math.hypot(ex-gx,ey-gy))};
+}
+function plan(){
+  const R=rows().filter(r=>!r.n.startsWith("Sub_Strap")&&!r.n.startsWith("Ceiling")&&r.n!=="Door_Exit"&&!r.n.startsWith("Floor"));
+  const order=["struct","part","sub","furn","seat","dev"];
+  R.sort((a,b)=>order.indexOf(a.c)-order.indexOf(b.c)||(b.z0===0&&b.z1<=1)-(a.z0===0&&a.z1<=1));
+  let s=`<rect x="0" y="0" width="300" height="80" fill="#e4e8ec"/><rect x="0" y="80" width="300" height="220" fill="#f3e6d3"/>`;
+  for(let i=0;i<=300;i+=50)s+=`<line x1="${i}" y1="0" x2="${i}" y2="300" stroke="#0001"/><line x1="0" y1="${i}" x2="300" y2="${i}" stroke="#0001"/>`;
+  R.forEach(r=>{const op=r.n.includes("Header")?.25:r.n==="Rug"?.35:(r.c==="sub"&&r.z0>150?.35:.9);
+    s+=`<rect data-id="${r.n}" x="${r.x0}" y="${r.y0}" width="${Math.max(r.x1-r.x0,.8)}" height="${Math.max(r.y1-r.y0,.8)}" fill="${COL[r.c]}" fill-opacity="${op}" data-st="none" data-sw="0"><title>${r.k} ${sz(r)}</title></rect>`});
+  rows().filter(r=>r.n.startsWith("Sub_Strap_")).forEach(r=>s+=`<circle cx="${(r.x0+r.x1)/2}" cy="${(r.y0+r.y1)/2}" r="2.2" fill="#7d93a6"/>`);
+  // 문 스윙
+  s+=`<path d="M270 85 A80 80 0 0 0 190 85" fill="none" stroke="#c0562a" stroke-dasharray="3 3"/>`;
+  const dd=dist(); s+=`<line x1="${dd.ex}" y1="${dd.ey}" x2="53.6" y2="195" stroke="#c0562a" stroke-width="1.2" stroke-dasharray="5 3"/><text x="${(dd.ex+53.6)/2}" y="${(dd.ey+195)/2-4}" font-size="9" fill="#c0562a" text-anchor="middle">약 ${dd.d}</text>`;
+  // 치수선
+  const dim=(x1,y1,x2,y2,t,o)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#555" stroke-width=".6" marker-start="url(#a)" marker-end="url(#a)"/><text x="${(x1+x2)/2+(o||0)}" y="${(y1+y2)/2-3}" font-size="9" text-anchor="middle" fill="#333">${t}</text>`;
+  s=`<defs><marker id="a" viewBox="0 0 6 6" refX="3" refY="3" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L6 3L0 6z" fill="#555"/></marker></defs>`+s
+   +dim(0,-22,300,-22,"300")+dim(0,-10,190,-10,"가벽 판 ① 190")+dim(190,-10,270,-10,"문 80")+dim(270,-10,300,-10,"30")
+   +`<line x1="-44" y1="0" x2="-44" y2="300" stroke="#555" stroke-width=".6"/><text x="-48" y="42" font-size="9" text-anchor="end">80</text><text x="-48" y="195" font-size="9" text-anchor="end">220</text><line x1="-48" y1="80" x2="-40" y2="80" stroke="#555"/>`
+   +`<text x="150" y="45" font-size="11" text-anchor="middle" fill="#2f4658" font-weight="700">지하철 칸 (사회)</text><text x="150" y="292" font-size="11" text-anchor="middle" fill="#7a4a14" font-weight="700">집</text>`
+   +`<text x="-6" y="40" font-size="9" text-anchor="end" fill="#2f4658">입구 →</text><text x="50" y="318" font-size="9" text-anchor="middle">출구 (X 10~90)</text>`
+   +`<text x="300" y="365" font-size="8.5" text-anchor="end" fill="#888">눈금 50cm · 점 = 손잡이 · 점선 호 = 문이 열리는 범위</text>`;
+  $("plan").innerHTML=s;
+  $("legend").innerHTML=Object.keys(CAT).map(c=>`<span><i class="sw" style="background:${COL[c]}"></i>${CAT[c]}</span>`).join("");
+  bindHover($("plan"));
+}
+function elev(){
+  // 지하철 칸에서 본 가벽 입면 (X 0~300, 높이 0~240)
+  const y=z=>240-z;
+  let s=`<rect x="0" y="${y(240)}" width="190" height="240" fill="#c0562a" fill-opacity=".18" stroke="#c0562a" data-id="Partition_1" data-st="#c0562a" data-sw="1"/>`
+   +`<rect x="270" y="${y(240)}" width="30" height="240" fill="#c0562a" fill-opacity=".18" stroke="#c0562a" data-id="Partition_2" data-st="#c0562a" data-sw="1"/>`
+   +`<rect x="190" y="${y(240)}" width="80" height="30" fill="#c0562a" fill-opacity=".35" stroke="#c0562a" data-id="Partition_DoorHeader" data-st="#c0562a" data-sw="1"/>`
+   +`<rect x="190" y="${y(210)}" width="80" height="210" fill="#fff" stroke="#c0562a" stroke-dasharray="4 3"/>`
+   +`<text x="95" y="120" font-size="13" text-anchor="middle" fill="#7a3414" font-weight="700">판 ①</text><text x="95" y="137" font-size="10.5" text-anchor="middle">190 × 240 × 10</text>`
+   +`<text x="230" y="130" font-size="11" text-anchor="middle" fill="#c0562a">문 개구부</text><text x="230" y="145" font-size="10" text-anchor="middle">80 × 210</text>`
+   +`<text x="230" y="20" font-size="10" text-anchor="middle" fill="#7a3414">③ 80 × 30</text><text x="285" y="130" font-size="10" text-anchor="middle" fill="#7a3414">②</text>`;
+  // 광고/노선도 (가벽 A면)
+  rows().filter(r=>r.n.startsWith("Sub_Ad_Wall")||r.n==="Sub_RouteMap").forEach(r=>s+=`<rect data-id="${r.n}" x="${r.x0}" y="${y(r.z1)}" width="${r.x1-r.x0}" height="${r.z1-r.z0}" fill="#7d93a6" fill-opacity=".45"><title>${r.k} ${sz(r)}</title></rect>`);
+  const d=(x1,x2,yy,t)=>`<line x1="${x1}" y1="${yy}" x2="${x2}" y2="${yy}" stroke="#555" stroke-width=".7"/><line x1="${x1}" y1="${yy-4}" x2="${x1}" y2="${yy+4}" stroke="#555"/><line x1="${x2}" y1="${yy-4}" x2="${x2}" y2="${yy+4}" stroke="#555"/><text x="${(x1+x2)/2}" y="${yy+13}" font-size="10" text-anchor="middle">${t}</text>`;
+  s+=d(0,190,252,"190 (안쪽 면 기준 185)")+d(190,270,252,"80")+d(270,300,252,"30")+d(0,300,272,"300 (순수 290)");
+  s+=`<line x1="-12" y1="0" x2="-12" y2="240" stroke="#555" stroke-width=".7"/><text x="-16" y="125" font-size="10" text-anchor="end">240</text><line x1="320" y1="0" x2="320" y2="30" stroke="#555"/><text x="324" y="18" font-size="9">30</text><line x1="320" y1="30" x2="320" y2="240" stroke="#555"/><text x="324" y="140" font-size="9">210</text>`;
+  s+=`<text x="0" y="-12" font-size="10.5" fill="#666">지하철 칸 쪽에서 본 가벽 (광고판·노선도 붙는 면)</text>`;
+  $("elev").innerHTML=s; bindHover($("elev"));
+  const P=["Partition_1","Partition_DoorHeader","Partition_2","Door_Partition"].map(find);
+  const real={Partition_1:"185 × 240 × 10",Partition_2:"25 × 240 × 10",Partition_DoorHeader:"80 × 30 × 10",Door_Partition:"80 × 210 × 4"};
+  $("parttab").innerHTML=`<tr><th>부재</th><th>모델 치수</th><th>실물 (외벽 안쪽 기준)</th><th>X 범위</th></tr>`+P.map(r=>`<tr data-id="${r.n}"><td>${r.k}</td><td class="n">${r.n==="Door_Partition"?"80 × 210 × 4":`${f(r.x1-r.x0)} × ${f(r.z1-r.z0)} × 10`}</td><td class="n"><b>${real[r.n]}</b></td><td class="n">${r.n==="Door_Partition"?"190~270 (개구부)":rng(r.x0,r.x1)}</td></tr>`).join("")
+   +`<tr><td>가벽 합계</td><td class="n">300</td><td class="n"><b>290</b></td><td class="n">Y 75~85에 섬</td></tr>`;
+  bindHover($("parttab"));
+}
+function sec(){
+  // 지하철 칸 단면: 가로 = Y 0~80, 세로 = 높이
+  const y=z=>230-z, sc=1.6;
+  let s=`<rect x="0" y="${y(240)}" width="${5*sc}" height="240" fill="#b9b1a6"/><rect x="${75*sc}" y="${y(240)}" width="${10*sc}" height="240" fill="#c0562a" fill-opacity=".5"/>`
+   +`<rect x="0" y="${y(220)}" width="${75*sc}" height="5" fill="#7d93a6"/>`;
+  [22,58].forEach((yy,i)=>{s+=`<circle cx="${yy*sc}" cy="${y(205.5)}" r="2.6" fill="#555"/><line x1="${yy*sc}" y1="${y(204)}" x2="${yy*sc}" y2="${y(192)}" stroke="#7d93a6" stroke-width="2"/><rect x="${yy*sc-6}" y="${y(192)}" width="12" height="8" rx="4" fill="none" stroke="#7d93a6" stroke-width="2"/>`});
+  // 사람 실루엣 (172cm 예시)
+  s+=`<g fill="#00000022"><circle cx="${40*sc}" cy="${y(163)}" r="9"/><rect x="${40*sc-14}" y="${y(153)}" width="28" height="70" rx="8"/><rect x="${40*sc-11}" y="${y(83)}" width="22" height="83" rx="5"/></g>`;
+  const lab=(z,t)=>`<line x1="${80*sc+16}" y1="${y(z)}" x2="${80*sc+22}" y2="${y(z)}" stroke="#555"/><text x="${80*sc+25}" y="${y(z)+3}" font-size="7.5">${t}</text>`;
+  s+=lab(215,"천장 215")+lab(205.5,"봉 204~207")+lab(192,"손잡이 끈 끝 192")+lab(184,"손잡이 고리 아래 184")+lab(172,"관객 키 172 예시");
+  s+=`<line x1="0" y1="${y(0)}" x2="${85*sc}" y2="${y(0)}" stroke="#333"/><text x="${40*sc}" y="${y(0)+14}" font-size="8" text-anchor="middle">안쪽 폭 70 (Y 5~75)</text>`
+   +`<text x="${22*sc}" y="${y(222)}" font-size="7" text-anchor="middle">Y=22</text><text x="${58*sc}" y="${y(222)}" font-size="7" text-anchor="middle">Y=58</text>`
+   +`<text x="0" y="-6" font-size="8" fill="#666">← 차량 옆면(위쪽 외벽)        가벽 →</text>`;
+  $("sec").setAttribute("viewBox","-10 -20 230 270"); $("sec").innerHTML=s;
+  const n=rows().filter(r=>r.n.startsWith("Sub_Strap_")).length, per=n/2;
+  const t=[["손잡이 봉",2,"284 × 3 × 3","X 8~292, Y 22 / 58, 높이 204~207","오른쪽·왼쪽 외벽에 양끝 고정"],
+   ["손잡이 (끈 + 고리)",n,"끈 12 + 고리 지름 8","30 간격, 봉마다 "+per+"개 · 문 앞 X 200~260 비움","고리 아래 끝 184"],
+   ["세로 기둥",2,"4 × 4 × 215","X 60, 190 · 위쪽 외벽에 붙임",""],
+   ["낮은 천장",1,"300 × 75 × 5","높이 215~220","선택: 없으면 봉만 매달아도 됨"],
+   ["형광등 띠",2,"260 × 6","높이 213~215, Y 28 / 52","6500K"],
+   ["차량 출입문 그림",2,"60 × 200","X 100~160, 220~280 (위쪽 외벽)","창 44 × 70, 위 LED 50 × 6"],
+   ["차창",2,"80 × 80, 44 × 80","X 12~92, 168~212 · 높이 95~175","위에 광고 25 높이"],
+   ["가벽 광고판",2,"60 × 65","X 20~80, 95~155 · 높이 120~185","라이트박스 또는 출력물"],
+   ["노선도 띠",1,"160 × 14","X 20~180 · 높이 192~206",""],
+   ["사람 실루엣 판",4,"폭 46 × 키 165~178 × 두께 3","위쪽 외벽 3장, 가벽 1장","검은 판"]];
+  $("subtab").innerHTML=`<tr><th>항목</th><th>개수</th><th>크기</th><th>위치</th><th>메모</th></tr>`+t.map(r=>`<tr><td>${r[0]}</td><td class="n">${r[1]}</td><td>${r[2]}</td><td class="wrap">${r[3]}</td><td class="wrap">${r[4]}</td></tr>`).join("");
+}
+function furn(){
+  let h=`<tr><th>이름</th><th>크기 X × Y × 높이</th><th>X 범위</th><th>Y 범위</th><th>높이 범위</th><th>메모</th></tr>`;
+  groups().forEach(([g,items])=>{h+=`<tr class="grp"><td colspan="6">${g}</td></tr>`;items.forEach(it=>{const b=it.b;h+=`<tr data-id="${it.id}"><td>${it.k}</td><td class="n"><b>${sz(b)}</b></td><td class="n">${rng(b.x0,b.x1)}</td><td class="n">${rng(b.y0,b.y1)}</td><td class="n">${rng(b.z0,b.z1)}</td><td class="wrap">${it.memo||""}</td></tr>`})});
+  $("furn").innerHTML=h; bindHover($("furn"));
+  const dd=dist(), s=V==="Opt5C";
+  $("dist").innerHTML=s?`<b>리클라이너:</b> 등받이를 젖히면 발판이 앞으로 약 50 나와요. 앞쪽(X 160~210)은 비어 있어 괜찮아요. 앉은 눈 위치에서 화면까지 약 ${dd.d}. 실물 1인 리클라이너는 보통 폭 80~90 × 깊이 90 × 높이 100 정도라 모델과 비슷해요.`
+   :`<b>2인 소파:</b> 폭 122 × 깊이 75. 앉은 눈 위치에서 화면까지 약 ${dd.d}. 실물 2인 소파는 보통 폭 140~160이라, 더 큰 소파를 쓰면 Y 168~290 안에 들어가는지(최대 122) 먼저 확인해야 해요.`;
+}
+function lights(){
+  const L=DATA[V].lights, ko={Light_A_Cold_1:"지하철 형광등 1",Light_A_Cold_2:"지하철 형광등 2",Light_B_Warm_1:"집 따뜻한 조명 (소파 위)",Light_B_Ceiling:"집 천장 은은한 조명",Light_TV_Glow:"브라운관 화면 빛",Light_Lamp:"스탠드 조명"};
+  $("lighttab").innerHTML=`<tr><th>조명</th><th>위치 X, Y</th><th>높이</th><th>색온도</th></tr>`+L.map(l=>`<tr><td>${ko[l[0]]||l[0]}</td><td class="n">${f(l[1])}, ${f(l[2])}</td><td class="n">${f(l[3]-2)}</td><td class="n">${l[4]}K</td></tr>`).join("");
+}
+function all(){
+  $("all").innerHTML=`<tr><th>아웃라이너 이름</th><th>역할</th><th>크기</th><th>X</th><th>Y</th><th>높이</th></tr>`+rows().map(r=>`<tr data-id="${r.n}"><td>EX_${r.n}</td><td>${r.k}</td><td class="n">${sz(r)}</td><td class="n">${rng(r.x0,r.x1)}</td><td class="n">${rng(r.y0,r.y1)}</td><td class="n">${rng(r.z0,r.z1)}</td></tr>`).join("");
+  bindHover($("all"));
+}
+function render(){key();plan();elev();sec();furn();lights();all();}
+document.querySelectorAll("#seat button").forEach(b=>b.onclick=()=>{V=b.dataset.v;document.querySelectorAll("#seat button").forEach(x=>x.classList.toggle("on",x===b));render()});
+render();
+</script>
+</body>
+</html>
