@@ -4,7 +4,7 @@ window.PROJECT = {
   title: "home — 인터랙티브 전시 제작 기록",
   subtitle: "AI 기반 영상 제작 워크샵 기말 프로젝트 · Unreal Engine 5.4 · 3m × 3m 체험 전시",
   status: "본안 확정(11/15 카톡): 브라운관 + 작은 소파 + 모닥불 영상 · 다음은 최종 렌더 → 크브페 지원서(마감 11/23)",
-  updated: "2026-11-16 13:25",
+  updated: "2026-11-16 15:40",
   // 큰 흐름. state: done(끝) / now(진행 중) / todo(아직)
   phases: [
     { name: "기획·공간 구조", state: "done" },
@@ -26,7 +26,7 @@ window.PROJECT = {
   },
   // 다음 할 일. who: 팀 / 지원 / Claude, state: now / todo / done
   next: [
-    { title: "크브페 작품 사진 넣기", detail: "본안 최종 렌더 완료(정면·좌측면·우측면·후면·상단 + 관객 시점). 바둑판 이미지나 9장 묶음을 받아 지원서에 넣고 캡션 8pt.", who: "지원", time: "20분", state: "now", link: "reports/status.html#photos", linkLabel: "작품 사진 받기" },
+    { title: "크브페 작품 사진 넣기", detail: "본안 최종 렌더 완료(정면·좌측면·우측면·후면·상단 + 관객 시점). 바둑판 이미지나 9장 묶음을 받아 지원서에 넣고 캡션 8pt.", who: "지원", time: "20분", state: "now", link: "reports/now.html", linkLabel: "현황판" },
     { title: "크브페 지원서 완성·제출 (11/23 23:59)", detail: "채움본(카톡 결정 반영됨)을 HWP에 붙이고 사진 11장 넣고 HWP + PDF로 메일 제출.", who: "지원", time: "11/22까지", state: "todo", link: "https://claude.ai/artifact/53y4wg4Gp9aoq7Mgd13yaY", linkLabel: "채움본" },
     { title: "모닥불 영상 고르기", detail: "저작권 문제 없는 모닥불 루프 영상, 라이선스 출처 보관.", who: "팀", time: "30분", state: "todo" },
     { title: "AI 사운드 5개 생성", detail: "지하철 칸 1 + 불멍 배경 1 + 리모컨 추가음 + 불편한 소리 3단계.", who: "팀", time: "반나절", state: "todo" },
@@ -342,6 +342,7 @@ window.TOPICS = [
 ];
 
 window.LOG = [
+  { date: "2026-11-16", time: "15:40", text: "현황판(now.html) 신설: 지금 적용 중인 정보만 한 장에. 기존 전체 현황은 '전체 기록'으로" },
   { date: "2026-11-16", time: "13:25", text: "ver8.3: 작품 사진 다시 — 흰 배경·눈높이·벽을 걷어 낸 단면 4면 + 상단" },
   { date: "2026-11-16", time: "13:20", text: "ver8.2: 크브페 작품 사진 — 본안(작은 소파, 3500K) 정면·좌측면·우측면·후면·상단 + 관객 시점, 캡션 바둑판" },
   { date: "2026-11-15", time: "19:10", text: "ver8.1: 사진·영상 다운로드 — 사진마다 받기 버튼(렌더는 1920×1080 고화질), 묶음 zip 3개" },

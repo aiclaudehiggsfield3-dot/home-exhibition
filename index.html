@@ -207,7 +207,7 @@ function todoList(){
 
 function home(){
   app.innerHTML = header()
-    + `<a class="full" href="reports/status.html"><div><b>전체 현황 한 페이지 보기</b><span>확정된 것 · 남은 일 · 진행률 · 버전 기록 · 사진·영상 다운로드까지 한 장에</span></div><i>열기 →</i></a>`
+    + `<a class="full" href="reports/now.html"><div><b>현황판 — 지금 적용 중인 것만</b><span>확정 설계 · 인터랙션 · 장비 · 다음 할 일 · 작품 사진 받기</span></div><i>열기 →</i></a><p style="margin:0 0 6px;font-size:14px;color:var(--sub)">지난 배치안·비교·버전 기록은 <a href="reports/status.html">전체 기록</a>에 있어요.</p>`
     + `<div class="sec">진행 단계</div>` + phases()
     + `<div class="sec">지금</div>` + hero()
     + `<div class="sec">할 일 순서</div>` + todoList()
