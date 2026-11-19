@@ -77,6 +77,13 @@ DEFAULT_CFG = {
         "qr_show_s": 20.0,            # QR 창을 띄워 두는 시간 (다음 관객이 들어오면 바로 닫힘)
         "pos_send_s": 0.1, "sample_s": 0.25,
         "door_s": 0.4,                # 집 구역에 이만큼 머물면 '문 열고 들어옴' (/home/door)
+        "facing_mode": "auto",        # 바라보는 방향: auto(YOLO 자세 인식 → 안 되면 걷는 방향) · pose · motion · off
+        "pose_model": "yolov8n-pose.pt",  # 자세 인식 모델 (처음 실행 때 자동으로 받아요, 약 7MB)
+        "pose_every": 3,              # 자세 인식은 이 프레임마다 한 번 (무거워서)
+        "pose_kp_conf": 0.4,          # 어깨 점 확신이 이보다 낮으면 자세로 안 정함
+        "facing_min_cms": 15,         # 걷는 방향으로 정할 때 이보다 빨라야 (멈춰 있으면 마지막 방향 유지)
+        "facing_alpha": 0.35,         # 방향 부드럽게 (0~1, 클수록 빨리 따라감)
+        "fan_deg": 60, "fan_cm": 90,  # 화면에 그리는 시야 부채꼴 (각도, 길이)
     },
 }
 NAMES_KO = {"blanket": "담요", "remote": "리모컨", "sofa": "소파", "spare": "예비", "spare_small": "예비 소형"}
@@ -155,6 +162,13 @@ def floor_homography(cfg, frame_wh):
 def to_floor(Hm, pts):
     p = cv2.perspectiveTransform(np.float32(pts).reshape(-1, 1, 2), Hm)
     return p.reshape(-1, 2)
+
+
+def fan_poly(xy, yaw_deg, fov_deg=60, length_cm=90, n=10):
+    """바닥 좌표(cm)에서 xy를 꼭짓점으로, yaw 방향으로 펼친 부채꼴 다각형"""
+    a = np.radians(yaw_deg + np.linspace(-fov_deg / 2, fov_deg / 2, n))
+    pts = [tuple(xy)] + [(xy[0] + length_cm * np.cos(t), xy[1] + length_cm * np.sin(t)) for t in a]
+    return np.float32(pts)
 
 
 def in_poly(pt, poly, margin=0.0):
@@ -301,6 +315,8 @@ class Tracker:
         self.prev_g, self.still_t = None, 0.0
         self.gate_since = None
         self.recent = []
+        self.facing, self.facing_src, self.facing_manual = None, "-", None   # 바라보는 방향(도, 언리얼 yaw: 0=+X, 90=+Y)
+        self.pose_n, self.pose_off = 0, False
         self.nadir = tuple(cfg["nadir_px"]) if cfg.get("nadir_px") else (self.fw / 2, self.fh / 2)
         Wc = cfg["floor_cm"][0]
         a, b = to_floor(self.Hinv, [[0, cfg["floor_cm"][1] / 2], [Wc, cfg["floor_cm"][1] / 2]])
@@ -327,6 +343,82 @@ class Tracker:
     def emit(self, t, name, *val):
         self.events_out.append((round(t, 2), name, val))
         self.osc.send(f"/home/{name}", *val)
+
+    # -------------------------------------------- 바라보는 방향
+    def update_facing(self, frame, det, fl, t):
+        """자세(어깨)로 → 안 되면 걷는 방향으로 → 그것도 아니면 마지막 방향 유지. 결과는 부드럽게."""
+        mode = self.T.get("facing_mode", "auto")
+        yaw, src = None, None
+        if self.facing_manual is not None:
+            yaw, src = float(self.facing_manual), "manual"
+        if yaw is None and mode in ("auto", "pose") and frame is not None and frame.ndim == 3 and frame.shape[0] > 32:
+            yaw = self.pose_yaw(frame, det[:2])
+            src = "pose" if yaw is not None else None
+        if yaw is None and mode in ("auto", "motion", "pose") and len(getattr(self, "hist", [])) >= 2 and self.speed >= self.T.get("facing_min_cms", 15):
+            h0, h1 = self.hist[0], self.hist[-1]
+            if np.hypot(h1[1] - h0[1], h1[2] - h0[2]) > 5:
+                yaw, src = float(np.degrees(np.arctan2(h1[2] - h0[2], h1[1] - h0[1]))), "walk"
+        if yaw is None:
+            return
+        if self.facing is None or src == "manual":
+            self.facing = yaw
+        else:
+            a = self.T.get("facing_alpha", 0.35)
+            d = (yaw - self.facing + 180) % 360 - 180               # 가장 가까운 쪽으로 돌기
+            self.facing = (self.facing + a * d + 180) % 360 - 180
+        self.facing_src = src
+
+    def pose_yaw(self, frame, img_pt):
+        """YOLO 자세 인식: 사람의 왼쪽·오른쪽 어깨를 바닥 좌표로 옮겨, 어깨선에 수직인 '앞'을 구한다.
+        언리얼 좌표(X 오른쪽, Y 아래=집 쪽, 위에서 볼 때)에서 사람의 오른쪽 = 앞 방향 + 90° 이므로 앞 = (오른어깨 - 왼어깨) 방향 - 90°."""
+        if self.pose_off:
+            return None
+        self.pose_n += 1
+        if self.pose_n % max(1, int(self.T.get("pose_every", 3))) and getattr(self, "pose_last", None) is not None:
+            return self.pose_last
+        if getattr(self, "pose", None) is None:
+            try:
+                from ultralytics import YOLO
+                self.pose = YOLO(self.T.get("pose_model", "yolov8n-pose.pt"))
+                self.pose_dev = getattr(self, "yolo_dev", None) or "cpu"
+                try:
+                    import torch
+                    if torch.backends.mps.is_available():
+                        self.pose_dev = "mps"
+                except Exception:
+                    pass
+                print(f"  [바라보는 방향] YOLO 자세 인식 사용 중 ({self.T.get('pose_model')}, {self.pose_dev})")
+            except Exception as e:
+                self.pose_off = True
+                print("  (자세 인식을 못 불러와서 걷는 방향으로 바라보는 방향을 정해요)", repr(e)[:100])
+                return None
+        try:
+            r = self.pose.predict(frame, imgsz=int(self.T.get("yolo_imgsz", 640)), conf=float(self.T.get("yolo_conf", 0.35)),
+                                  device=self.pose_dev, verbose=False)[0]
+        except Exception as e:
+            if self.pose_dev != "cpu":
+                self.pose_dev = "cpu"
+                return None
+            self.pose_off = True
+            print("  (자세 인식 오류 — 걷는 방향으로 바꿔요)", repr(e)[:100])
+            return None
+        self.pose_last = None
+        if r.keypoints is None or r.boxes is None or not len(r.boxes):
+            return None
+        boxes = r.boxes.xyxy.cpu().numpy()
+        kxy = r.keypoints.xy.cpu().numpy()
+        kc = r.keypoints.conf.cpu().numpy() if r.keypoints.conf is not None else np.ones(kxy.shape[:2])
+        cx, cy = (boxes[:, 0] + boxes[:, 2]) / 2, (boxes[:, 1] + boxes[:, 3]) / 2
+        i = int(np.argmin(np.hypot(cx - img_pt[0], cy - img_pt[1])))       # 지금 따라가는 사람과 가장 가까운 사람
+        th = self.T.get("pose_kp_conf", 0.4)
+        if kc[i, 5] < th or kc[i, 6] < th:                                   # 5 왼어깨, 6 오른어깨 (COCO)
+            return None
+        L, R = to_floor(self.Hm, [kxy[i, 5], kxy[i, 6]])
+        v = R - L
+        if np.hypot(*v) < 8:                                                 # 어깨가 겹쳐 보이면(옆모습 위에서) 믿지 않음
+            return None
+        self.pose_last = float((np.degrees(np.arctan2(v[1], v[0])) - 90 + 180) % 360 - 180)
+        return self.pose_last
 
     # -------------------------------------------- 사람 (배경 차이)
     def person_detect(self, frame, t):
@@ -669,6 +761,7 @@ class Tracker:
             self.hist = [h for h in getattr(self, "hist", []) if t - h[0] <= 1.0] + [(t, float(fl[0]), float(fl[1]))]
             h0 = self.hist[0]
             self.speed = float(np.hypot(fl[0] - h0[1], fl[1] - h0[2]) / max(t - h0[0], 0.3))
+            self.update_facing(frame, det, fl, t)
         elif not present:
             self.person = None
             self.recent = []
@@ -742,6 +835,8 @@ class Tracker:
             if t >= self.next_pos_t:
                 self.next_pos_t = t + T["pos_send_s"]
                 self.osc.send("/home/pos", float(x), float(y))
+                if self.facing is not None:
+                    self.osc.send("/home/look", float(round(self.facing, 1)))
             if t >= self.next_sample_t:
                 self.next_sample_t = t + T["sample_s"]
                 self.samples.append((t - self.t0, float(x), float(y), self.seated))
@@ -830,6 +925,12 @@ class Tracker:
         if self.person is not None:
             cv2.drawContours(out, [self.person[2]], -1, (255, 200, 60), 2)
             cv2.circle(out, (int(self.person[0]), int(self.person[1])), 10, (255, 200, 60), -1)
+            if self.facing is not None:
+                fan = to_floor(self.Hinv, fan_poly(self.person[3], self.facing, self.T.get("fan_deg", 60), self.T.get("fan_cm", 90))).astype(np.int32)
+                ov = out.copy(); cv2.fillPoly(ov, [fan], (0, 220, 255)); out = cv2.addWeighted(ov, 0.35, out, 0.65, 0)
+                cv2.polylines(out, [fan], True, (0, 220, 255), 2)
+                cv2.putText(out, f"{self.facing:.0f} deg ({self.facing_src})", (int(self.person[0]) + 14, int(self.person[1]) + 30),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 220, 255), 2)
         for i, (img, flp, c) in self.seen.items():
             cv2.polylines(out, [c.astype(np.int32)], True, (0, 255, 255), 2)
             cv2.putText(out, f"{i}:{self.marker_obj.get(i)}", (int(img[0]) + 8, int(img[1]) - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)

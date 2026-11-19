@@ -203,10 +203,39 @@ link('N_SUBIN', 'then', 'F_PRINT', 'execute')
 # 문 열고 집에 들어오면 지하철 소리 끊김
 unlink('F_TVOPEN', 'then', 'F_PRINT', 'execute')
 fn('D_SUBOUT', '/Script/Engine.AudioComponent', 'FadeOut',
-   EXEC() + [P('self', 'object', obj=C_AC), P('FadeOutDuration', 'real', 'double', default='1.5'),
-             P('FadeVolumeLevel', 'real', 'double', default='0.0')], X0 + 600, Y1, 'door: 지하철 소리 끊김')
+   EXEC() + [P('self', 'object', obj=C_AC), P('FadeOutDuration', 'real', 'double', default='3.0'),
+             P('FadeVolumeLevel', 'real', 'double', default='0.0')], X0 + 600, Y1, 'door: 지하철 소리 3초에 걸쳐 잦아듦')
 link('F_TVOPEN', 'then', 'D_SUBOUT', 'execute'); link('SUBAC1', 'AudioComponent', 'D_SUBOUT', 'self')
 link('D_SUBOUT', 'then', 'F_PRINT', 'execute')
+
+# ================================================================== 5) 바라보는 방향(/home/look) + 시야 부채꼴 (11/19 21:55)
+# 각도는 보이지 않는 기준점 EX_LookRef(TargetPoint_0)의 회전에 저장 → Tick에서 형체가 그 방향으로 부드럽게 돈다 (새 변수 없이)
+literal('LIT_LOOK', '/Script/Engine.TargetPoint', 'TargetPoint_0', 900, 40)
+literal('LIT_FAN', '/Script/Engine.StaticMeshActor', 'StaticMeshActor_0', 900, 100)
+ROT = "\"/Script/CoreUObject.ScriptStruct'/Script/CoreUObject.Rotator'\""
+sw['head'].insert(8, '   PinNames(8)="/home/look"')
+sw['pins'].append(P('/home/look', out=True))
+Y4 = Y1 + 2400
+fn('L_GF', '/Script/OSC.OSCManager', 'GetFloat',
+   EXEC() + [P('Message', 'struct', obj=OSCMSG, ref=True), P('Index', 'int', default='0'),
+             P('Value', 'real', 'double', out=True), P('ReturnValue', 'bool', out=True)], X0 + 300, Y4, 'look: 바라보는 방향(도)')
+link('SW', '/home/look', 'L_GF', 'execute'); link('ONOSC', 'Message', 'L_GF', 'Message')
+fn('L_ROT', '/Script/Engine.KismetMathLibrary', 'MakeRotator',
+   [P('Roll', 'real', 'double', default='0.0'), P('Pitch', 'real', 'double', default='0.0'), P('Yaw', 'real', 'double'),
+    P('ReturnValue', 'struct', obj=ROT, out=True)], X0 + 600, Y4 + 200)
+link('L_GF', 'Value', 'L_ROT', 'Yaw')
+fn('L_SET', '/Script/Engine.Actor', 'K2_SetActorRotation',
+   EXEC() + [P('self', 'object', obj=C_ACTOR), P('NewRotation', 'struct', obj=ROT), P('bTeleportPhysics', 'bool', default='false'),
+             P('ReturnValue', 'bool', out=True)], X0 + 900, Y4, '기준점에 방향 저장')
+link('L_GF', 'then', 'L_SET', 'execute'); link('LIT_LOOK', 'ReturnValue', 'L_SET', 'self'); link('L_ROT', 'ReturnValue', 'L_SET', 'NewRotation')
+# Tick: 형체가 도는 목표 = (예전) 움직이는 쪽 → (지금) 기준점 방향
+unlink('F_SELROT', 'ReturnValue', 'F_RINTERP', 'Target')
+fn('L_GETROT', '/Script/Engine.Actor', 'K2_GetActorRotation',
+   [P('self', 'object', obj=C_ACTOR), P('ReturnValue', 'struct', obj=ROT, out=True)], 1250, 2350)
+link('LIT_LOOK', 'ReturnValue', 'L_GETROT', 'self'); link('L_GETROT', 'ReturnValue', 'F_RINTERP', 'Target')
+# 부채꼴은 형체와 같이 숨기고 보이기
+for n in ('F_HIDEVIS', 'F_SHOWVIS'):
+    link('LIT_FAN', 'ReturnValue', n, 'self')          # 퇴장 리셋(X_HIDEV)은 아래에서
 
 # ================================================================== 4) QR
 Y2 = Y1 + 400
@@ -277,6 +306,7 @@ fn('X_PRINT', '/Script/Engine.KismetSystemLibrary', 'PrintString',
 seq = ['F_DELAY', 'X_HIDEL', 'X_HIDEV', 'X_TVCLOSE', 'X_TV0', 'X_VOL0', 'X_SEAT', 'X_SNAP', 'X_MUS', 'X_FIRE', 'X_SUB', 'X_PRINT']
 for a, b in zip(seq, seq[1:]):
     link(a, 'then', b, 'execute')
+link('LIT_FAN', 'ReturnValue', 'X_HIDEV', 'self')        # 퇴장하면 부채꼴도 숨김
 
 # ------------------------------------------------------------------ 쓰기
 out = []
