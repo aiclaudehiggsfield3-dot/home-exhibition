@@ -68,7 +68,8 @@ DEFAULT_CFG = {
         "exit_dwell_s": 3.0,          # 출구 영역 안에 이 시간 동안 있으면 퇴장 → QR
         "clear_s": 1.0,               # 퇴장 뒤 화면이 이만큼 비어야 다음 관객 입장 받음
         "qr_show_s": 20.0,            # QR 창을 띄워 두는 시간 (다음 관객이 들어오면 바로 닫힘)
-        "pos_send_s": 0.2, "sample_s": 0.25,
+        "pos_send_s": 0.1, "sample_s": 0.25,
+        "door_s": 0.4,                # 집 구역에 이만큼 머물면 '문 열고 들어옴' (/home/door)
     },
 }
 NAMES_KO = {"blanket": "담요", "remote": "리모컨", "sofa": "소파", "spare": "예비", "spare_small": "예비 소형"}
@@ -306,6 +307,9 @@ class Tracker:
         self.near_exit = False
         self.in_exit = False
         self.exit_since = None
+        self.room = None
+        self.home_since = None
+        self.door_sent = False
 
     def emit(self, t, name, *val):
         self.events_out.append((round(t, 2), name, val))
@@ -617,6 +621,18 @@ class Tracker:
                     return
             else:
                 self.exit_since = None
+            room = "home" if Z.get("home") and in_poly((x, y), Z["home"], 0) else ("train" if Z.get("train") and in_poly((x, y), Z["train"], 0) else None)
+            if room != self.room:
+                self.room = room
+                self.log(f"[{t - self.t0:6.1f}s] 구역: {room or '-'}")
+            if room == "home" and not self.door_sent:
+                self.home_since = self.home_since or t
+                if t - self.home_since >= T.get("door_s", 0.4):
+                    self.door_sent = True
+                    self.log(f"[{t - self.t0:6.1f}s] 집에 들어옴 (문)")
+                    self.emit(t, "door")
+            elif room != "home":
+                self.home_since = None
             if t >= self.next_pos_t:
                 self.next_pos_t = t + T["pos_send_s"]
                 self.osc.send("/home/pos", float(x), float(y))
@@ -691,6 +707,11 @@ class Tracker:
         W, H = self.cfg["floor_cm"]
         fl = to_floor(self.Hinv, [[0, 0], [W, 0], [W, H], [0, H]]).astype(np.int32)
         cv2.polylines(out, [fl], True, (200, 200, 200), 2)
+        for name, col in (("train", (200, 160, 90)), ("home", (60, 180, 255))):
+            if Z.get(name):
+                p = to_floor(self.Hinv, Z[name]).astype(np.int32)
+                cv2.polylines(out, [p], True, col, 1)
+                cv2.putText(out, name.upper(), tuple(p[0] + [6, 60]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, col, 2)
         for name, col in (("sofa", (60, 140, 255)), ("exit", (90, 220, 120))):
             if Z.get(name):
                 p = to_floor(self.Hinv, Z[name]).astype(np.int32)
@@ -735,9 +756,16 @@ def run_setup(cfg, cfg_path, cap):
     if not ok:
         sys.exit("카메라 화면을 못 받았어요. --camera 번호를 확인하세요 (--list-cameras).")
     win = "SETUP"
-    steps = [("floor", 4, "1) Click the 4 FLOOR corners"),
+    locked = bool(cfg.get("lock_zones"))
+    steps = [("floor", 4, "Click the 4 corners: 1 2 3 4 as on the map" if locked else "1) Click the 4 FLOOR corners"),
              ("sofa", 0, "2) Click SOFA area corners, then ENTER"),
              ("exit", 0, "3) Click EXIT area corners, then ENTER")]
+    if locked:
+        steps = steps[:1]
+        print("\n[언리얼 도면 모드] 구역(기차·집·소파·출구)은 언리얼 도면에서 가져와요.")
+        print("  카메라 화면에서 전시장 네 모서리를 찍어 주세요. 오른쪽 위 작은 지도의 1·2·3·4와 같은 자리예요.")
+        print("  1 = 입구 쪽 왼쪽 위, 2 = 출구 쪽 오른쪽 위, 3 = 오른쪽 아래(TV 쪽), 4 = 왼쪽 아래")
+    mini = layout_minimap(cfg) if locked else None
     clicks = []
     cv2.namedWindow(win, cv2.WINDOW_NORMAL)
     cv2.setMouseCallback(win, lambda e, x, y, f, p: clicks.append((x, y)) if e == cv2.EVENT_LBUTTONDOWN else None)
@@ -759,6 +787,10 @@ def run_setup(cfg, cfg_path, cap):
                 cv2.polylines(v, [np.int32(clicks)], key != "floor" or len(clicks) == 4, (0, 200, 255), 2)
             for kk, pts in res.items():
                 cv2.polylines(v, [np.int32(pts)], True, (120, 255, 120), 2)
+            if mini is not None:
+                mh, mw = mini.shape[:2]
+                if v.shape[1] > mw + 20 and v.shape[0] > mh + 60:
+                    v[54:54 + mh, v.shape[1] - mw - 10:v.shape[1] - 10] = mini
             cv2.imshow(win, v)
             k = cv2.waitKey(30) & 0xFF
             if k == 27:
@@ -768,7 +800,10 @@ def run_setup(cfg, cfg_path, cap):
             if (need and len(clicks) >= need) or (k in (13, 10) and len(clicks) >= 3):
                 res[key] = clicks[:need] if need else list(clicks)
                 break
-        if key == "floor":
+        if key == "floor" and locked:
+            cfg["floor_px"] = [list(map(float, p)) for p in order_corners(res["floor"])]
+            cfg["frame_size"] = [frame.shape[1], frame.shape[0]]
+        elif key == "floor":
             try:
                 w = float(input("   바닥 네 점 사이 가로 길이(cm)? ") or cfg["floor_cm"][0])
                 h = float(input("   세로 길이(cm)? ") or cfg["floor_cm"][1])
@@ -777,10 +812,42 @@ def run_setup(cfg, cfg_path, cap):
             cfg["floor_px"], cfg["floor_cm"] = [list(map(float, p)) for p in order_corners(res["floor"])], [w, h]
             cfg["frame_size"] = [frame.shape[1], frame.shape[0]]
     Hm, _ = floor_homography(cfg, (frame.shape[1], frame.shape[0]))
-    cfg["zones"] = {k: [list(map(lambda v: round(float(v), 1), p)) for p in to_floor(Hm, order_poly(res[k]))] for k in ("sofa", "exit")}
+    if not locked:
+        cfg["zones"] = {k: [list(map(lambda v: round(float(v), 1), p)) for p in to_floor(Hm, order_poly(res[k]))] for k in ("sofa", "exit")}
     cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     cv2.destroyWindow(win)
     print(f"  저장했어요 → {cfg_path}\n  소파(cm): {cfg['zones']['sofa']}\n  출구(cm): {cfg['zones']['exit']}")
+
+
+def layout_minimap(cfg, size=220):
+    """셋업 화면 구석에 그릴 언리얼 도면 미니맵 (모서리 번호 1~4)"""
+    W, H = cfg["floor_cm"]
+    s = size / max(W, H)
+    pad = 26
+    img = np.full((int(H * s) + 2 * pad, int(W * s) + 2 * pad, 3), 30, np.uint8)
+    P = lambda x, y: (int(pad + x * s), int(pad + y * s))
+    cols = {"train": (200, 160, 90), "home": (60, 180, 255), "sofa": (60, 140, 255), "exit": (90, 220, 120)}
+    for k in ("train", "home", "sofa", "exit"):
+        poly = cfg.get("zones", {}).get(k)
+        if poly:
+            cv2.polylines(img, [np.int32([P(*p) for p in poly])], True, cols[k], 2)
+            c = np.mean(np.float32(poly), axis=0)
+            cv2.putText(img, k.upper(), (P(*c)[0] - 22, P(*c)[1] + 5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, cols[k], 1)
+    for i, (x, y) in enumerate([(0, 0), (W, 0), (W, H), (0, H)]):
+        cv2.circle(img, P(x, y), 9, (0, 200, 255), -1)
+        cv2.putText(img, str(i + 1), (P(x, y)[0] - 5, P(x, y)[1] + 5), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 0), 2)
+    cv2.rectangle(img, (0, 0), (img.shape[1] - 1, img.shape[0] - 1), (200, 200, 200), 1)
+    return img
+
+
+def apply_layout(cfg, path):
+    """언리얼에서 뽑은 도면(바닥 크기 + 구역)을 설정에 넣는다"""
+    lay = json.loads(Path(path).read_text(encoding="utf-8"))
+    cfg["floor_cm"] = lay["floor_cm"]
+    cfg["zones"] = lay["zones"]
+    cfg["lock_zones"] = True
+    cfg["layout_note"] = lay.get("note", "")
+    return cfg
 
 
 def read_first(cap, wait_s=5.0):
@@ -820,6 +887,7 @@ def main():
     ap.add_argument("--save-video", help="인식 화면을 영상으로 저장")
     ap.add_argument("--save-raw", help="표시 없는 원본 화면을 영상으로 저장 (나중에 --video로 다시 시험할 때)")
     ap.add_argument("--list-cameras", action="store_true")
+    ap.add_argument("--layout", help="언리얼 도면 파일(unreal_layout.json)로 구역 맞추기 — 다음 --setup에서는 네 모서리만 찍음")
     ap.add_argument("--floor-size", nargs=2, type=float, metavar=("가로cm", "세로cm"), help="바닥 크기만 바꿔 저장 (다시 클릭 안 해도 됨)")
     args = ap.parse_args()
 
@@ -848,6 +916,12 @@ def main():
 
     cfg_path = Path(args.config)
     cfg = load_cfg(cfg_path)
+    if args.layout:
+        cfg = apply_layout(cfg, args.layout)
+        cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"언리얼 도면을 넣었어요: 바닥 {cfg['floor_cm'][0]:.0f} × {cfg['floor_cm'][1]:.0f}cm, 구역 {', '.join(cfg['zones'])}")
+        print("이제 --setup 으로 네 모서리만 찍으면 돼요.")
+        return
     if args.floor_size:
         cfg = set_floor_size(cfg, *args.floor_size)
         cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
