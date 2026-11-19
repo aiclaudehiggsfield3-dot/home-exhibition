@@ -302,5 +302,6 @@ window.WORKLOG = [
 "text": "07 전체 기록 페이지 — 버전·작업 기록을 날짜별로, Push하면 자동으로 늘어남",
 "link": "history.html"
 },
-{"date": "2026-11-19", "time": "16:20", "text": "감지 프로그램 개선 — 영역 안에 들어오면 자동 입장, 출구에 3초 머물면 퇴장하고 QR 창 자동으로 띄움, 다음 관객은 화면이 빈 뒤에 받음", "link": "interaction/README.md"}
+{"date": "2026-11-19", "time": "16:20", "text": "감지 프로그램 개선 — 영역 안에 들어오면 자동 입장, 출구에 3초 머물면 퇴장하고 QR 창 자동으로 띄움, 다음 관객은 화면이 빈 뒤에 받음", "link": "interaction/README.md"},
+{"date": "2026-11-19", "time": "16:44", "text": "언리얼 연결 — OSC 플러그인 켜고 레벨 블루프린트로 신호 받기 성공, 입장하면 집 조명 켜지고 퇴장하면 꺼짐", "link": "interaction/unreal/README.md"}
 ];
