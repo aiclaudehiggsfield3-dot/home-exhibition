@@ -308,5 +308,6 @@ window.WORKLOG = [
 {"date": "2026-11-19", "time": "17:18", "text": "손끝 추적 개선 — 피부색만 남겨 손가락 그림자를 빼고 진짜 끝만 손끝으로 (point_mode=finger)", "link": "interaction/docs/finger_before_after.jpg"},
 {"date": "2026-11-19", "time": "20:22", "text": "사람 감지를 사람 형체 인식(YOLO)으로 — 그림자·TV를 사람으로 안 봄, 삼각대(비스듬히) 촬영에서 발 위치 계산", "link": "interaction/README.md"},
 {"date": "2026-11-19", "time": "20:30", "text": "언리얼 L_Current를 최신 배치로 다시 지음 — 위 지하철 칸 80 · 아래 집 220, 작은 소파·스탠드 2·브라운관, 감지 구역도 새 도면으로", "link": "interaction/unreal/README.md"},
-{"date": "2026-11-19", "time": "21:15", "text": "언리얼 블루프린트 확장 — 퇴장하면 플레이 종료 대신 리셋(다음 관객 바로), 담요=모닥불 소리 · 리모컨=TV 채널 바꿈, 지하철 칸=지하철 소리(문 열면 끊김), 퇴장 QR을 언리얼 QR 화면에 표시. OSC로 한 바퀴 시험 통과", "link": "interaction/unreal/README.md"}
+{"date": "2026-11-19", "time": "21:15", "text": "언리얼 블루프린트 확장 — 퇴장하면 플레이 종료 대신 리셋(다음 관객 바로), 담요=모닥불 소리 · 리모컨=TV 채널 바꿈, 지하철 칸=지하철 소리(문 열면 끊김), 퇴장 QR을 언리얼 QR 화면에 표시. OSC로 한 바퀴 시험 통과", "link": "interaction/unreal/README.md"},
+{"date": "2026-11-19", "time": "21:40", "text": "마우스 시연(home_mouse.py) — 카메라 없이 노트북 도면에서 마우스로 관객을 움직여 같은 규칙·OSC로 언리얼 시험 (1 담요 · 2 리모컨 · 3 손잡이 · 0 퇴장)", "link": "interaction/README.md"}
 ];

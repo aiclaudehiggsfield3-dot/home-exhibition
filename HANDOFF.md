@@ -1,4 +1,4 @@
-# 인수인계: 기말 'home' 전시 — 2026-11-19 21:15 기준 (새 Claude는 이 파일부터 읽고 시작)
+# 인수인계: 기말 'home' 전시 — 2026-11-19 21:40 기준 (새 Claude는 이 파일부터 읽고 시작)
 
 사용자: **정지원** (영상학과 25학번). 인터랙션 담당.
 - 3인 팀: 정지원 · 서지오(사운드) · 최아원.
@@ -94,6 +94,10 @@
 - 기본: `pip3 install --default-timeout=200 --retries 10 -r requirements.txt`
 - YOLO: `pip3 install --default-timeout=200 --retries 10 -r requirements_yolo.txt` (**설치 완료**: ultralytics 8.4.215, torch 2.8)
 - ultralytics 설치 때문에 **opencv-python 5.1 → 4.11.0.86, numpy 2.0 → 1.26.4**로 바뀌었어요. 지금 코드는 이 버전에서 돌아가요. 함부로 올리지 말아요.
+
+### 카메라 없이: 마우스 시연 (11/19 21:40)
+- `python3 home_mouse.py` → 도면 창에서 왼쪽 클릭 = 관객 등장, 마우스 = 발 위치, 1 담요 · 2 리모컨 · 3 손잡이(`/home/handle`) · 0 강제 퇴장 · ESC 끝. 규칙·OSC는 home_tracker와 똑같음, 기록은 `results/mouse/`.
+- 카메라를 달기 전까지 언리얼 쪽 기능(손잡이·소리 등)은 이걸로 시험해요.
 
 ### 자주 쓰는 명령 (맥 터미널, 한 줄씩)
 ```
