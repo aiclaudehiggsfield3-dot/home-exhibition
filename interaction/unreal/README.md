@@ -12,7 +12,7 @@
 | 이름 | 역할 |
 |---|---|
 | EX_Visitor | 관객 형체 (실루엣 원기둥, 높이 170cm) |
-| EX_VisitorEye | 관객 눈높이 카메라 (160cm, 형체에 붙어 같이 움직임) |
+| EX_VisitorEye | 관객 1인칭 눈 카메라 — 몸 중심에서 **앞으로 30cm**(몸 밖) · 눈높이 160cm · 6° 아래 · 14mm · **화면 꽉 채움**(비율 고정 끔) · 이 카메라만 노출 보정 -7 (수동 노출, 물리 카메라 노출 끔). 미리보기 `docs/eyecam_1119.png` |
 | S_TempMusic | 임시 음악 (서지오 파일 나오면 교체) — Content/Exhibition/Audio |
 | S_TempFire · S_TempSubway · S_TempStatic | 임시 모닥불·지하철·채널 지지직 소리 (직접 합성, 원본 `temp_sounds/`) — 서지오 파일로 교체 |
 | EX_Snd_Fire (AmbientSound_0) · EX_Snd_Subway (AmbientSound_1) | 소리 액터 (자동 재생 끔) — 블루프린트가 켜고 끔. Exhibition/Sound 폴더 |

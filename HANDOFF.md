@@ -1,4 +1,4 @@
-# 인수인계: 기말 'home' 전시 — 2026-11-19 21:40 기준 (새 Claude는 이 파일부터 읽고 시작)
+# 인수인계: 기말 'home' 전시 — 2026-11-19 21:45 기준 (새 Claude는 이 파일부터 읽고 시작)
 
 사용자: **정지원** (영상학과 25학번). 인터랙션 담당.
 - 3인 팀: 정지원 · 서지오(사운드) · 최아원.
@@ -125,7 +125,7 @@ caffeinate -d python3 home_tracker.py --camera 번호 --save-raw results/이름.
     - PointLight_2 = EX_Light_B_Warm_2 → 스탠드 (282, 286), 3500K
     - MediaPlate_1 = EX_Screen_B_Home → 브라운관 유리 (71, 186, z71), 오른쪽을 봄
     - StaticMeshActor_27 = EX_Visitor (형체) → 시작 (20, 36)
-    - CineCameraActor_0 = EX_VisitorEye (형체에 붙어 있음)
+    - CineCameraActor_0 = EX_VisitorEye (형체에 붙어 있음) — **11/19 21:45 다시**: 몸 앞 30cm·160cm·6° 아래·14mm, 비율 고정 끔(반쪽 화면 꽉 채움), 이 카메라만 수동 노출+보정 -7. 스크립트 `Saved/cam1119b.py`·`cam1119c.py`, 미리보기 `Saved/cap1119.py` → `Saved/eyecam/` (플레이 없이 PNG로 찍음)
     - CineCameraActor_1 = EX_Cam_TopView (150, 150, 900, 아래를 봄)
     - 그 밖에 EX_PostProcess · EX_PlayerStart · EX_WalkCam도 지킴.
   - 새 액터: 바닥·벽·가벽·천장(아래를 보는 한 면 판 → 천장 CCTV에서 투명), 지하철 소품, 집 가구, QR_Screen, CCTV_Dome, 지하철 조명 2, 카메라(Cam_A_Subway · Cam_B_Door · Cam_B_OverSofa). 폴더 Exhibition/Structure · Subway · Home.
