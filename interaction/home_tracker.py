@@ -49,6 +49,10 @@ DEFAULT_CFG = {
         "exit_margin_cm": 40,
         "foot_point": True,           # (예전 설정) point_mode가 없을 때만 씀
         "point_mode": "foot",         # finger(손끝: 손 인식 → 피부색) 추천은 손 시연 때
+        "person_detector": "bg",      # bg(빈 방 배경과 비교) · yolo(사람 형체 인식: pip3 install ultralytics → 그림자·TV를 사람으로 안 봄)
+        "yolo_model": "yolov8n-seg.pt",   # 처음 실행 때 자동으로 받아요 (약 7MB)
+        "yolo_conf": 0.35,            # 이보다 확신이 낮으면 사람으로 안 봄
+        "yolo_imgsz": 640,            # 인식용 크기 (작을수록 빠름, 480도 가능)
         "use_mediapipe": False,       # True + pip3 install mediapipe → 손 전체가 보일 때 검지 끝을 손 인식으로 (손 일부만 보이면 피부색 방식이 더 안정적)
         "tip_band": 0.85,             # 끝점 후보 범위 (손끝은 0.96)
         "skin_lo": [40, 136, 77], "skin_hi": [255, 180, 130],   # 피부색 범위 (YCrCb)         # 위치로 삼을 점: foot(위에서 본 사람의 발) · tip(손끝: 화면 가장자리에서 가장 먼 끝) · center(덩어리 중심)
@@ -344,6 +348,10 @@ class Tracker:
         fg = cv2.morphologyEx(fg, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
         fg = cv2.morphologyEx(fg, cv2.MORPH_CLOSE, np.ones((11, 11), np.uint8))
         fg = cv2.dilate(fg, np.ones((7, 7), np.uint8))
+        if self.T.get("person_detector", "bg") == "yolo":
+            ym = self.yolo_mask(frame)
+            if ym is not None:
+                fg = ym                                # 사람 형체만 (그림자·가구·TV 화면은 빠짐)
         self.fg = fg
         self.last_gn = gn
         cnts, _ = cv2.findContours(fg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -428,6 +436,46 @@ class Tracker:
         med = np.clip(med, 0.3, 3.0).astype(np.float32)
         med = cv2.GaussianBlur(med, (3, 3), 0)
         return cv2.resize(med, (pw, ph), interpolation=cv2.INTER_LINEAR)
+
+    def yolo_mask(self, frame):
+        """YOLO 분할 모델로 '사람' 모양만 찾아 감지용 크기(pw×ph)의 마스크로 돌려준다. 못 쓰면 None → 배경 방식."""
+        if getattr(self, "yolo_off", False):
+            return None
+        if getattr(self, "yolo", None) is None:
+            try:
+                from ultralytics import YOLO
+                self.yolo = YOLO(self.T.get("yolo_model", "yolov8n-seg.pt"))
+                self.yolo_dev = "cpu"
+                try:
+                    import torch
+                    if torch.backends.mps.is_available():
+                        self.yolo_dev = "mps"
+                except Exception:
+                    pass
+                print(f"  [사람 형체 인식] YOLO 사용 중 ({self.T.get('yolo_model')}, {self.yolo_dev})")
+            except Exception as e:
+                self.yolo_off = True
+                print("  (YOLO를 못 불러와서 배경 차이 방식으로 감지해요. 설치: pip3 install ultralytics)", repr(e)[:120])
+                return None
+        try:
+            r = self.yolo.predict(frame, imgsz=int(self.T.get("yolo_imgsz", 640)), conf=float(self.T.get("yolo_conf", 0.35)),
+                                  classes=[0], device=self.yolo_dev, verbose=False)[0]
+        except Exception as e:
+            if self.yolo_dev != "cpu":
+                print("  (mps에서 오류가 나서 cpu로 바꿔요)", repr(e)[:120])
+                self.yolo_dev = "cpu"
+                return None
+            raise
+        m = np.zeros((self.ph, self.pw), np.uint8)
+        if r.masks is not None and len(r.masks):
+            for poly in r.masks.xy:
+                if len(poly) >= 3:
+                    cv2.fillPoly(m, [np.int32(np.asarray(poly) * self.scale)], 255)
+        elif r.boxes is not None:
+            for x1, y1, x2, y2 in r.boxes.xyxy.cpu().numpy():
+                cv2.rectangle(m, (int(x1 * self.scale), int(y1 * self.scale)), (int(x2 * self.scale), int(y2 * self.scale)), 255, -1)
+        m = cv2.dilate(m, np.ones((5, 5), np.uint8))
+        return m
 
     def finger_of(self, frame, g, person_mask, cnt_full, ctr):
         """손끝: ① MediaPipe 손 인식(설치돼 있고 손이 잡히면) → 검지 끝
@@ -812,7 +860,7 @@ def run_setup(cfg, cfg_path, cap):
         steps = steps[:1]
         print("\n[언리얼 도면 모드] 구역(기차·집·소파·출구)은 언리얼 도면에서 가져와요.")
         print("  카메라 화면에서 전시장 네 모서리를 찍어 주세요. 오른쪽 위 작은 지도의 1·2·3·4와 같은 자리예요.")
-        print("  1 = 입구 쪽 왼쪽 위, 2 = 출구 쪽 오른쪽 위, 3 = 오른쪽 아래(TV 쪽), 4 = 왼쪽 아래")
+        print("  1 = 왼쪽 위(지하철 칸 입구 쪽), 2 = 오른쪽 위(지하철 칸 끝), 3 = 오른쪽 아래(소파 뒤 스탠드), 4 = 왼쪽 아래(출구 쪽)")
     mini = layout_minimap(cfg) if locked else None
     clicks = []
     cv2.namedWindow(win, cv2.WINDOW_NORMAL)
@@ -898,14 +946,23 @@ def apply_layout(cfg, path):
     return cfg
 
 
-def read_first(cap, wait_s=5.0):
+def read_first(cap, wait_s=8.0):
     """카메라가 첫 화면을 줄 때까지 기다린다 (아이폰 연속성 카메라는 1~2초 걸림)"""
     t0 = time.monotonic()
+    n_ok, last_mean = 0, None
     while time.monotonic() - t0 < wait_s:
         ok, f = cap.read()
-        if ok and f is not None and f.mean() > 3:
-            return True, f
+        if ok and f is not None:
+            n_ok, last_mean = n_ok + 1, float(f.mean())
+            if last_mean > 3:
+                return True, f
         time.sleep(0.05)
+    if not cap.isOpened():
+        print("  [진단] 카메라를 아예 못 열었어요 → 번호가 없거나, 카메라 권한(시스템 설정 → 개인정보 보호 → 카메라 → 터미널)이 꺼져 있어요.")
+    elif n_ok == 0:
+        print("  [진단] 카메라는 열렸는데 화면이 한 장도 안 왔어요 → A7 IV가 USB 스트리밍 중인지(카메라 화면에 표시), 다른 앱(줌·OBS 등)이 쓰고 있지 않은지 확인하세요.")
+    else:
+        print(f"  [진단] 화면은 {n_ok}장 왔는데 전부 새까매요 (밝기 {last_mean:.1f}) → 렌즈 캡, 너무 어두운 노출(M 모드 셔터·ISO), 방 불을 확인하세요.")
     return False, None
 
 
@@ -992,6 +1049,12 @@ def main():
     if args.save_video:
         writer = cv2.VideoWriter(args.save_video, cv2.VideoWriter_fourcc(*"mp4v"), fps, (frame.shape[1], frame.shape[0]))
     print(f"실행 중 · OSC → {cfg['osc']['host']}:{cfg['osc']['port']}{' (꺼짐)' if args.no_osc else ''} · 끄기: ESC / q / 창 닫기 / 터미널에서 Ctrl+C")
+    import signal
+    def _stop(signum, _frame):
+        raise KeyboardInterrupt
+    for _sig in (getattr(signal, "SIGHUP", None), signal.SIGTERM):
+        if _sig is not None:
+            signal.signal(_sig, _stop)                  # 터미널 창을 닫아도 영상·기록을 마무리하고 끝냄
     n, t_start = 0, time.monotonic()
     win = "Home Sweet Home - CCTV"
     shown = False
@@ -1040,12 +1103,15 @@ def main():
         print("\nCtrl+C — 기록을 저장하고 끝낼게요")
     if tr.state == "IN":
         tr.finish(n / fps if args.video else time.monotonic() - t_start, "프로그램 종료")
-    cap.release()
-    cv2.destroyAllWindows()
     if writer:
-        writer.release()
+        writer.release()                                # 영상 먼저 마무리 (창 정리 중 오류가 나도 파일은 살림)
     if raw_writer:
         raw_writer.release()
+    cap.release()
+    try:
+        cv2.destroyAllWindows()
+    except cv2.error:
+        pass
     if args.events_json:
         Path(args.events_json).write_text(json.dumps({"events": tr.events_out, "osc": [(a, list(v)) for a, v in osc.sent if a != "/home/pos"]}, ensure_ascii=False, indent=1), encoding="utf-8")
 

@@ -5,3 +5,4 @@ sim_frame_*.jpg
 sim_truth.json
 sim_config.json
 config.json
+*.pt

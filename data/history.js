@@ -305,5 +305,7 @@ window.WORKLOG = [
 {"date": "2026-11-19", "time": "16:20", "text": "감지 프로그램 개선 — 영역 안에 들어오면 자동 입장, 출구에 3초 머물면 퇴장하고 QR 창 자동으로 띄움, 다음 관객은 화면이 빈 뒤에 받음", "link": "interaction/README.md"},
 {"date": "2026-11-19", "time": "16:44", "text": "언리얼 연결 — OSC 플러그인 켜고 레벨 블루프린트로 신호 받기 성공, 입장하면 집 조명 켜지고 퇴장하면 꺼짐", "link": "interaction/unreal/README.md"},
 {"date": "2026-11-19", "time": "17:05", "text": "현실 ↔ 언리얼 매칭 — 언리얼 도면으로 구역 자동 설정, 화면 둘로 나눠 천장 CCTV + 관객 눈 시점, 형체가 실제 동선대로 이동, 집에 들어오면 조명·TV, 소파·물건 만지면 음악 커짐, 퇴장하면 플레이 종료", "link": "interaction/unreal/README.md"},
-{"date": "2026-11-19", "time": "17:18", "text": "손끝 추적 개선 — 피부색만 남겨 손가락 그림자를 빼고 진짜 끝만 손끝으로 (point_mode=finger)", "link": "interaction/docs/finger_before_after.jpg"}
+{"date": "2026-11-19", "time": "17:18", "text": "손끝 추적 개선 — 피부색만 남겨 손가락 그림자를 빼고 진짜 끝만 손끝으로 (point_mode=finger)", "link": "interaction/docs/finger_before_after.jpg"},
+{"date": "2026-11-19", "time": "20:22", "text": "사람 감지를 사람 형체 인식(YOLO)으로 — 그림자·TV를 사람으로 안 봄, 삼각대(비스듬히) 촬영에서 발 위치 계산", "link": "interaction/README.md"},
+{"date": "2026-11-19", "time": "20:30", "text": "언리얼 L_Current를 최신 배치로 다시 지음 — 위 지하철 칸 80 · 아래 집 220, 작은 소파·스탠드 2·브라운관, 감지 구역도 새 도면으로", "link": "interaction/unreal/README.md"}
 ];
