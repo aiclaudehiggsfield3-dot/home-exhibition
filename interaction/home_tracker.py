@@ -62,7 +62,12 @@ DEFAULT_CFG = {
         "cover_margin_cm": 20,        # 사람 덩어리에서 이 거리 안이면 '가려진 것'
         "still_cms": 12,              # 사람이 이보다 느리면 '멈춰 있음' (들고 있음 판단은 멈춰 있을 때만 셈)
         "sofa_margin_cm": 35,         # 앉은 뒤에는 소파 영역에서 이만큼 벗어나야 '일어남'
-        "entry_edge_cm": 60,          # 입장은 바닥 가장자리에서 이 거리 안에 처음 나타날 때만
+        "entry_edge_cm": 60,          # entry_anywhere가 꺼져 있을 때만: 바닥 가장자리 이 거리 안에서 나타나야 입장
+        "entry_anywhere": True,       # 바닥 영역 안 어디든 사람이 1초쯤 보이면 자동 입장
+        "entry_s": 0.8,               # 입장으로 볼 때까지 이어서 보여야 하는 시간
+        "exit_dwell_s": 3.0,          # 출구 영역 안에 이 시간 동안 있으면 퇴장 → QR
+        "clear_s": 1.0,               # 퇴장 뒤 화면이 이만큼 비어야 다음 관객 입장 받음
+        "qr_show_s": 20.0,            # QR 창을 띄워 두는 시간 (다음 관객이 들어오면 바로 닫힘)
         "pos_send_s": 0.2, "sample_s": 0.25,
     },
 }
@@ -190,6 +195,39 @@ def save_qr(url, path):
     return path
 
 
+def qr_card(vid, stay, qr_path, url, size=(900, 1000)):
+    """QR 창에 띄울 그림: 흰 바탕 + QR + 안내 글 (한글 글꼴이 있으면 한글로)."""
+    W, H = size
+    card = np.full((H, W, 3), 255, np.uint8)
+    q = cv2.imread(str(qr_path)) if qr_path else None
+    if q is not None:
+        s = 640
+        q = cv2.resize(q, (s, s), interpolation=cv2.INTER_NEAREST)
+        x0, y0 = (W - s) // 2, 150
+        card[y0:y0 + s, x0:x0 + s] = q
+    lines = [(f"관객 #{vid:04d} · 머문 시간 {stay:.0f}초", 46, 50), ("휴대폰으로 찍으면 내 동선이 나와요", 38, 820), ("Scan to see your path", 30, 880)]
+    font = None
+    for fp in ("/System/Library/Fonts/AppleSDGothicNeo.ttc", "/System/Library/Fonts/Supplemental/AppleGothic.ttf",
+               "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc", "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"):
+        if os.path.exists(fp):
+            font = fp
+            break
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+        if not font:
+            raise ImportError
+        im = Image.fromarray(card[:, :, ::-1]); d = ImageDraw.Draw(im)
+        for text, sz, y in lines:
+            f = ImageFont.truetype(font, sz)
+            w = d.textlength(text, font=f)
+            d.text(((W - w) / 2, y), text, font=f, fill=(20, 20, 20))
+        card = np.array(im)[:, :, ::-1].copy()
+    except Exception:
+        cv2.putText(card, f"Visitor #{vid:04d}  {stay:.0f}s", (60, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.4, (20, 20, 20), 3)
+        cv2.putText(card, "Scan to see your path", (60, 880), cv2.FONT_HERSHEY_SIMPLEX, 1.4, (20, 20, 20), 3)
+    return card
+
+
 # ---------------------------------------------------------------- OSC
 class Osc:
     def __init__(self, cfg, enabled=True):
@@ -240,6 +278,10 @@ class Tracker:
         self.last_absent_t = None
         self.last_pos = None
         self.relearn_until = 0.0
+        self.need_clear = False                      # 퇴장 직후: 화면이 비기 전엔 새 입장 안 받음
+        self.clear_since = None
+        self.entry_since = None
+        self.last_result = None                      # (방문 번호, 머문 시간, QR 경로, 주소) — QR 창용
         self.prev_foot_proc = None
         self.jump_since = None
         self.speed, self.dt = 0.0, 0.0
@@ -262,6 +304,8 @@ class Tracker:
         self.touch_count = {}
         self.next_pos_t = self.next_sample_t = 0.0
         self.near_exit = False
+        self.in_exit = False
+        self.exit_since = None
 
     def emit(self, t, name, *val):
         self.events_out.append((round(t, 2), name, val))
@@ -526,9 +570,29 @@ class Tracker:
 
         if self.state == "IDLE":
             W, H = self.cfg["floor_cm"]
-            e = self.T["entry_edge_cm"]
-            near_edge = self.person is not None and not (e < self.person[3][0] < W - e and e < self.person[3][1] < H - e)
-            if present and self.person is not None and near_edge and t >= self.relearn_until:
+            if self.need_clear:                          # 방금 나간 사람이 아직 화면에 있으면 기다림
+                if self.person is None and not present:
+                    self.clear_since = self.clear_since or t
+                    if t - self.clear_since >= T["clear_s"]:
+                        self.need_clear = False
+                else:
+                    self.clear_since = None
+                self.entry_since = None
+                return
+            ok_pos = False
+            if self.person is not None:
+                px, py = self.person[3]
+                if T.get("entry_anywhere", True):
+                    ok_pos = -10 <= px <= W + 10 and -10 <= py <= H + 10
+                else:
+                    e = T["entry_edge_cm"]
+                    ok_pos = not (e < px < W - e and e < py < H - e)
+            if present and ok_pos and t >= self.relearn_until:
+                self.entry_since = self.entry_since or t
+            else:
+                self.entry_since = None
+            if self.entry_since is not None and t - self.entry_since >= T.get("entry_s", 0.8):
+                self.entry_since = None
                 self.state = "IN"
                 self.reset_session()
                 self.t0 = t
@@ -545,6 +609,14 @@ class Tracker:
             x, y = self.person[3]
             self.last_pos = (x, y)
             self.near_exit = in_poly((x, y), Z["exit"], T["exit_margin_cm"]) if Z.get("exit") else False
+            self.in_exit = in_poly((x, y), Z["exit"], 0) if Z.get("exit") else False
+            if self.in_exit:
+                self.exit_since = self.exit_since or t
+                if t - self.exit_since >= T.get("exit_dwell_s", 3.0):
+                    self.finish(t, f"출구에서 {T.get('exit_dwell_s', 3.0):.0f}초")
+                    return
+            else:
+                self.exit_since = None
             if t >= self.next_pos_t:
                 self.next_pos_t = t + T["pos_send_s"]
                 self.osc.send("/home/pos", float(x), float(y))
@@ -575,6 +647,7 @@ class Tracker:
 
         if self.person is None:
             self.last_absent_t = self.last_absent_t or t
+            self.exit_since = None
             gone = t - self.last_absent_t
             if (self.near_exit and gone > T["absent_exit_s"]) or gone > T["lost_s"]:
                 self.finish(t, "출구로 퇴장" if self.near_exit else "사라짐(출구 아님)")
@@ -607,6 +680,9 @@ class Tracker:
         self.prev_foot_proc = None
         self.present_hist = []
         self.relearn_until = t + 2.0                   # 사람이 나간 뒤 배경 빠르게 다시 익히기
+        self.need_clear = True
+        self.clear_since = None
+        self.last_result = (self.vid, stay, qr, url, t)
 
     # -------------------------------------------- 화면 표시
     def draw(self, frame, t):
@@ -637,6 +713,15 @@ class Tracker:
         txt = f"{'REC' if rec else 'WAIT'}  #{getattr(self, 'vid', 0):04d}  " + (f"{t - self.t0:5.1f}s" if rec else "")
         if rec and self.seated:
             txt += "  SEATED"
+        if rec and self.exit_since is not None:
+            left = max(0.0, self.T.get("exit_dwell_s", 3.0) - (t - self.exit_since))
+            txt += f"  EXIT {left:.1f}"
+            p = to_floor(self.Hinv, Z["exit"]).astype(np.int32)
+            cv2.polylines(out, [p], True, (90, 220, 120), 6)
+        if not rec and self.need_clear:
+            txt = "DONE - clear the area"
+        elif not rec and self.entry_since is not None:
+            txt = "ENTERING..."
         cv2.rectangle(out, (0, 0), (out.shape[1], 46), (0, 0, 0), -1)
         cv2.putText(out, txt, (14, 32), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (60, 60, 255) if rec else (200, 200, 200), 2)
         cnt = "  ".join(f"{k}:{v}" for k, v in self.touch_count.items())
@@ -788,6 +873,7 @@ def main():
     n, t_start = 0, time.monotonic()
     win = "Home Sweet Home - CCTV"
     shown = False
+    qr_win, qr_until, qr_seen = "QR", 0.0, None
     try:
         while ok:
             t = n / fps if args.video else time.monotonic() - t_start
@@ -800,6 +886,19 @@ def main():
                     writer.write(view)
                 if not args.headless:
                     cv2.imshow(win, view)
+                    lr = tr.last_result
+                    if lr is not None and lr is not qr_seen and lr[2]:      # 새 결과 → QR 창 띄우기
+                        qr_seen = lr
+                        cv2.namedWindow(qr_win, cv2.WINDOW_NORMAL)
+                        cv2.imshow(qr_win, qr_card(lr[0], lr[1], lr[2], lr[3]))
+                        try:
+                            cv2.setWindowProperty(qr_win, cv2.WND_PROP_TOPMOST, 1)
+                        except Exception:
+                            pass
+                        qr_until = time.monotonic() + tr.T.get("qr_show_s", 20.0)
+                    if qr_until and (time.monotonic() > qr_until or tr.state == "IN"):
+                        cv2.destroyWindow(qr_win)
+                        qr_until = 0.0
                     k = cv2.waitKey(1) & 0xFF
                     if shown and cv2.getWindowProperty(win, cv2.WND_PROP_VISIBLE) < 1:
                         break                                   # 창 닫기 버튼
