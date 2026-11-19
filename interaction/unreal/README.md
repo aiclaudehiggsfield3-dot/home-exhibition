@@ -14,16 +14,28 @@
 | EX_Visitor | 관객 형체 (실루엣 원기둥, 높이 170cm) |
 | EX_VisitorEye | 관객 눈높이 카메라 (160cm, 형체에 붙어 같이 움직임) |
 | S_TempMusic | 임시 음악 (서지오 파일 나오면 교체) — Content/Exhibition/Audio |
+| S_TempFire · S_TempSubway · S_TempStatic | 임시 모닥불·지하철·채널 지지직 소리 (직접 합성, 원본 `temp_sounds/`) — 서지오 파일로 교체 |
+| EX_Snd_Fire (AmbientSound_0) · EX_Snd_Subway (AmbientSound_1) | 소리 액터 (자동 재생 끔) — 블루프린트가 켜고 끔. Exhibition/Sound 폴더 |
+| EX_QR_Screen (StaticMeshActor_116) | 출구 옆 QR 화면 — 머티리얼 M_QR (Tex 텍스처 × Show 밝기) |
+| PL_TV | TV 채널 목록 (0 B_home · 1 A_society) — MediaPlate가 이 목록을 씀 |
 | 화면 나누기 | 왼쪽 = 천장 CCTV, 오른쪽 = 관객 눈 (DefaultEngine.ini: 2인 화면 세로 분할) |
 
 ## 블루프린트가 하는 일
 | 신호 | 반응 |
 |---|---|
 | 시작 | 8000번 포트 열기 · 집 조명 끔 · 관객 형체 숨김 · 집 TV 끔 · 화면 둘로 나누기 · 음악 아주 작게 시작 |
-| `/home/enter` | 관객 등장 준비 |
+| `/home/enter` | 관객 등장 준비 · QR 화면 끔 |
 | `/home/pos x y` | 형체가 그 자리로 부드럽게 이동하고 가는 방향을 봄 (첫 위치면 바로 나타남) |
-| `/home/door` | 집 구역에 들어섬 = 문 열고 들어옴 → **집 조명 켬 + TV 영상 재생** |
+| `/home/door` | 집 구역에 들어섬 = 문 열고 들어옴 → **집 조명 켬 + TV 영상 재생 + 지하철 소리 1.5초 페이드아웃** |
 | `/home/sit 1` | 음악 목표 볼륨 0.35 이상으로 |
-| `/home/touch` | 음악 목표 볼륨 +0.2 (최대 1) |
+| `/home/train` | 지하철 소리 켬 (1초 페이드인) |
+| `/home/touch blanket` | 음악 +0.2 · **모닥불 소리** 켬 (이미 나고 있으면 그대로) |
+| `/home/touch remote` | 음악 +0.2 · **TV 채널 바꿈** (B_home ↔ A_society) + 지지직 소리 |
 | 앉아 있는 동안 | 목표 볼륨이 초당 0.01씩 커짐, 실제 볼륨은 천천히 따라감 |
-| `/home/exit` | 2초 뒤 **플레이 완전 종료** (다음 관객은 ▶ 다시) |
+| `/home/exit` | 2초 뒤 **리셋**: 조명·형체 숨김, TV 끔, 볼륨 0, 모닥불·지하철 소리 끔 → 다음 관객을 플레이 중에 바로 받음 |
+| `/home/result` | QR PNG를 텍스처로 읽어 **QR 화면에 표시** (다음 관객 `/home/enter` 때 꺼짐) |
+
+## 블루프린트 고치는 법 (11/19)
+- 그래프는 `gen_bp1119.py`가 만든다: `python3 gen_bp1119.py <Saved 폴더>` → `bp_v4.t3d`(11/19 17시 그래프) + 새 기능 = `bp_v5.t3d` (= 이 폴더의 `L_Current_OSC.t3d`).
+- 새 변수는 없음 (소리는 AmbientSound 액터, QR은 그 자리에서 머티리얼 인스턴스 생성) → 붙여 넣고 **컴파일만** 하면 됨.
+- 채널 바꾸기 주의: MediaPlate `Open()`은 항상 0번부터, 플레이어 `Next()`는 같은 영상만 다시 틂 → 플레이어의 `PlayOnOpen`을 켜고 `OpenPlaylistIndex(PL_TV, 지금이 A_society면 0 아니면 1)`.

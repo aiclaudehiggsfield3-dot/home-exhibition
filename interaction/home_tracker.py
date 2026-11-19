@@ -199,7 +199,12 @@ def save_qr(url, path):
     q = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=3)
     q.add_data(url); q.make(fit=True)
     img = q.make_image()
-    img.save(path)
+    pil = img.get_image() if hasattr(img, "get_image") else getattr(img, "_img", img)
+    try:
+        pil = pil.convert("RGB")      # 1비트 흑백 PNG는 언리얼이 빨간 한 채널로 읽어서 RGB로 저장
+    except Exception:
+        pass
+    pil.save(path)
     return path
 
 
@@ -317,6 +322,7 @@ class Tracker:
         self.room = None
         self.home_since = None
         self.door_sent = False
+        self.train_sent = False
 
     def emit(self, t, name, *val):
         self.events_out.append((round(t, 2), name, val))
@@ -721,6 +727,10 @@ class Tracker:
             if room != self.room:
                 self.room = room
                 self.log(f"[{t - self.t0:6.1f}s] 구역: {room or '-'}")
+            if room == "train" and not self.train_sent and not self.door_sent:
+                self.train_sent = True
+                self.log(f"[{t - self.t0:6.1f}s] 지하철 칸 (지하철 소리)")
+                self.emit(t, "train")
             if room == "home" and not self.door_sent:
                 self.home_since = self.home_since or t
                 if t - self.home_since >= T.get("door_s", 0.4):
