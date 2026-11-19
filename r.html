@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>당신이 머문 집 — Home Sweet Home</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#14120f;--ink:#f3ece2;--mute:#a59a8b;--line:#3a332b;--card:#1e1b17;--warm:#e0763f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;line-height:1.55}
+.w{max-width:520px;margin:0 auto;padding:22px 18px 40px}
+.tag{display:inline-block;font-size:12px;background:#3a2c1c;color:#f0b77f;border-radius:99px;padding:2px 10px}
+h1{font-size:28px;margin:10px 0 2px;letter-spacing:-.5px}.sub{color:var(--mute);font-size:13.5px;margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0}
+.card h2{font-size:13px;color:var(--mute);font-weight:500;margin:0 0 8px;display:flex;justify-content:space-between}
+canvas{width:100%;display:block;border-radius:10px;background:#0c0b0a}
+.bar{height:5px;background:#2c2620;border-radius:9px;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;width:0;background:var(--warm)}
+.big{font-size:44px;font-weight:700;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.big small{font-size:18px;font-weight:500;margin-left:2px}
+ul{list-style:none;padding:0;margin:0}li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}li:last-child{border:0}
+li span{color:var(--mute);font-variant-numeric:tabular-nums}
+.q{font-size:17px;text-align:center;margin:22px 0 4px}.note{color:var(--mute);font-size:12px;text-align:center}
+button{font:inherit;font-size:13px;background:#0000;color:var(--ink);border:1px solid #fff3;border-radius:99px;padding:3px 12px;cursor:pointer}
+.err{padding:30px 0;text-align:center;color:var(--mute)}
+</style></head><body><div class="w" id="app">
+<span class="tag">Home Sweet Home</span>
+<h1>당신이 머문 집</h1>
+<p class="sub" id="sub"></p>
+<div class="card"><h2><span>천장 CCTV 동선 타임랩스</span><button id="re">다시 보기</button></h2><canvas id="cv" width="900" height="520"></canvas><div class="bar"><i id="pb"></i></div></div>
+<div class="card"><h2><span>머문 시간</span></h2><div class="big" id="stay"></div></div>
+<div class="card"><h2><span>만진 물건</span><span id="cnt"></span></h2><ul id="ev"></ul></div>
+<p class="q">"편안함이 안주가 되는 데 얼마나 걸렸나요?"</p>
+<p class="note">위에서 본 움직임만 기록했어요(얼굴 X). 이 기록은 이 주소 안에만 들어 있고 서버에 저장되지 않아요.</p>
+</div>
+<script>
+const B='0123456789abcdefghijklmnopqrstuvwxyz';
+const n36=s=>[...s].reduce((a,c)=>a*36+B.indexOf(c),0);
+const pairs=s=>{const o=[];for(let i=0;i+3<s.length;i+=4)o.push([n36(s.slice(i,i+2)),n36(s.slice(i+2,i+4))]);return o;};
+const NAME={b:'담요',r:'리모컨',s:'소파',p:'예비 물건'};
+const fmt=s=>`${Math.floor(s/60)}분 ${String(Math.round(s%60)).padStart(2,'0')}초`;
+function parse(){
+  const h=decodeURIComponent(location.hash||'');const m=h.match(/d=([^&]+)/);if(!m)return null;
+  const p=m[1].split('~');if(p[0]!=='v1'||p.length<10)return null;
+  return {id:+p[1],stay:+p[2],dt:+p[3],W:+p[4],H:+p[5],sofa:pairs(p[6]),exit:pairs(p[7]),path:pairs(p[8]),
+    ev:p[9]?p[9].split('.').filter(Boolean).map(e=>({k:e[0],t:n36(e.slice(1))})):[]};
+}
+const D=parse();
+if(!D){document.getElementById('app').innerHTML='<div class="err">기록을 찾을 수 없어요.<br>출구 화면의 QR을 다시 찍어 주세요.</div>';}
+else{
+  document.getElementById('sub').textContent=`관객 #${String(D.id).padStart(4,'0')} · ${new Date().toLocaleDateString('ko-KR')}`;
+  document.getElementById('stay').innerHTML=`${Math.floor(D.stay/60)}<small>분</small> ${String(Math.round(D.stay%60)).padStart(2,'0')}<small>초</small>`;
+  const touched=D.ev.filter(e=>e.k!=='s');
+  document.getElementById('cnt').textContent=touched.length?`${touched.length}번`:'';
+  document.getElementById('ev').innerHTML=D.ev.length?D.ev.map(e=>`<li>${e.k==='s'?'소파에 앉음':NAME[e.k]||'물건'}<span>${fmt(e.t)}</span></li>`).join(''):'<li>아무것도 만지지 않았어요<span>—</span></li>';
+  const cv=document.getElementById('cv'),g=cv.getContext('2d');
+  const pad=30,sc=Math.min((cv.width-2*pad)/D.W,(cv.height-2*pad)/D.H),ox=(cv.width-D.W*sc)/2,oy=(cv.height-D.H*sc)/2;
+  const X=x=>ox+x*sc,Y=y=>oy+y*sc;
+  function poly(p,fill,stroke,label){if(p.length<3)return;g.beginPath();p.forEach(([x,y],i)=>i?g.lineTo(X(x),Y(y)):g.moveTo(X(x),Y(y)));g.closePath();g.fillStyle=fill;g.fill();g.strokeStyle=stroke;g.lineWidth=2;g.stroke();
+    g.fillStyle=stroke;g.font='600 20px Noto Sans KR';g.fillText(label,X(p[0][0])+8,Y(p[0][1])+24);}
+  function frame(f){
+    g.clearRect(0,0,cv.width,cv.height);g.fillStyle='#2a241e';g.fillRect(X(0),Y(0),D.W*sc,D.H*sc);
+    g.strokeStyle='#4a4036';g.lineWidth=1;for(let x=0;x<=D.W;x+=50){g.beginPath();g.moveTo(X(x),Y(0));g.lineTo(X(x),Y(D.H));g.stroke();}
+    for(let y=0;y<=D.H;y+=50){g.beginPath();g.moveTo(X(0),Y(y));g.lineTo(X(D.W),Y(y));g.stroke();}
+    poly(D.sofa,'#c4622d44','#e0763f','소파');poly(D.exit,'#3fa06a33','#5fd08a','출구');
+    const n=Math.max(1,Math.floor(f*D.path.length));
+    g.lineCap='round';g.lineJoin='round';
+    for(let i=1;i<n;i++){const [a,b]=[D.path[i-1],D.path[i]];g.strokeStyle=`rgba(255,${90+Math.round(120*i/D.path.length)},70,.9)`;g.lineWidth=4;
+      g.beginPath();g.moveTo(X(a[0]),Y(a[1]));g.lineTo(X(b[0]),Y(b[1]));g.stroke();}
+    const p=D.path[n-1];if(p){g.fillStyle='#fff';g.beginPath();g.arc(X(p[0]),Y(p[1]),9,0,7);g.fill();
+      g.fillStyle='#fff';g.font='600 18px Noto Sans KR';g.fillText(fmt(Math.min(D.stay,(n-1)*D.dt)),X(p[0])+14,Y(p[1])-12);}
+    document.getElementById('pb').style.width=(f*100)+'%';}
+  let t0;function play(ts){t0=t0??ts;const f=Math.min((ts-t0)/10000,1);frame(f);if(f<1)requestAnimationFrame(play);}
+  document.getElementById('re').onclick=()=>{t0=undefined;requestAnimationFrame(play);};
+  requestAnimationFrame(play);
+}
+</script></body></html>
