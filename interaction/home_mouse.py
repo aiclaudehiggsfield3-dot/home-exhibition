@@ -10,7 +10,7 @@ Home Sweet Home — 게임처럼 조작하는 관객 시연 (카메라 대신 �
   스페이스 / 창 클릭   관객 등장 (지하철 입구에서) — 클릭하면 마우스가 창에 잡혀 시야 조작
   W A S D (방향키)     위 · 왼쪽 · 아래 · 오른쪽으로 걷기 (Shift = 빨리)
   마우스 좌우          바라보는 방향 돌리기 (시야 부채꼴)
-  1 담요 만짐   2 리모컨 만짐   0 지금 강제 퇴장   9 동선 지우기
+  1 담요 만짐   2 리모컨 만짐   3 TV 만짐(켜기)   0 지금 강제 퇴장   9 동선 지우기
   ESC                  마우스 풀기 → 한 번 더 누르면 끝
   가벽은 문으로만 지나갈 수 있고, 출구 틈(아래 벽 왼쪽)으로 나가면 화면 밖과 같음.
 
@@ -19,6 +19,8 @@ Home Sweet Home — 게임처럼 조작하는 관객 시연 (카메라 대신 �
   python3 home_mouse.py --no-osc
 """
 import argparse, os, sys, time, json
+import faulthandler
+faulthandler.enable()                                         # 비정상 종료(Segmentation fault) 때 어느 줄인지 남김
 from pathlib import Path
 import numpy as np
 import cv2
@@ -26,6 +28,8 @@ import cv2
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import home_tracker as ht                                     # 같은 규칙·OSC·QR 사용
+from unreal_game import UnrealGame                          # 언리얼을 게임 창으로 같이 켜고 끔
+from session_record import SessionRecorder                  # 시연 기록 폴더 자동 저장
 
 try:
     import pygame
@@ -42,7 +46,7 @@ FONT = next((f for f in ("/System/Library/Fonts/AppleSDGothicNeo.ttc", "/System/
              if os.path.exists(f)), None)
 ZONE_COL = {"train": (200, 160, 90), "home": (60, 120, 200), "sofa": (60, 140, 255), "exit": (90, 220, 120)}
 ZONE_KO = {"train": "지하철 칸", "home": "집", "sofa": "소파", "exit": "출구"}
-EV_KO = {"enter": "입장", "train": "지하철 칸 → 지하철 소리", "door": "문 → 조명·TV·지하철 소리 잦아듦", "sit": "소파", "touch": "만짐",
+EV_KO = {"enter": "입장", "train": "지하철 칸 → 지하철 소리", "door": "문 → 지하철 소리 잦아듦", "sit": "소파 (1이면 조명)", "touch": "만짐 (tv면 TV 켜짐)",
          "exit": "퇴장", "result": "QR"}
 
 
@@ -71,7 +75,7 @@ class MouseTracker(ht.Tracker):
     def __init__(self, *a, **k):
         super().__init__(*a, **k)
         self.mouse = None             # (x, y) 화면 픽셀, None이면 사람 없음
-        self.T = dict(self.T, pos_send_s=1 / 30)   # 게임식은 잡음이 없으니 매 프레임 보내 언리얼 1인칭이 바로 따라오게
+        self.T = dict(self.T, pos_send_s=0.02)   # 게임식은 잡음이 없으니 매 프레임 보내 언리얼 1인칭이 바로 따라오게
 
     def person_detect(self, frame, t):
         if self.mouse is None:
@@ -124,6 +128,8 @@ def main():
     ap.add_argument("--config", default=str(HERE / "config.json"))
     ap.add_argument("--results", default=str(HERE / "results" / "mouse"), help="기록·QR 저장 폴더 (실제 관객 기록과 따로)")
     ap.add_argument("--no-osc", action="store_true")
+    ap.add_argument("--no-unreal", action="store_true", help="언리얼을 같이 켜지 않음 (에디터 ▶로 따로 켤 때)")
+    ap.add_argument("--no-record", action="store_true", help="시연 기록 폴더를 만들지 않음")
     args = ap.parse_args()
 
     cfg = ht.load_cfg(Path(args.config))
@@ -146,8 +152,37 @@ def main():
             logs.append(line.strip())
         del logs[:-9]
 
+    rec = None if args.no_record else SessionRecorder(args.results, "mouse", cfg, "게임식 시연")
+    if rec:
+        log = rec.wrap_log(log)
     osc = ht.Osc(cfg, enabled=not args.no_osc)
     tr = MouseTracker(cfg, (fw, fh), osc, args.results, log=log)
+    if rec:
+        rec.attach_osc(osc)
+        rec.attach_tracker(tr)
+    # ---- 한 화면 나눠 쓰기: 왼쪽 언리얼 게임 창, 오른쪽 시연 창 (config unreal_game.layout = "side" 기본 / "manual")
+    NW, NH = fw + PANEL, fh
+    PW, PH = NW, NH
+    UG = cfg.setdefault("unreal_game", {})
+    pygame.display.init()
+    di = pygame.display.Info()
+    SW, SH = di.current_w, di.current_h
+    if UG.get("layout", "side") == "side" and SW > 0 and SH > 0:
+        TOP = 28                                              # 맥 메뉴 막대 아래
+        PW = min(NW, int(SW * float(UG.get("panel_ratio", 0.42))))
+        PH = int(NH * PW / NW)
+        if PH > SH - TOP - 30:
+            PH = SH - TOP - 30; PW = int(NW * PH / NH)
+        UW = SW - PW
+        UH = min(SH - TOP - 30, int(UW * 9 / 16))
+        UG["res"], UG["pos"] = [UW - 2, UH], [0, TOP]
+        os.environ["SDL_VIDEO_WINDOW_POS"] = f"{UW},{TOP}"
+        print(f"화면 {SW}×{SH} → 언리얼 {UW}×{UH} (왼쪽) · 시연 창 {PW}×{PH} (오른쪽)")
+    ug = UnrealGame(cfg, log=log, log_path=str(rec.unreal_log) if rec else None)
+    import atexit
+    atexit.register(ug.stop)                                         # 오류로 끝나도 언리얼 창은 닫음
+    if not (args.no_unreal or args.no_osc):
+        ug.start()
     wk = Walker(W, H, U)
 
     # ---- 바닥 그림 (한 번만)
@@ -182,17 +217,37 @@ def main():
         cv2.circle(base, cm2px(lx, ly), 9, (80, 200, 255), -1)
     base = ko_text(base, lab)
     help_lines = ["스페이스·클릭: 관객 등장 (마우스 잡힘)", "W/S 앞뒤 · A/D 옆걸음 (보는 방향 기준, Shift 빨리)", "마우스 좌우·←/→·Q/E: 몸 돌리기",
-                  "1 담요   2 리모컨   0 강제 퇴장", "9 동선 지우기   ESC 마우스 풀기 → 끝"]
+                  "C 소파 앉기/일어나기  1 담요  2 리모컨  3 TV  0 퇴장", "9 동선 지우기   ESC 마우스 풀기 → 끝"]
     base = ko_text(base, [(s, (fw + 16, fh - 140 + i * 25), 16, (170, 170, 170)) for i, s in enumerate(help_lines)])
 
     # ---- 창
     pygame.init()
-    screen = pygame.display.set_mode((fw + PANEL, fh))
+    screen = pygame.display.set_mode((PW, PH))
+    def show(img):                                            # 그린 화면(원래 크기)을 창 크기에 맞춰 보여 줌
+        rgb = np.ascontiguousarray(img[:, :, ::-1])
+        surf = pygame.image.frombuffer(rgb.tobytes(), (rgb.shape[1], rgb.shape[0]), "RGB")
+        if (PW, PH) != (rgb.shape[1], rgb.shape[0]):
+            surf = pygame.transform.smoothscale(surf, (PW, PH))
+        screen.blit(surf, (0, 0))
     pygame.display.set_caption("Home Sweet Home - 게임식 시연 (카메라 대신)")
     clock = pygame.time.Clock()
     K = pygame
-    FWD, BACK, SL, SR = (K.K_w, K.K_UP), (K.K_s, K.K_DOWN), (K.K_a,), (K.K_d,)    # 1인칭: 보는 방향 기준
-    TURN_L, TURN_R, TURN_SPEED = (K.K_LEFT, K.K_q), (K.K_RIGHT, K.K_e), 120.0     # 방향키·Q/E 회전 (도/초)
+    try:
+        pygame.key.stop_text_input()          # 한글 입력기가 W·A·S·D를 ㅈ·ㅁ·ㄴ·ㅇ으로 가로채지 않게
+    except Exception:
+        pass
+    # 키는 '자리(scancode, USB 표준 번호)'로 읽는다 → 한글/영문 입력 상태와 상관없음
+    SC = {"w": 26, "a": 4, "s": 22, "d": 7, "q": 20, "e": 8, "c": 6, "1": 30, "2": 31, "3": 32, "9": 38, "0": 39,
+          "right": 79, "left": 80, "down": 81, "up": 82, "lshift": 225, "rshift": 229}
+    FWD, BACK, SL, SR = (SC["w"], SC["up"]), (SC["s"], SC["down"]), (SC["a"],), (SC["d"],)   # 1인칭: 보는 방향 기준
+    TURN_L, TURN_R, TURN_SPEED = (SC["left"], SC["q"]), (SC["right"], SC["e"]), 120.0       # 방향키·Q/E 회전 (도/초)
+    KEY2SC = {K.K_w: SC["w"], K.K_a: SC["a"], K.K_s: SC["s"], K.K_d: SC["d"], K.K_q: SC["q"], K.K_e: SC["e"],
+              K.K_c: SC["c"], K.K_1: SC["1"], K.K_2: SC["2"], K.K_3: SC["3"], K.K_9: SC["9"], K.K_0: SC["0"], K.K_UP: SC["up"], K.K_DOWN: SC["down"],
+              K.K_LEFT: SC["left"], K.K_RIGHT: SC["right"], K.K_LSHIFT: SC["lshift"], K.K_RSHIFT: SC["rshift"]}
+    held = set()                              # 지금 눌려 있는 키 자리
+    def sc_of(e):
+        sc = getattr(e, "scancode", 0) or 0
+        return sc if sc else KEY2SC.get(getattr(e, "key", None), -1)
 
     st = {"present": False, "grab": False, "yaw": 0.0, "trail": []}
     def set_grab(on):
@@ -203,8 +258,45 @@ def main():
             pygame.mouse.get_rel()                                     # 쌓인 움직임 버리기
     def appear():
         if not st["present"]:
-            wk.reset(); st["yaw"] = 0.0; st["present"] = True
+            wk.reset(); st["yaw"] = 0.0; st["present"] = True; st["sit"] = False
+    # 소파 자리 (언리얼 도면): 앉으면 가운데, 일어나면 소파 앞(TV 쪽)으로 한 걸음
+    (sx0, sy0), (sx1, sy1) = U.get("sofa") or [[200, 164], [267, 265]]
+    seat = ((sx0 + sx1) / 2, (sy0 + sy1) / 2)
+    tvp = U.get("tv") or [71, 186]
+    def toggle_sit():
+        if not st["present"]:
+            return
+        if st.get("sit"):
+            wk.x, wk.y = sx0 - 50.0, seat[1]                   # 소파 앞으로 일어남 (앉음 판정 구역 밖)
+            st["sit"] = False
+            log("C: 일어남")
+        elif sx0 - 60 <= wk.x <= sx1 + 60 and sy0 - 60 <= wk.y <= sy1 + 60:
+            wk.x, wk.y = seat
+            st["yaw"] = float(np.degrees(np.arctan2(tvp[1] - seat[1], tvp[0] - seat[0])))   # TV를 바라봄
+            st["sit"] = True
+            log("C: 소파에 앉음 (1.2초 뒤 조명·눈높이 115cm)")
+        else:
+            log("C: 소파 가까이(60cm 안)에서 눌러 주세요")
 
+    FOCUS_LOST = tuple(getattr(pygame, n) for n in ("WINDOWFOCUSLOST",) if hasattr(pygame, n))
+    # ---- 언리얼이 준비될 때까지 기다림 (창에 표시, 창 닫으면 그만)
+    def wait_tick(el):
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT or (e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE):
+                return False
+        w = ko_text(base.copy(), [("언리얼 켜는 중…", (fw // 2 - 90, fh // 2 - 30), 30, (0, 200, 255)),
+                                   (f"{el:4.0f}초 · 게임 창이 뜨고 화면이 둘로 나뉘면 준비 끝", (fw // 2 - 190, fh // 2 + 14), 17, (220, 220, 220))])
+        show(w)
+        pygame.display.flip()
+    if ug.p is not None and not ug.wait_ready(tick=wait_tick):
+        if ug.p is not None and ug.p.poll() is None and ug.status != "시간 초과":
+            ug.stop(); pygame.quit()
+            if rec:
+                rec.unreal_status = ug.status; rec.close()
+            return
+    if rec:
+        rec.unreal_status = ug.status
+    # (언리얼 창이 앞에 떠도 시연 창을 한 번 클릭하면 앞으로 옴 — pygame._sdl2 focus는 맥에서 Bus error를 내서 뺌)
     dummy = np.zeros((8, 8, 3), np.uint8)
     t0, prev_state, qr = time.monotonic(), "IDLE", None
     print(f"게임식 시연 · OSC → {cfg['osc']['host']}:{cfg['osc']['port']}{' (꺼짐)' if args.no_osc else ''} · 기록: {args.results}")
@@ -216,25 +308,34 @@ def main():
             for e in pygame.event.get():
                 if e.type == pygame.QUIT:
                     running = False
+                elif e.type == pygame.KEYUP:
+                    held.discard(sc_of(e))
+                elif e.type in FOCUS_LOST:
+                    held.clear()
                 elif e.type == pygame.KEYDOWN:
-                    if e.key == pygame.K_ESCAPE:
+                    k = sc_of(e); held.add(k)
+                    if e.key == pygame.K_ESCAPE or k == 41:
                         if st["grab"]:
                             set_grab(False)
                         else:
                             running = False
-                    elif e.key == pygame.K_SPACE:
+                    elif e.key == pygame.K_SPACE or k == 44:
                         if st["present"]:
                             st["present"] = False
                         else:
                             appear()
-                    elif tr.state == "IN" and e.key == pygame.K_1:
+                    elif tr.state == "IN" and k == SC["1"]:
                         tr.touch(t, "blanket", "키보드 1")
-                    elif tr.state == "IN" and e.key == pygame.K_2:
+                    elif tr.state == "IN" and k == SC["2"]:
                         tr.touch(t, "remote", "키보드 2")
-                    elif tr.state == "IN" and e.key == pygame.K_0:
+                    elif tr.state == "IN" and k == SC["3"]:
+                        tr.touch(t, "tv", "키보드 3")
+                    elif tr.state == "IN" and k == SC["0"]:
                         tr.finish(t, "강제 퇴장(키보드 0)")
-                    elif e.key == pygame.K_9:
+                    elif k == SC["9"]:
                         st["trail"] = []
+                    elif k == SC["c"]:
+                        toggle_sit()
                 elif e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
                     if not st["grab"]:
                         set_grab(True)
@@ -242,15 +343,14 @@ def main():
                 elif e.type == pygame.MOUSEMOTION and st["grab"]:
                     st["yaw"] = (st["yaw"] + e.rel[0] * SENS + 180) % 360 - 180
 
-            keys = pygame.key.get_pressed()
-            on = lambda ks: any(keys[k] for k in ks)
+            on = lambda ks: any(k in held for k in ks)
             turn = (1 if on(TURN_R) else 0) - (1 if on(TURN_L) else 0)
             if st["present"] and turn:
                 st["yaw"] = (st["yaw"] + turn * TURN_SPEED * dt + 180) % 360 - 180
             f = (1 if on(FWD) else 0) - (1 if on(BACK) else 0)      # 앞(+)/뒤(-)
             r = (1 if on(SR) else 0) - (1 if on(SL) else 0)         # 오른쪽(+)/왼쪽(-) 옆걸음
-            if st["present"] and (f or r):
-                sp = RUN if (keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]) else WALK
+            if st["present"] and (f or r) and not st.get("sit"):   # 앉아 있는 동안은 고개만 돌림 (C로 일어남)
+                sp = RUN if on((SC["lshift"], SC["rshift"])) else WALK
                 a = np.radians(st["yaw"])
                 fx, fy = np.cos(a), np.sin(a)                     # 앞 방향 (0°=+X, 90°=+Y, 언리얼과 같음)
                 rx, ry = -fy, fx                                  # 오른쪽 = 앞에서 시계 방향 90°
@@ -306,6 +406,10 @@ def main():
                 txt.append(("만짐: " + ", ".join(f"{ht.NAMES_KO.get(k, k)} {n}" for k, n in tr.touch_count.items()), (x0, 106), 17, (220, 220, 220)))
             if not st["grab"]:
                 txt.append(("※ 창을 클릭하면 마우스로 시야를 돌려요", (x0, 128), 14, (0, 200, 255)))
+            elif tr.state == "IN" and tr.door_sent:                     # 소리 세 갈래 (누적 초 → 볼륨)
+                ls, vv = tr.layer_s, tr.vols
+                txt.append((f"소리 음악 {vv[0]:.2f}({ls['sofa']:.0f}s) · TV {vv[1]:.2f}({ls['tv']:.0f}s){' ●' if tr.watching_tv else ''} · 모닥불 {vv[2]:.2f}({ls['blanket']:.0f}s)",
+                            (x0, 128), 14, (255, 200, 120)))
             txt.append(("보낸 신호 (OSC)" + (" — 꺼짐" if args.no_osc else ""), (x0, 150), 16, (150, 150, 150)))
             for i, (te, name, val) in enumerate(tr.events_out[-8:]):
                 vv = " ".join(str(x) for x in val)[:16] if name != "result" else ""
@@ -317,14 +421,22 @@ def main():
                 c = cv2.resize(qr[1], (PANEL - 20, int((PANEL - 20) * qr[1].shape[0] / qr[1].shape[1])))
                 h = min(c.shape[0], fh - 20)
                 v[10:10 + h, fw + 10:fw + 10 + c.shape[1]] = c[:h]
-            rgb = np.ascontiguousarray(v[:, :, ::-1])
-            screen.blit(pygame.image.frombuffer(rgb.tobytes(), (rgb.shape[1], rgb.shape[0]), "RGB"), (0, 0))
+            if rec:
+                rec.frame(v)                                   # 시연 화면 녹화 (15fps)
+            show(v)
             pygame.display.flip()
     except KeyboardInterrupt:
         pass
-    if tr.state == "IN":
-        tr.finish(time.monotonic() - t0, "프로그램 종료")
-    pygame.quit()
+    finally:
+        if tr.state == "IN":
+            tr.finish(time.monotonic() - t0, "프로그램 종료")
+        pygame.quit()
+        ug.stop()
+        if rec:
+            page = rec.close()
+            print(f"시연 기록: {page}")
+            if sys.platform == "darwin":
+                os.system(f'open "{page}"')
 
 
 if __name__ == "__main__":

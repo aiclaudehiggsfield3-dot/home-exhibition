@@ -12,39 +12,42 @@
 <li>가벽 290cm = 판 185 + 문 80 + 판 25. 문은 집 쪽으로 열리고 도어클로저로 닫힘</li>
 <li>출구는 집 아래쪽 벽, 잠기지 않음. 옆 화면에 QR</li></ul>
 <div class="grp">지하철 칸</div><ul class="chk y">
-<li>손잡이 14개 · 광고·노선도 · 사람 실루엣 판, 6500K 차가운 빛과 소음</li>
-<li>손잡이를 잡으면 안내방송과 '도착하겠습니다' 음악 → 정차하면 집으로</li></ul>
+<li>광고·노선도 · 사람 실루엣 판, 6500K 차가운 빛과 지하철 소음</li>
+<li>지하철 칸을 지나 문을 열고 집으로 <small>손잡이·안내방송은 보류 (11/19)</small></li></ul>
 <div class="grp">집</div><ul class="chk y">
 <li>브라운관 TV + TV장 · 작은 소파 · 담요 · 리모컨 · 러그 · 스탠드 2 · 선반 · 화분 <small>자세히: <a href="furniture.html" style="color:var(--warm)">03 가구 정리</a></small></li>
-<li>3500K 웜화이트 스탠드, 집 문이 열리면 켜짐</li></ul>
+<li>3500K 웜화이트 스탠드, 소파에 앉으면 켜짐 <small>11/19</small></li></ul>
 <div class="grp">만들기</div><ul class="chk y">
 <li>모든 반응은 Unreal 블루프린트로 처리 <small>교수님 지시</small></li>
-<li>소리는 서지오 담당</li></ul>
+<li>소리는 서지오 담당</li>
+<li>감지: 천장 카메라 1대 + YOLO 사람 인식(위치·바라보는 방향), 담요·리모컨은 ArUco 마커 <small>11/19 · <a href="tech.html" style="color:var(--warm)">06 인터랙션·장비</a></small></li></ul>
 </div>
 <div><h2>미정 · 검토 중</h2><ul class="chk n">
 <li>TV 영상 내용 <small>모닥불이 아닐 수 있음</small></li>
 <li>채널별 영상·소리, 리모컨이 담는 의미</li>
 <li>소리 종류 — 기본 편안한 소리, 물건마다 소리, 지하철 소음 <small>서지오 정리 중</small></li>
-<li>감지 방식 — 물건별 센서 / CCTV만 <small>정지원 검토 중 · <a href="tech.html" style="color:var(--warm)">06 인터랙션·장비</a></small></li>
-<li>손잡이를 잡았는지 알아채는 방법</li></ul>
+<li>손잡이 14개 · 안내방송 · '도착하겠습니다' 음악 <small>보류 — 넣을지, 넣으면 잡은 걸 어떻게 알아챌지</small></li>
+<li>천장 카메라 자리 <small>출구 쪽 벽 가운데 천장에서 45~60° 내려다보기 추천 · 실제 공간에서 확인</small></li></ul>
 <h2 style="margin-top:22px">희망사항</h2><ul class="chk w">
 <li>창밖으로 달리는 지하철 화면 <small>TV 또는 LED</small></li></ul>
 </div></div></section>
 
 <section class="box"><h2>관객이 하는 일과 반응 <span class="chip ok">확정</span></h2>
 <ol class="seq">
-<li><b>손잡이를 잡음</b> 안내방송 · '도착하겠습니다' 음악 → 정차</li>
-<li><b>집 문을 엶</b> 불 켜짐 · TV·영상 재생 · CCTV 녹화 시작 / 문이 닫히면 지하철 소리 끊김</li>
-<li><b>소파에 앉음</b> 머문 시간 기록 시작</li>
-<li><b>담요를 덮음</b> 모닥불 소리</li>
+<li><b>지하철 칸에 들어섬</b> 동선 기록 시작 · 지하철 소음 <span class="chip">손잡이 보류</span></li>
+<li><b>집 문을 엶</b> 편안한 음악 시작 · 지하철 소리는 2초에 걸쳐 잦아듦</li>
+<li><b>TV를 만짐</b> TV 켜짐 · 영상 재생 · TV 소리 시작 <small>TV 앞에 잠깐 서 있으면 만진 걸로 봄 · 리모컨을 먼저 눌러도 켜짐</small></li>
+<li><b>소파에 앉음</b> 집 조명(스탠드 2개) 켜짐 · 앉아 있는 시간만큼 음악이 커짐</li>
+<li><b>TV를 봄</b> TV가 켜진 뒤 TV 쪽을 바라본 시간만큼 TV 소리가 커짐</li>
+<li><b>담요를 덮음</b> 모닥불 소리 — 덮고 있는 시간만큼 커짐</li>
 <li><b>리모컨을 누름</b> 채널이 바뀜 <span class="chip">채널별 영상 미정</span></li>
-<li><b>머무름</b> 시간이 지날수록 모든 소리의 볼륨이 함께 커짐 · 좋은 소리도 겹치면 불편해짐</li>
+<li><b>머무름</b> 세 소리가 각자 커지다가 함께 높아지면 겹쳐서 불쾌한 소리가 됨 — 편안함이 불편함으로</li>
 <li><b>출구로 나감</b> 옆 화면에 QR → 동선 타임랩스 · 만진 물건 · 머문 시간</li>
 </ol><p class="mute" style="font-size:13px;margin:8px 0 0">→ 전부 클릭해 보며 겪어 보려면 <a href="experience.html" style="color:var(--warm)">05 직접 체험</a></p></section>
 
 <section class="box"><h2>소리 <span class="chip">서지오 정리 중</span></h2><ul class="chk n">
-<li>지하철 칸 — 불편한 소음, 손잡이를 잡으면 안내방송과 도착 음악</li>
-<li>기본 소리 — TV 영상과 함께 처음 들리는 마음이 안정되는 소리 <small>영상에 맞춰 정함</small></li>
-<li>물건마다 — 담요 → 모닥불 소리 · 리모컨 → 채널 소리·영상 <small>미정</small></li>
-<li>불편함 — 시간이 지날수록 모든 소리가 함께 커짐, 겹침까지 고려. 핵심은 '기분 나빠지는 소리'</li></ul></section>
+<li>지하철 칸 — 불편한 소음, 집 문을 지나면 2초에 걸쳐 잦아듦 <small>안내방송·도착 음악은 손잡이와 함께 보류</small></li>
+<li>세 갈래 소리 — 소파(앉은 시간) → 편안한 음악 · TV(바라본 시간) → TV 소리 · 담요(덮은 시간) → 모닥불 <small>지금은 임시 소리</small></li>
+<li>불편함 — 셋이 함께 커지면 좋은 소리끼리 겹쳐 '기분 나빠지는 소리'가 됨 (각 소리 약 60초에 최대, 겹치면 더 커짐)</li>
+<li>리모컨 → 채널 소리·영상 <small>미정</small></li></ul></section>
 <div class="pn"><a href="furniture.html"><span>← 이전</span>03 가구 정리</a><a class="r" href="experience.html"><span>다음 →</span>05 직접 체험</a></div></div></body></html>

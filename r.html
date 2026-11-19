@@ -33,7 +33,7 @@ button{font:inherit;font-size:13px;background:#0000;color:var(--ink);border:1px 
 const B='0123456789abcdefghijklmnopqrstuvwxyz';
 const n36=s=>[...s].reduce((a,c)=>a*36+B.indexOf(c),0);
 const pairs=s=>{const o=[];for(let i=0;i+3<s.length;i+=4)o.push([n36(s.slice(i,i+2)),n36(s.slice(i+2,i+4))]);return o;};
-const NAME={b:'담요',r:'리모컨',s:'소파',p:'예비 물건'};
+const NAME={b:'담요',r:'리모컨',s:'소파',t:'TV',p:'예비 물건'};
 const fmt=s=>`${Math.floor(s/60)}분 ${String(Math.round(s%60)).padStart(2,'0')}초`;
 function parse(){
   const h=decodeURIComponent(location.hash||'');const m=h.match(/d=([^&]+)/);if(!m)return null;

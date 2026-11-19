@@ -2,11 +2,16 @@
 # bp_v4.t3d(현재 레벨 블루프린트)에 11/19 기능을 더해 bp_v5.t3d를 만든다.
 #  1) 퇴장 → 플레이 종료 대신 리셋  2) touch 이름별(담요=모닥불, 리모컨=채널+지지직)
 #  3) /home/train → 지하철 소리, 문(door)에서 페이드아웃  4) /home/result → QR_Screen에 QR 이미지
-# 사용: python3 gen_bp1119.py <Saved 폴더>
+# 사용: python3 gen_bp1119.py <Saved 폴더> [EX_Snd_TV 내부 이름]  → bp_v6.t3d
+#  6) /home/level 소리 세 갈래 · 지하철 2초 페이드 · 빠른 반응(11/19 22:40)
+#  7) 앉으면 조명 · TV는 /home/touch tv로 켬 (11/19 23:00)
+#  8) 리모컨 채널 차례로 · 앉으면 눈높이 115cm (11/19 23:20)
+#  9) 관리자 소리 계기판 /home/meter (11/19 23:50)  → bp_v9.t3d
 import re, sys, uuid
 
 SV = sys.argv[1] if len(sys.argv) > 1 else '.'
-SRC, DST = SV + '/bp_v4.t3d', SV + '/bp_v5.t3d'
+SRC, DST = SV + '/bp_v4.t3d', SV + '/bp_v9.t3d'
+TVSND = sys.argv[2] if len(sys.argv) > 2 else 'AmbientSound_2'   # EX_Snd_TV의 내부 이름 (언리얼에서 확인)
 LVL = "/Game/Exhibition/Maps/L_Current.L_Current:PersistentLevel."
 STD = ("PinType.PinSubCategoryMemberReference=(),PinType.PinValueType=(),PinType.ContainerType=None,PinType.bIsReference=False,"
        "PinType.bIsConst=False,PinType.bIsWeakPointer=False,PinType.bIsUObjectWrapper=False,PinType.bSerializeAsSinglePrecisionFloat=False,")
@@ -203,8 +208,8 @@ link('N_SUBIN', 'then', 'F_PRINT', 'execute')
 # 문 열고 집에 들어오면 지하철 소리 끊김
 unlink('F_TVOPEN', 'then', 'F_PRINT', 'execute')
 fn('D_SUBOUT', '/Script/Engine.AudioComponent', 'FadeOut',
-   EXEC() + [P('self', 'object', obj=C_AC), P('FadeOutDuration', 'real', 'double', default='3.0'),
-             P('FadeVolumeLevel', 'real', 'double', default='0.0')], X0 + 600, Y1, 'door: 지하철 소리 3초에 걸쳐 잦아듦')
+   EXEC() + [P('self', 'object', obj=C_AC), P('FadeOutDuration', 'real', 'double', default='2.0'),
+             P('FadeVolumeLevel', 'real', 'double', default='0.0')], X0 + 600, Y1, 'door: 지하철 소리 2초에 걸쳐 잦아듦')
 link('F_TVOPEN', 'then', 'D_SUBOUT', 'execute'); link('SUBAC1', 'AudioComponent', 'D_SUBOUT', 'self')
 link('D_SUBOUT', 'then', 'F_PRINT', 'execute')
 
@@ -307,6 +312,151 @@ seq = ['F_DELAY', 'X_HIDEL', 'X_HIDEV', 'X_TVCLOSE', 'X_TV0', 'X_VOL0', 'X_SEAT'
 for a, b in zip(seq, seq[1:]):
     link(a, 'then', b, 'execute')
 link('LIT_FAN', 'ReturnValue', 'X_HIDEV', 'self')        # 퇴장하면 부채꼴도 숨김
+
+# ================================================================== 6) 소리 세 갈래 (/home/level) + 빠른 반응 (11/19 22:40)
+# Python이 '소파에 앉은 시간 → 음악, TV 본 시간 → TV 소리, 담요 덮은 시간 → 모닥불' 볼륨을 계산해 보낸다.
+# 언리얼은 받은 값을 그대로 적용만 한다 (조정은 Python config에서). 옛 규칙(앉으면 0.35, 만지면 +0.2, 초당 +0.01)은 지운다.
+def setdef(node, pname, val):
+    p = pin(node, pname)
+    p['raw'] = re.sub(r'DefaultValue="[^"]*"', 'DefaultValue="%s"' % val, p['raw'])
+setdef('F_VINTERP', 'InterpSpeed', '12.0')     # 위치 따라가기 (예전 4)
+setdef('F_RINTERP', 'InterpSpeed', '20.0')     # 방향 따라가기 (예전 5) — 1인칭 고개가 바로 따라오게
+setdef('F_FINTERP', 'InterpSpeed', '1.5')      # 음악 볼륨 따라가기 (예전 0.8)
+# 옛 볼륨 규칙 지우기
+unlink('SET_SEAT', 'then', 'SET_TV1', 'execute'); unlink('SET_TV1', 'then', 'F_PRINT', 'execute')
+for n in ('SET_TV1', 'F_SEL', 'F_MAX', 'GET_TV1'):
+    remove(n)
+link('SET_SEAT', 'then', 'F_PRINT', 'execute')
+unlink('SW', '/home/touch', 'SET_TV2', 'execute'); unlink('SET_TV2', 'then', 'T_GS', 'execute')
+for n in ('SET_TV2', 'F_MIN', 'F_ADD', 'GET_TV2'):
+    remove(n)
+link('SW', '/home/touch', 'T_GS', 'execute')
+unlink('F_TURN', 'then', 'SET_TV3', 'execute'); unlink('SET_TV3', 'then', 'SET_VOL', 'execute')
+for n in ('SET_TV3', 'F_MIN2', 'F_ADD2', 'F_MUL', 'F_MUL2', 'F_B2D', 'GET_SEAT', 'GET_TV3'):
+    remove(n)
+link('F_TURN', 'then', 'SET_VOL', 'execute')
+self_get('GET_TVX', 'TargetVol', 'real', None, 1700, 2650)
+nodes['GET_TVX']['pins'][0]['raw'] = nodes['GET_TVX']['pins'][0]['raw'].replace('PinType.PinSubCategory=""', 'PinType.PinSubCategory="double"')
+link('GET_TVX', 'TargetVol', 'F_FINTERP', 'Target')
+# TV 소리 (EX_Snd_TV, TV 자리의 앰비언트 사운드)
+literal('LIT_TVSND', '/Script/Engine.AmbientSound', TVSND, 900, 160)
+Y5 = Y4 + 600
+comp_get('TVSAC1', '/Script/Engine.AmbientSound', C_AMB, 'AudioComponent', C_AC, X0 + 600, Y1 + 300)
+link('LIT_TVSND', 'ReturnValue', 'TVSAC1', 'self')
+fade_in('D_TVSIN', X0 + 900, Y1, '1.0', '1.0', 'door: TV 소리 켬')
+unlink('D_SUBOUT', 'then', 'F_PRINT', 'execute')
+link('D_SUBOUT', 'then', 'D_TVSIN', 'execute'); link('TVSAC1', 'AudioComponent', 'D_TVSIN', 'self')
+link('D_TVSIN', 'then', 'F_PRINT', 'execute')
+# /home/level 음악 TV 모닥불
+sw['head'].insert(9, '   PinNames(9)="/home/level"')
+sw['pins'].append(P('/home/level', out=True))
+def getf(name, idx, x, y, comment=None):
+    fn(name, '/Script/OSC.OSCManager', 'GetFloat',
+       EXEC() + [P('Message', 'struct', obj=OSCMSG, ref=True), P('Index', 'int', default=str(idx)),
+                 P('Value', 'real', 'double', out=True), P('ReturnValue', 'bool', out=True)], x, y, comment)
+    link('ONOSC', 'Message', name, 'Message')
+def setvol(name, x, y, comment):
+    fn(name, '/Script/Engine.AudioComponent', 'SetVolumeMultiplier',
+       EXEC() + [P('self', 'object', obj=C_AC), P('NewVolumeMultiplier', 'real', 'double', default='0.0')], x, y, comment)
+getf('V_G0', 0, X0 + 300, Y5, 'level: 소파 → 음악 볼륨')
+self_set('V_SETT', 'TargetVol', 'real', 'double', '0.0', X0 + 600, Y5)
+link('SW', '/home/level', 'V_G0', 'execute'); link('V_G0', 'then', 'V_SETT', 'execute'); link('V_G0', 'Value', 'V_SETT', 'TargetVol')
+getf('V_G1', 1, X0 + 900, Y5, 'TV 본 시간 → TV 소리')
+comp_get('TVSAC2', '/Script/Engine.AmbientSound', C_AMB, 'AudioComponent', C_AC, X0 + 1050, Y5 + 250)
+link('LIT_TVSND', 'ReturnValue', 'TVSAC2', 'self')
+setvol('V_TV', X0 + 1200, Y5, 'TV 소리 볼륨')
+link('V_SETT', 'then', 'V_G1', 'execute'); link('V_G1', 'then', 'V_TV', 'execute')
+link('V_G1', 'Value', 'V_TV', 'NewVolumeMultiplier'); link('TVSAC2', 'AudioComponent', 'V_TV', 'self')
+getf('V_G2', 2, X0 + 1500, Y5, '담요 덮은 시간 → 모닥불')
+comp_get('FIREAC3', '/Script/Engine.AmbientSound', C_AMB, 'AudioComponent', C_AC, X0 + 1650, Y5 + 250)
+link('LIT_FIRE', 'ReturnValue', 'FIREAC3', 'self')
+setvol('V_FIRE', X0 + 1800, Y5, '모닥불 볼륨')
+link('V_TV', 'then', 'V_G2', 'execute'); link('V_G2', 'then', 'V_FIRE', 'execute')
+link('V_G2', 'Value', 'V_FIRE', 'NewVolumeMultiplier'); link('FIREAC3', 'AudioComponent', 'V_FIRE', 'self')
+# 리셋: TV 소리도 끔
+comp_get('TVSAC3', '/Script/Engine.AmbientSound', C_AMB, 'AudioComponent', C_AC, X0 + 2550, Y3 + 350)
+link('LIT_TVSND', 'ReturnValue', 'TVSAC3', 'self')
+ac_call('X_TVS', 'Stop', X0 + 2650, Y3 + 150, 'TV 소리 끔')
+link('TVSAC3', 'AudioComponent', 'X_TVS', 'self')
+unlink('X_SUB', 'then', 'X_PRINT', 'execute')
+link('X_SUB', 'then', 'X_TVS', 'execute'); link('X_TVS', 'then', 'X_PRINT', 'execute')
+
+# ================================================================== 7) 앉으면 조명 · TV는 만지면 켜짐 (11/19 23:00)
+# 문(door): 지하철 소리 2초 페이드아웃만. 조명은 /home/sit 1, TV 영상·TV 소리는 /home/touch tv.
+for a, ap, b, bp in [('SW', '/home/door', 'F_SHOWLIGHTS', 'execute'), ('F_SHOWLIGHTS', 'then', 'F_TVOPEN', 'execute'),
+                     ('F_TVOPEN', 'then', 'D_SUBOUT', 'execute'), ('D_SUBOUT', 'then', 'D_TVSIN', 'execute'),
+                     ('D_TVSIN', 'then', 'F_PRINT', 'execute'), ('SET_SEAT', 'then', 'F_PRINT', 'execute')]:
+    unlink(a, ap, b, bp)
+link('SW', '/home/door', 'D_SUBOUT', 'execute'); link('D_SUBOUT', 'then', 'F_PRINT', 'execute')
+nodes['D_SUBOUT']['head'] = [h.replace('door: 지하철 소리 2초에 걸쳐 잦아듦', 'door: 지하철 소리 2초에 걸쳐 잦아듦 (조명은 앉을 때, TV는 만질 때)') for h in nodes['D_SUBOUT']['head']]
+# 앉음(값 1)일 때만 조명 켬
+add('S_BR', 'K2Node_IfThenElse', [], [P('execute'), P('Condition', 'bool', default='true'), P('then', out=True), P('else', out=True)],
+    1500, 1500, 'sit: 앉으면 집 조명 켬')
+link('SET_SEAT', 'then', 'S_BR', 'execute'); link('F_I2B', 'ReturnValue', 'S_BR', 'Condition')
+link('S_BR', 'then', 'F_SHOWLIGHTS', 'execute'); link('F_SHOWLIGHTS', 'then', 'F_PRINT', 'execute')
+link('S_BR', 'else', 'F_PRINT', 'execute')
+nodes['F_SHOWLIGHTS']['head'] = [h.replace('집에 들어옴: 조명 켬', '앉음: 집 조명 켬') for h in nodes['F_SHOWLIGHTS']['head']]
+# touch tv → TV 영상 재생 + TV 소리
+tsw = nodes['T_SW']
+i = max(k for k, h in enumerate(tsw['head']) if 'PinNames(' in h)
+tsw['head'].insert(i + 1, '   PinNames(2)="tv"')
+tsw['pins'].append(P('tv', out=True))
+link('T_SW', 'tv', 'F_TVOPEN', 'execute'); link('F_TVOPEN', 'then', 'D_TVSIN', 'execute')
+nodes['F_TVOPEN']['head'] = [h.replace('TV 영상 재생', 'touch tv: TV 영상 재생') for h in nodes['F_TVOPEN']['head']]
+nodes['D_TVSIN']['head'] = [h.replace('door: TV 소리 켬', 'touch tv: TV 소리 켬') for h in nodes['D_TVSIN']['head']]
+
+# ================================================================== 8) 채널 차례로 돌리기 · 앉으면 눈높이 낮춤 (11/19 23:20)
+# 리모컨: 채널 번호 = 누른 횟수 % 채널 수  (PL_TV: TEST_CH1·2·3, B_home, A_society)
+C_PL = cls('/Script/MediaAssets.MediaPlaylist')
+for n_ in ('T_URL', 'T_HAS', 'T_SELI'):
+    remove(n_)
+unlink('T_PON', 'then', 'T_OPEN', 'execute')
+# 리모컨 누른 횟수(/home/touch remote 횟수의 둘째 값)로 채널을 정함 → TV 켜짐 CH1(0), 1번 CH2, 2번 CH3, 3번 B_home, 4번 A_society, 5번 다시 CH1
+# (플레이어의 GetPlaylistIndex는 채널을 건너뛰는 일이 있어서 쓰지 않음)
+fn('C_GI', '/Script/OSC.OSCManager', 'GetInt32',
+   EXEC() + [P('Message', 'struct', obj=OSCMSG, ref=True), P('Index', 'int', default='1'),
+             P('Value', 'int', out=True), P('ReturnValue', 'bool', out=True)], X0 + 1300, Y0 + 380, 'remote: 누른 횟수')
+link('ONOSC', 'Message', 'C_GI', 'Message')
+fn('C_NUM', '/Script/MediaAssets.MediaPlaylist', 'Num',
+   EXEC() + [P('self', 'object', obj=C_PL, defobj='/Game/Exhibition/Media/PL_TV.PL_TV'), P('ReturnValue', 'int', out=True)],
+   X0 + 1400, Y0 + 380, 'remote: 채널 수')
+fn('C_MOD', '/Script/Engine.KismetMathLibrary', 'Percent_IntInt',
+   [P('A', 'int', default='0'), P('B', 'int', default='1'), P('ReturnValue', 'int', out=True)], X0 + 1750, Y0 + 520)
+link('C_GI', 'Value', 'C_MOD', 'A'); link('C_NUM', 'ReturnValue', 'C_MOD', 'B'); link('C_MOD', 'ReturnValue', 'T_OPEN', 'Index')
+link('T_PON', 'then', 'C_GI', 'execute'); link('C_GI', 'then', 'C_NUM', 'execute'); link('C_NUM', 'then', 'T_OPEN', 'execute')
+nodes['T_OPEN']['head'] = [h.replace('리모컨 → 다른 채널', '리모컨 → 다음 채널 (차례로)') for h in nodes['T_OPEN']['head']]
+# 앉음/일어남 → 관객 눈 카메라(형체에 붙음) 높이·기울기. 형체 중심 85cm, 세로 배율 1.7 → 160cm = 44.12, 115cm = 17.65
+VEC = "\"/Script/CoreUObject.ScriptStruct'/Script/CoreUObject.Vector'\""
+def eye_set(name, z, pitch, x, y, comment):
+    fn(name + 'L', '/Script/Engine.Actor', 'K2_SetActorRelativeLocation',
+       EXEC() + [P('self', 'object', obj=C_ACTOR), P('NewRelativeLocation', 'struct', obj=VEC, default='66.666667,0.000000,%s' % z),
+                 P('bSweep', 'bool', default='false'), P('bTeleport', 'bool', default='true')], x, y, comment)
+    fn(name + 'R', '/Script/Engine.Actor', 'K2_SetActorRelativeRotation',
+       EXEC() + [P('self', 'object', obj=C_ACTOR), P('NewRelativeRotation', 'struct', obj=ROT, default='%s,0.000000,0.000000' % pitch),
+                 P('bSweep', 'bool', default='false'), P('bTeleport', 'bool', default='true')], x + 250, y)
+    link('LIT_EYE', 'ReturnValue', name + 'L', 'self'); link('LIT_EYE', 'ReturnValue', name + 'R', 'self')
+    link(name + 'L', 'then', name + 'R', 'execute')
+eye_set('E_SIT', '17.647059', '-14.000000', 1800, 1450, 'sit 1: 눈높이 115cm (소파에 앉아 TV를 봄)')
+eye_set('E_STD', '44.117647', '-6.000000', 1800, 1650, 'sit 0: 눈높이 160cm (서 있음)')
+unlink('F_SHOWLIGHTS', 'then', 'F_PRINT', 'execute'); unlink('S_BR', 'else', 'F_PRINT', 'execute')
+link('F_SHOWLIGHTS', 'then', 'E_SITL', 'execute'); link('E_SITR', 'then', 'F_PRINT', 'execute')
+link('S_BR', 'else', 'E_STDL', 'execute'); link('E_STDR', 'then', 'F_PRINT', 'execute')
+
+# ================================================================== 9) 관리자 소리 계기판 (/home/meter 글자 → 화면 왼쪽 위) (11/19 23:50)
+# Python이 각 소리 단계(0~5)와 겹침 단계를 글자로 만들어 0.5초마다 보냄 → 같은 Key로 덮어써서 계기판처럼 보임 (1.5초 안 오면 사라짐)
+sw['head'].insert(10, '   PinNames(10)="/home/meter"')
+sw['pins'].append(P('/home/meter', out=True))
+get_string('M_GS', 0, X0 + 300, Y5 + 500, 'meter: 관리자 계기판 글자')
+link('SW', '/home/meter', 'M_GS', 'execute'); link('ONOSC', 'Message', 'M_GS', 'Message')
+fn('M_PRINT', '/Script/Engine.KismetSystemLibrary', 'PrintString',
+   EXEC() + [P('InString', 'string', default=''), P('bPrintToScreen', 'bool', default='true'), P('bPrintToLog', 'bool', default='false'),
+             P('TextColor', 'struct', obj="\"/Script/CoreUObject.ScriptStruct'/Script/CoreUObject.LinearColor'\"",
+               default='(R=1.000000,G=0.850000,B=0.350000,A=1.000000)'),
+             P('Duration', 'real', 'double', default='1.5'), P('Key', 'name', default='HOME_METER')], X0 + 600, Y5 + 500, '계기판 표시 (같은 Key로 덮어씀)')
+link('M_GS', 'then', 'M_PRINT', 'execute'); link('M_GS', 'Value', 'M_PRINT', 'InString')
+# 신호 이름 디버그 글자는 화면에 안 찍고 로그로만 (계기판을 가리지 않게)
+for n_ in ('F_PRINT', 'X_PRINT'):
+    nodes[n_]['pins'].append(P('bPrintToScreen', 'bool', default='false'))
 
 # ------------------------------------------------------------------ 쓰기
 out = []

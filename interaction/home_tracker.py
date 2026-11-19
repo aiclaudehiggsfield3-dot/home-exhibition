@@ -14,6 +14,8 @@
   창 닫기 버튼이나 터미널 Ctrl+C로 꺼도 기록은 저장된다. (b·r·s는 영문 입력 상태에서)
 """
 import argparse, json, math, os, sys, time
+import faulthandler
+faulthandler.enable()                                         # 비정상 종료(Segmentation fault) 때 어느 줄인지 남김
 from pathlib import Path
 
 import cv2
@@ -84,9 +86,20 @@ DEFAULT_CFG = {
         "facing_min_cms": 15,         # 걷는 방향으로 정할 때 이보다 빨라야 (멈춰 있으면 마지막 방향 유지)
         "facing_alpha": 0.35,         # 방향 부드럽게 (0~1, 클수록 빨리 따라감)
         "fan_deg": 60, "fan_cm": 90,  # 화면에 그리는 시야 부채꼴 (각도, 길이)
+        # 소리 세 갈래 (11/19): 소파에 앉은 시간 → 음악, TV를 본 시간 → TV 소리, 담요를 덮은 시간 → 모닥불.
+        # 각각 누적 시간만큼 커지고, 셋이 함께 높아지면 전체가 더 커져 '불쾌한 소리'가 된다. → /home/level 음악 TV 모닥불
+        "tv_pos": [71, 186],          # TV 자리(cm). unreal_layout.json에 있으면 그 값
+        "tv_view_deg": 35,            # 바라보는 방향이 TV 쪽에서 이 각도 안이면 'TV 보는 중' (TV가 켜진 뒤부터)
+        "tv_touch_cm": 55, "tv_touch_s": 0.8,   # TV 앞 이 거리 안에 이 시간 서 있으면 'TV 만짐' → TV 켜짐
+        "grow_s": {"sofa": 60, "tv": 60, "blanket": 60},       # 이 시간(초) 동안 하면 그 소리가 최대
+        "vol_base": {"sofa": 0.25, "tv": 0.2, "blanket": 0.3},  # 처음 볼륨 (집에 들어오면 음악·TV, 담요 덮으면 모닥불)
+        "vol_max": {"sofa": 1.2, "tv": 1.2, "blanket": 1.2},    # 혼자 최대일 때 볼륨
+        "overlap_gain": 0.8,          # 셋이 함께 높을 때 더 키우는 정도 (셋 다 최대면 ×1.8)
+        "level_send_s": 0.25,
+        "meter_send_s": 0.5,          # 관리자 계기판(/home/meter 글자) 보내는 간격 — 언리얼 CCTV 화면 왼쪽 위에 표시
     },
 }
-NAMES_KO = {"blanket": "담요", "remote": "리모컨", "sofa": "소파", "spare": "예비", "spare_small": "예비 소형"}
+NAMES_KO = {"blanket": "담요", "remote": "리모컨", "tv": "TV", "sofa": "소파", "spare": "예비", "spare_small": "예비 소형"}
 
 
 def load_cfg(path):
@@ -198,7 +211,7 @@ def build_result_url(base, vid, stay, floor_cm, zones, samples, events, max_pts=
     dt = stay / max(1, len(pts) - 1)
     path = "".join(b36(x) + b36(y) for (_, x, y, _s) in pts)
     zone = lambda poly: "".join(b36(x) + b36(y) for x, y in poly)
-    ev = ".".join(f"{name[0]}{b36(t, 2)}" for name, t in events)   # b=담요 r=리모컨 s=소파
+    ev = ".".join(f"{name[0]}{b36(t, 2)}" for name, t in events)   # b=담요 r=리모컨 s=소파 t=TV
     parts = ["v1", str(vid), f"{stay:.0f}", f"{dt:.2f}", f"{floor_cm[0]:.0f}", f"{floor_cm[1]:.0f}",
              zone(zones.get("sofa", [])), zone(zones.get("exit", [])), path, ev]
     return f"{base}#d=" + "~".join(parts)
@@ -280,6 +293,13 @@ class Osc:
 class Tracker:
     def __init__(self, cfg, frame_wh, osc, results_dir, log=print):
         self.cfg, self.T = cfg, cfg["tune"]
+        self.tv_pos = tuple(self.T.get("tv_pos", [71, 186]))
+        try:                                            # 언리얼 도면의 TV 자리가 있으면 그걸 씀
+            self.tv_pos = tuple(json.loads((Path(__file__).resolve().parent / "unreal_layout.json").read_text(encoding="utf-8"))["unreal"]["tv"])
+        except Exception:
+            pass
+        self.levels = {"sofa": 0.0, "tv": 0.0, "blanket": 0.0}
+        self.boost, self.meter = 1.0, []
         self.user_tune = cfg.get("_user_tune_keys", [])
         self.fw, self.fh = frame_wh
         self.Hm, self.Hinv = floor_homography(cfg, frame_wh)
@@ -339,6 +359,16 @@ class Tracker:
         self.home_since = None
         self.door_sent = False
         self.train_sent = False
+        self.layer_s = {"sofa": 0.0, "tv": 0.0, "blanket": 0.0}   # 소리 세 갈래 누적 시간
+        self.blanket_on = False
+        self.tv_on = False
+        self.tv_near_since = None
+        self.watching_tv = False
+        self.layer_t = None
+        self.next_level_t = 0.0
+        self.vols = (0.0, 0.0, 0.0)
+        self.levels = {"sofa": 0.0, "tv": 0.0, "blanket": 0.0}
+        self.boost, self.next_meter_t = 1.0, 0.0
 
     def emit(self, t, name, *val):
         self.events_out.append((round(t, 2), name, val))
@@ -679,10 +709,19 @@ class Tracker:
     def touch(self, t, obj, why):
         if obj in ("spare", "spare_small"):
             obj = obj  # 예비 마커도 그대로 알림
+        if obj == "tv" and self.tv_on:
+            return                                      # 이미 켜져 있음 (다시 켜면 영상이 처음부터 시작돼서)
+        if obj == "remote" and not self.tv_on:
+            self.touch(t, "tv", "리모컨이 TV를 켬")
         if t - self.obj_cool.get(obj, -99) < 2.5:
             return
         self.obj_cool[obj] = t
         self.touch_count[obj] = self.touch_count.get(obj, 0) + 1
+        if obj == "tv":
+            self.tv_on = True
+        if obj == "blanket" and not self.blanket_on:
+            self.blanket_on = True
+            self.log(f"[{t - self.t0:6.1f}s] 담요 덮음 (앉아 있는 동안 모닥불이 커짐)")
         self.events.append((obj, t - self.t0))
         self.log(f"[{t - self.t0:6.1f}s] {NAMES_KO.get(obj, obj)} 만짐 ({why}) · {self.touch_count[obj]}번째")
         self.emit(t, "touch", obj, self.touch_count[obj])
@@ -856,11 +895,15 @@ class Tracker:
                 if t - self.stand_since > T["stand_s"]:
                     self.seated = False
                     self.log(f"[{t - self.t0:6.1f}s] 일어남")
+                    if self.blanket_on:
+                        self.blanket_on = False
+                        self.log(f"[{t - self.t0:6.1f}s] 담요 벗음")
                     self.emit(t, "sit", 0)
             else:
                 self.sit_since = self.sit_since if on_sofa else None
                 self.stand_since = None
         self.update_markers(t)
+        self.update_layers(t)
 
         if self.person is None:
             self.last_absent_t = self.last_absent_t or t
@@ -868,6 +911,72 @@ class Tracker:
             gone = t - self.last_absent_t
             if (self.near_exit and gone > T["absent_exit_s"]) or gone > T["lost_s"]:
                 self.finish(t, "출구로 퇴장" if self.near_exit else "사라짐(출구 아님)")
+
+    def update_layers(self, t):
+        """소파·TV·담요 누적 시간 → 세 소리 볼륨 → /home/level (문을 지나 집에 들어온 뒤부터)."""
+        T = self.T
+        dt = 0.0 if self.layer_t is None else min(t - self.layer_t, 0.5)
+        self.layer_t = t
+        if not self.door_sent:
+            self.send_meter(t, {"sofa": 0.0, "tv": 0.0, "blanket": 0.0}, (0.0, 0.0, 0.0), 1.0, before_door=True)
+            return
+        self.watching_tv = False
+        if self.person is not None and not self.tv_on:          # TV 앞에 잠깐 서 있으면 TV를 만진 걸로 봄
+            near = np.hypot(self.person[3][0] - self.tv_pos[0], self.person[3][1] - self.tv_pos[1]) <= T["tv_touch_cm"]
+            self.tv_near_since = (self.tv_near_since or t) if near else None
+            if near and t - self.tv_near_since >= T["tv_touch_s"]:
+                self.touch(t, "tv", "TV 앞")
+        if self.tv_on and self.person is not None and self.facing is not None and self.room == "home":
+            x, y = self.person[3]
+            tx, ty = self.tv_pos
+            want = np.degrees(np.arctan2(ty - y, tx - x))
+            self.watching_tv = abs((self.facing - want + 180) % 360 - 180) <= T["tv_view_deg"]
+        on = {"sofa": self.seated, "tv": self.watching_tv, "blanket": self.blanket_on and self.seated}
+        for k, v in on.items():
+            if v:
+                self.layer_s[k] += dt
+        lv = {k: min(1.0, self.layer_s[k] / max(1e-6, T["grow_s"][k])) for k in self.layer_s}
+        boost = 1.0 + T["overlap_gain"] * (lv["sofa"] * lv["tv"] + lv["tv"] * lv["blanket"] + lv["sofa"] * lv["blanket"]) / 3.0
+        base, top = T["vol_base"], T["vol_max"]
+        vol = {k: (base[k] + (top[k] - base[k]) * lv[k]) * boost for k in lv}
+        if not self.blanket_on and self.layer_s["blanket"] == 0:
+            vol["blanket"] = 0.0                       # 담요를 한 번도 안 덮었으면 모닥불은 조용히
+        if not self.tv_on:
+            vol["tv"] = 0.0                            # TV를 켜기 전에는 TV 소리 없음
+        self.vols = (round(vol["sofa"], 3), round(vol["tv"], 3), round(vol["blanket"], 3))
+        self.levels = lv
+        self.boost = boost
+        if t >= self.next_level_t:
+            self.next_level_t = t + T["level_send_s"]
+            self.osc.send("/home/level", *map(float, self.vols))
+        self.send_meter(t, lv, self.vols, boost)
+
+    def meter_lines(self, lv, vols, boost, before_door=False):
+        """관리자 계기판: 각 소리 단계(0~5)와 셋을 합친 겹침 단계(0~5).
+        언리얼 OSC 글자는 한글(UTF-8)이 깨져서 영어·ASCII로만 씀."""
+        def stage(x):
+            return 0 if x <= 0 else min(5, int(math.ceil(x * 5 - 1e-9)))
+        bar = lambda n: "[" + "#" * n + "-" * (5 - n) + "]"
+        ls = self.layer_s
+        rows = [("MUSIC  (sofa)   ", "sofa", 0, f"sitting {ls['sofa']:.0f}s"),
+                ("TV     (watch)  ", "tv", 1, f"watching {ls['tv']:.0f}s" if self.tv_on else "TV off"),
+                ("FIRE   (blanket)", "blanket", 2, f"covered {ls['blanket']:.0f}s" if (self.blanket_on or ls['blanket'] > 0) else "no blanket")]
+        out = ["== SOUND MONITOR (admin) ==" + ("   (visitor still in subway)" if before_door else "")]
+        for name, k, i, note in rows:
+            n = stage(lv[k])
+            out.append(f"{name} {bar(n)} {n}/5   vol {vols[i]:.2f}   {note}")
+        og = max(1e-6, self.T["overlap_gain"])
+        on = int(round(min(1.0, max(0.0, (boost - 1.0) / og)) * 5))
+        word = "CALM" if on == 0 else ("MILD OVERLAP" if on <= 2 else ("UNCOMFORTABLE" if on <= 4 else "UNPLEASANT"))
+        out.append(f"OVERLAP (all 3)  {bar(on)} {on}/5   x{boost:.2f}   -> {word}")
+        return out
+
+    def send_meter(self, t, lv, vols, boost, before_door=False):
+        if t < getattr(self, "next_meter_t", 0.0):
+            return
+        self.next_meter_t = t + self.T.get("meter_send_s", 0.5)
+        self.meter = self.meter_lines(lv, vols, boost, before_door)
+        self.osc.send("/home/meter", "\n".join(self.meter))
 
     def next_visitor_id(self):
         f = self.results_dir / "counter.txt"
@@ -885,7 +994,8 @@ class Tracker:
         if qr:
             save_qr(url, str(self.results_dir / "latest_qr.png"))       # 언리얼은 항상 이 파일을 읽으면 됨
         (self.results_dir / f"visit_{rid}.json").write_text(json.dumps(
-            {"id": self.vid, "stay_s": round(stay, 1), "why": why, "events": self.events, "samples": self.samples, "url": url},
+            {"id": self.vid, "stay_s": round(stay, 1), "why": why, "events": self.events, "samples": self.samples, "url": url,
+             "layers_s": {k: round(v, 1) for k, v in self.layer_s.items()}},
             ensure_ascii=False, indent=1), encoding="utf-8")
         touched = ", ".join(f"{NAMES_KO.get(k, k)} {v}번" for k, v in self.touch_count.items()) or "없음"
         self.log(f"■ 관객 #{rid} {why} · 머문 시간 {stay:.0f}초 · 만진 물건: {touched}\n  결과 주소({len(url)}자): {url[:90]}…")
@@ -1103,6 +1213,8 @@ def main():
     ap.add_argument("--save-video", help="인식 화면을 영상으로 저장")
     ap.add_argument("--save-raw", help="표시 없는 원본 화면을 영상으로 저장 (나중에 --video로 다시 시험할 때)")
     ap.add_argument("--list-cameras", action="store_true")
+    ap.add_argument("--no-unreal", action="store_true", help="언리얼을 같이 켜지 않음 (에디터 ▶로 따로 켤 때)")
+    ap.add_argument("--no-record", action="store_true", help="시연 기록 폴더를 만들지 않음")
     ap.add_argument("--layout", help="언리얼 도면 파일(unreal_layout.json)로 구역 맞추기 — 다음 --setup에서는 네 모서리만 찍음")
     ap.add_argument("--floor-size", nargs=2, type=float, metavar=("가로cm", "세로cm"), help="바닥 크기만 바꿔 저장 (다시 클릭 안 해도 됨)")
     args = ap.parse_args()
@@ -1152,8 +1264,24 @@ def main():
     if not ok:
         sys.exit("첫 화면을 못 받았어요. 아이폰이 잠긴 채 가로로 놓여 있는지, 카메라 번호(--list-cameras)가 맞는지 확인하세요.")
     fps = cap.get(cv2.CAP_PROP_FPS) or 30
+    from session_record import SessionRecorder
+    from unreal_game import UnrealGame
+    rec = None if (args.no_record or args.video) else SessionRecorder(HERE / "results", "camera", cfg, "카메라 감지 시연")
+    log = rec.wrap_log(print) if rec else print
     osc = Osc(cfg, enabled=not args.no_osc)
-    tr = Tracker(cfg, (frame.shape[1], frame.shape[0]), osc, HERE / "results")
+    tr = Tracker(cfg, (frame.shape[1], frame.shape[0]), osc, HERE / "results", log=log)
+    if rec:
+        rec.attach_osc(osc)
+        rec.attach_tracker(tr)
+    ug = UnrealGame(cfg, log=log, log_path=str(rec.unreal_log) if rec else None)
+    import atexit
+    atexit.register(ug.stop)                                         # 오류로 끝나도 언리얼 창은 닫음
+    if not (args.no_unreal or args.no_osc or args.video):          # 영상으로 시험할 때는 언리얼을 켜지 않음
+        if ug.start():
+            ug.wait_ready(tick=lambda el: print(f"\r언리얼 켜는 중… {el:4.0f}초", end="", flush=True))
+            print()
+    if rec:
+        rec.unreal_status = ug.status
     writer = raw_writer = None
     if args.save_raw:
         raw_writer = cv2.VideoWriter(args.save_raw, cv2.VideoWriter_fourcc(*"mp4v"), 15, (frame.shape[1], frame.shape[0]))
@@ -1180,6 +1308,8 @@ def main():
                 view = tr.draw(frame, t)
                 if writer:
                     writer.write(view)
+                if rec:
+                    rec.frame(view)
                 if not args.headless:
                     cv2.imshow(win, view)
                     lr = tr.last_result
@@ -1223,6 +1353,12 @@ def main():
         cv2.destroyAllWindows()
     except cv2.error:
         pass
+    ug.stop()
+    if rec:
+        page = rec.close()
+        print(f"시연 기록: {page}")
+        if sys.platform == "darwin":
+            os.system(f'open "{page}"')
     if args.events_json:
         Path(args.events_json).write_text(json.dumps({"events": tr.events_out, "osc": [(a, list(v)) for a, v in osc.sent if a != "/home/pos"]}, ensure_ascii=False, indent=1), encoding="utf-8")
 

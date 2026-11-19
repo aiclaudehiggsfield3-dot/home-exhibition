@@ -69,10 +69,10 @@ aside{display:flex;flex-direction:column;gap:12px;min-height:0;overflow:auto}
       <h2>퇴근길 지하철, 그리고 집</h2>
       <p>3×3m 설치 공간을 실제 치수로 옮겨 놓았어요. 관객이 되어 순서대로 겪어 보세요.</p>
       <ol>
-        <li>좁은 지하철 칸에서 <b>손잡이</b>를 잡으면 안내방송과 도착 음악이 나오고 열차가 멈춰요.</li>
-        <li><b>집 문</b>을 열면 불이 켜지고 TV와 영상이 재생돼요. 천장 CCTV 녹화도 시작돼요. 문이 닫히면 지하철 소리가 끊겨요.</li>
-        <li><b>소파·담요·리모컨</b>을 눌러 보세요. 물건마다 다른 소리가 나요.</li>
-        <li>머무는 동안 모든 소리의 볼륨이 조금씩 커져요. 언제 나갈지는 내가 정해요.</li>
+        <li>좁은 지하철 칸에서 <b>손잡이</b>를 잡으면 열차가 멈춰요. <small>(손잡이·안내방송은 보류 중 — 이 체험에서만 보여 주는 장면)</small></li>
+        <li><b>집 문</b>을 열고 들어가면 지하철 소리가 2초에 걸쳐 잦아들어요. <b>소파에 앉으면 조명</b>이, <b>TV를 만지면 TV</b>가 켜져요.</li>
+        <li><b>소파에 앉아 있는 시간</b>만큼 음악이, <b>TV를 바라본 시간</b>만큼 TV 소리가, <b>담요를 덮은 시간</b>만큼 모닥불 소리가 커져요.</li>
+        <li>세 소리가 함께 커지면 좋은 소리끼리 겹쳐 불쾌해져요. 언제 나갈지는 내가 정해요.</li>
         <li><b>출구</b>로 나가면 QR과 함께 내가 머문 기록(타임랩스)을 보여 줘요.</li>
       </ol>
       <p style="font-size:13px">드래그: 둘러보기 · 반짝이는 물건 클릭: 행동 · 소리가 나니 볼륨을 확인하세요.</p>
@@ -99,7 +99,7 @@ aside{display:flex;flex-direction:column;gap:12px;min-height:0;overflow:auto}
       <div class="panel"><h3>볼륨 <span id="volTxt">—</span></h3><div class="meter" style="margin-top:12px"><i id="vol"></i></div></div>
     </div>
     <div class="panel"><h3>CCTV 기록 <span>만진 물건 · 시간</span></h3><ol id="log"></ol></div>
-    <div class="panel" style="font-size:12.5px;color:var(--mute)">CCTV는 위에서 본 움직임만 기록하고(얼굴 X), 빨간 선이 관객 동선이에요. 감지 방식(센서 / CCTV만)은 아직 검토 중이라 이 체험에서는 클릭으로 대신해요.</div>
+    <div class="panel" style="font-size:12.5px;color:var(--mute)">CCTV는 위에서 본 움직임만 기록하고(얼굴 X), 빨간 선이 관객 동선이에요. 실제 전시에서는 천장 카메라(YOLO 사람 인식)가 위치와 바라보는 방향을 읽고, 담요·리모컨은 마커로 알아채요. 이 체험에서는 클릭과 드래그(바라보는 방향)로 대신해요.</div>
   </aside>
 </main>
 <script type="importmap">{"imports":{"three":"./assets/vendor/three.module.min.js"}}</script>
@@ -196,10 +196,10 @@ box(.26,.3,.24,M(0x9a6b4a),.86,0,.94);const leaf=new THREE.Mesh(new THREE.Icosah
 box(.56,.8,.28,M(0xc0884f),1.31,0,.97);box(.12,.14,.1,M(0x3a3a3a),1.5,.8,.95);box(.18,.22,.04,M(0x5b7fa6),1.15,.8,.97);
 // TV장 + 브라운관 (오른쪽을 바라봄)
 box(.45,.5,.6,M(0xd9c9ad),.485,0,1.86);
-box(.42,.38,.46,M(0xcfc6b6),.47,.5,1.86);box(.03,.32,.4,M(0x2a2a2a),.69,.53,1.86);
+const tvMat=M(0xcfc6b6,{emissive:0xffe08a,emissiveIntensity:0});const tvBody=box(.42,.38,.46,tvMat,.47,.5,1.86);act(tvBody,'tv',[tvMat]);box(.03,.32,.4,M(0x2a2a2a),.69,.53,1.86);
 const tv=canvasTex(256,192,(g,w,h)=>{g.fillStyle='#000';g.fillRect(0,0,w,h);});
 const screen=new THREE.Mesh(new THREE.PlaneGeometry(.35,.26),new THREE.MeshBasicMaterial({map:tv.t,toneMapped:false}));
-screen.position.set(.707,.69,1.86);screen.rotation.y=Math.PI/2;scene.add(screen);
+screen.position.set(.707,.69,1.86);screen.rotation.y=Math.PI/2;scene.add(screen);act(screen,'tv',[]);
 [[-1],[1]].forEach(([s])=>{const a=new THREE.Mesh(new THREE.CylinderGeometry(.005,.005,.4,6),steel);a.position.set(.45,1.05,1.86+s*.08);a.rotation.x=s*.45;scene.add(a);});
 // 러그
 box(1.02,.012,1.07,M(0xe7dcc6),1.4,0,1.96);
@@ -236,7 +236,7 @@ const trailPts=layer(new THREE.Points(trailGeo,new THREE.PointsMaterial({color:0
 
 // ---------- 상태 ----------
 const S={state:'intro',t:0,speed:1,rec:false,enterT:0,exitT:0,seated:false,channel:0,tvOn:false,blanket:false,
-  samples:[],touched:[],remoteN:0,sway:0,stopping:0,houseVol:0,lightK:0,lapse:null,muted:false};
+  samples:[],touched:[],remoteN:0,sway:0,stopping:0,houseVol:0,lightK:0,lapse:null,muted:false,L:{sofa:0,tv:0,blanket:0},vols:{sofa:0,tv:0,blanket:0},watching:false};
 const LOOK={tv:new THREE.Vector3(.707,.69,1.86)};
 let yaw=0,pitch=0;
 function setLook(v,p=cam.position){const d=v.clone().sub(p).normalize();yaw=Math.atan2(-d.x,-d.z);pitch=Math.asin(THREE.MathUtils.clamp(d.y,-1,1));}
@@ -252,7 +252,7 @@ async function moveTo(p,look,dur=1.2){const p0=cam.position.clone(),y0=yaw,x0=pi
   await tween(dur,t=>{const e=ease(t);cam.position.lerpVectors(p0,P,e);yaw=angLerp(y0,y1,e);pitch=x0+(x1-x0)*e;});}
 
 // ---------- 소리 (임시 · WebAudio 합성) ----------
-let AC,master,subG,houseBus,comfortG,fireG,annG;
+let AC,master,subG,houseBus,comfortG,fireG,annG,tvG;
 function noise(type='white',sec=3){const n=AC.sampleRate*sec,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);let last=0,b0=0,b1=0,b2=0;
   for(let i=0;i<n;i++){const w=Math.random()*2-1;if(type==='brown'){last=(last+.02*w)/1.02;d[i]=last*3.5;}else if(type==='pink'){b0=.99765*b0+w*.099;b1=.963*b1+w*.2965;b2=.57*b2+w*1.0526;d[i]=(b0+b1+b2+w*.1848)*.18;}else d[i]=w;}return b;}
 function loop(buf,dest,filter,freq){const s=AC.createBufferSource();s.buffer=buf;s.loop=true;let n=s;if(filter){const f=AC.createBiquadFilter();f.type=filter;f.frequency.value=freq;s.connect(f);n=f;}n.connect(dest);s.start();return s;}
@@ -260,7 +260,8 @@ function gain(v,dest){const g=AC.createGain();g.gain.value=v;g.connect(dest);ret
 function initAudio(){AC=new (window.AudioContext||window.webkitAudioContext)();master=gain(1,AC.destination);
   subG=gain(.55,master);loop(noise('brown'),subG,'lowpass',380);const o=AC.createOscillator();o.frequency.value=46;const og=gain(.12,subG);o.connect(og);o.start();
   const lfo=AC.createOscillator();lfo.frequency.value=.7;const lg=gain(.05,og.gain);lfo.connect(lg);lfo.start();
-  houseBus=gain(0,master);comfortG=gain(.22,houseBus);loop(noise('pink'),comfortG,'lowpass',900);
+  houseBus=gain(0,master);comfortG=gain(0,houseBus);loop(noise('pink'),comfortG,'lowpass',900);
+  tvG=gain(0,houseBus);loop(noise('pink'),tvG,'bandpass',1200);
   const hum=AC.createOscillator();hum.frequency.value=15700;const hg=gain(.004,comfortG);hum.connect(hg);hum.start();
   fireG=gain(0,houseBus);loop(noise('brown'),gain(.5,fireG),'lowpass',260);
   setInterval(()=>{if(!AC||fireG.gain.value<.01)return;const n=1+Math.floor(Math.random()*3);for(let k=0;k<n;k++){const s=AC.createBufferSource();s.buffer=crackBuf;const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=1500+Math.random()*2500;const g=AC.createGain();const t=AC.currentTime+Math.random()*.25;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.5+Math.random()*.6,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.05+Math.random()*.06);s.connect(f);f.connect(g);g.connect(fireG);s.start(t);s.stop(t+.15);}},180);
@@ -299,7 +300,7 @@ const unannounce=()=>$('announce').classList.remove('show');
 const T0=new Date();
 
 // ---------- 행동 ----------
-const enabled=()=>({intro:[],subway:['handle'],arriving:[],stopped:['door'],entering:[],house:['sofa','blanket','remote','exit'],seated:['blanket','remote','exit','sofa'],busy:[],leaving:[],end:[]})[S.state]||[];
+const enabled=()=>({intro:[],subway:['handle'],arriving:[],stopped:['door'],entering:[],house:['sofa','tv','blanket','remote','exit'],seated:['tv','blanket','remote','exit','sofa'],busy:[],leaving:[],end:[]})[S.state]||[];
 async function onAction(a){
   if(!enabled().includes(a))return;
   if(a==='handle'){S.state='arriving';hint('안내방송 중…');log('손잡이를 잡음');
@@ -310,25 +311,29 @@ async function onAction(a){
   if(a==='door'){S.state='entering';hint('');
     tween(1.2,t=>door.rotation.y=ease(t)*1.5);
     S.rec=true;S.enterT=S.t;$('rec').className='on';$('rec').textContent='REC';avatar.visible=true;recLed.material.color.set(0xff2020);
-    log('문 열림 · 불 켜짐 · TV·영상 재생 · <b>녹화 시작</b>');
-    tween(1.6,t=>S.lightK=t);S.tvOn=true;ramp(houseBus,.3,.6);
+    log('문 열림 · <b>녹화 시작</b> (조명은 소파에 앉을 때, TV는 만질 때 켜져요)');
+    ramp(houseBus,1,.6);
+    if(AC){const n=AC.currentTime;subG.gain.cancelScheduledValues(n);subG.gain.setValueAtTime(subG.gain.value,n);subG.gain.linearRampToValueAtTime(0,n+2);}
+    log('지하철 소리 2초에 걸쳐 잦아듦');
     await moveTo([2.3,1.6,.5],[2.3,1.5,1.5],.8);await moveTo([2.25,1.6,1.25],[1.5,1.2,2.0],1.1);await moveTo([1.75,1.6,1.65],[.707,.8,1.86],1.0);
-    await tween(1.4,t=>door.rotation.y=1.5*(1-ease(t)));ramp(subG,0,.15);log('문 닫힘 · 지하철 소리 끊김');
-    S.state='house';hint('소파·담요·리모컨을 눌러 보세요 · 나가고 싶으면 출구');}
+    await tween(1.4,t=>door.rotation.y=1.5*(1-ease(t)));log('문 닫힘');
+    S.state='house';hint('소파·TV·담요·리모컨을 눌러 보세요 · 나가고 싶으면 출구');}
   if(a==='sofa'){if(S.seated)return;await sit();}
-  if(a==='blanket'){if(S.blanket)return;if(!S.seated)await sit();S.blanket=true;touch('담요');log('담요를 덮음 · <b>모닥불 소리</b>');ramp(fireG,.9,.8);
+  if(a==='blanket'){if(S.blanket)return;if(!S.seated)await sit();S.blanket=true;touch('담요');log('담요를 덮음 · <b>모닥불 소리</b> (덮고 있는 동안 커짐)');
     const p0=blanket.position.clone();tween(.9,t=>{const e=ease(t);blanket.position.lerpVectors(p0,new THREE.Vector3(2.08,.5,2.13),e);blanket.scale.set(1+e*.9,1-e*.4,1+e*1.4);});}
-  if(a==='remote'){if(!S.seated)await sit();S.remoteN++;S.channel++;osdUntil=performance.now()/1000+1.6;touch('리모컨');remoteBlip();log(`리모컨 · 채널 ${S.channel%3+1}로 바뀜`);
+  if(a==='tv'){if(S.tvOn)return;tvOn('TV를 만짐');}
+  if(a==='remote'){if(!S.seated)await sit();if(!S.tvOn)tvOn('리모컨이 TV를 켬');S.remoteN++;S.channel++;osdUntil=performance.now()/1000+1.6;touch('리모컨');remoteBlip();log(`리모컨 · 채널 ${S.channel%3+1}로 바뀜`);
     const y0=remote.position.y;tween(.35,t=>remote.position.y=y0+Math.sin(t*Math.PI)*.04);}
   if(a==='exit'){S.state='busy';if(S.seated)await standUp();S.state='leaving';hint('');
     await moveTo([.55,1.6,2.5],[.5,1.5,3.2],1.0);tween(1.0,t=>exitD.rotation.y=ease(t)*1.4);drawQR();
     S.exitT=S.t;log('출구 문 열림 · <b>QR 표시</b> · 녹화 종료');ramp(houseBus,0,.5);ramp(fireG,0,.5);
     await moveTo([.5,1.6,3.6],[.5,1.5,4.5],1.4);S.rec=false;$('rec').className='';$('rec').textContent='종료';showEnd();}
 }
+function tvOn(why){S.tvOn=true;touch('TV');log(why+' · <b>TV 켜짐</b>');}
 async function sit(){S.state='busy';$('stand').classList.add('hidden');
   await moveTo([1.95,1.6,2.12],[.707,.8,1.86],.8);await moveTo([2.32,1.08,2.12],[.707,.69,1.86],.8);
-  S.seated=true;if(!S.touched.some(x=>x.name==='소파')){touch('소파');}log('소파에 앉음');S.state='seated';$('stand').classList.remove('hidden');hint('담요·리모컨을 눌러 보세요 · 일어나기 / 출구');}
-async function standUp(){S.state='busy';$('stand').classList.add('hidden');await moveTo([1.95,1.6,2.12],[.707,.9,1.86],.8);S.seated=false;log('일어남');S.state='house';hint('소파·담요·리모컨 · 나가고 싶으면 출구');}
+  S.seated=true;if(!S.touched.some(x=>x.name==='소파')){touch('소파');}log('소파에 앉음');if(!S.lightOn){S.lightOn=true;tween(1.6,t=>S.lightK=t);log('<b>조명 켜짐</b>');}S.state='seated';$('stand').classList.remove('hidden');hint('TV·담요·리모컨을 눌러 보세요 · 일어나기 / 출구');}
+async function standUp(){S.state='busy';$('stand').classList.add('hidden');await moveTo([1.95,1.6,2.12],[.707,.9,1.86],.8);S.seated=false;log('일어남');S.state='house';hint('소파·TV·담요·리모컨 · 나가고 싶으면 출구');}
 $('stand').onclick=()=>{if(S.state==='seated')standUp();};
 
 // ---------- QR · 결과 ----------
@@ -381,13 +386,23 @@ function frame(){const dt=Math.min(clock.getDelta(),.25),now=performance.now()/1
   const k=S.lightK;homeL.forEach(l=>l.intensity=l.userData.max*k);shadeMat.emissiveIntensity=1.6*k;
   tvL.intensity=S.tvOn?(.5+Math.sin(now*9)*.12+Math.random()*.08):0;
   subL.forEach(l=>l.intensity=2.2*(S.rec&&S.state!=='stopped'?.55:1));
-  // 볼륨: 문이 열린 뒤 시간이 지날수록 모든 소리가 함께 커짐
-  if(S.enterT&&S.rec){const e=S.t-S.enterT;S.houseVol=Math.min(1,.3+.7*e/150);if(AC&&houseBus)houseBus.gain.setTargetAtTime(S.houseVol,AC.currentTime,.3);}
-  $('vol').style.width=(S.houseVol*100)+'%';$('volTxt').textContent=S.enterT?Math.round(S.houseVol*100)+'%':'—';
+  // 소리 세 갈래 (전시 프로그램과 같은 규칙): 소파에 앉은 시간 → 음악, TV를 바라본 시간 → TV 소리, 담요 덮은 시간 → 모닥불.
+  // 각 60초에 최대, 셋이 함께 높으면 더 커져 불쾌한 소리가 됨
+  if(S.enterT&&S.rec){const d=dt*S.speed,L=S.L;
+    const fx=-Math.sin(yaw),fz=-Math.cos(yaw),tx=.71-base.x,tz=1.86-base.z,tl=Math.hypot(tx,tz)||1;
+    S.watching=S.tvOn&&Math.acos(THREE.MathUtils.clamp((fx*tx+fz*tz)/tl,-1,1))<35*Math.PI/180;
+    if(S.seated)L.sofa+=d; if(S.watching)L.tv+=d; if(S.blanket&&S.seated)L.blanket+=d;
+    const lv={sofa:Math.min(1,L.sofa/60),tv:Math.min(1,L.tv/60),blanket:Math.min(1,L.blanket/60)};
+    const boost=1+.8*(lv.sofa*lv.tv+lv.tv*lv.blanket+lv.sofa*lv.blanket)/3;
+    S.vols={sofa:(.25+.95*lv.sofa)*boost,tv:S.tvOn?(.2+lv.tv)*boost:0,blanket:(S.blanket||L.blanket>0)?(.3+.9*lv.blanket)*boost:0};
+    if(AC){ramp(comfortG,S.vols.sofa*.35,.3);ramp(tvG,S.vols.tv*.35,.3);ramp(fireG,S.vols.blanket*.8,.3);}
+    S.houseVol=Math.min(1,(S.vols.sofa+S.vols.tv+S.vols.blanket)/(3*2.16));}
+  $('vol').style.width=(S.houseVol*100)+'%';
+  $('volTxt').textContent=S.enterT?`음악 ${Math.round(S.L.sofa)}초 · TV ${Math.round(S.L.tv)}초${S.watching?' ●':''} · 모닥불 ${Math.round(S.L.blanket)}초 → ${Math.round(S.houseVol*100)}%`:'—';
   $('stay').textContent=fmt(S.enterT?((S.exitT||S.t)-S.enterT):0);
   // 반짝이는 행동 대상
   const en=enabled(),ph=.5+.5*Math.sin(now*4),SMALL=['handle','blanket','remote'];
-  actionables.forEach(a=>{const on=en.includes(a.name)&&!(a.name==='blanket'&&S.blanket)&&!(a.name==='sofa'&&S.seated);const big=!SMALL.includes(a.name);a.mats.forEach(m=>m.emissiveIntensity=on?(hover===a.name?(big?.35:.9):(big?.06+.14*ph:.25+.5*ph)):0);});
+  actionables.forEach(a=>{const on=en.includes(a.name)&&!(a.name==='blanket'&&S.blanket)&&!(a.name==='sofa'&&S.seated)&&!(a.name==='tv'&&S.tvOn);const big=!SMALL.includes(a.name);a.mats.forEach(m=>m.emissiveIntensity=on?(hover===a.name?(big?.35:.9):(big?.06+.14*ph:.25+.5*ph)):0);});
   drawTV(now);
   // CCTV: 관객 위치 · 동선
   avatar.position.set(base.x,S.seated?-.35:0,base.z);
