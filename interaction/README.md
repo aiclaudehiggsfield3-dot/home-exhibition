@@ -108,3 +108,10 @@ caffeinate -d python3 home_tracker.py --camera 0 --setup
 ```
 첫 줄은 구역(기차·집·소파·출구)을 언리얼 도면에서 가져와 저장. 둘째 줄은 **네 모서리만** 찍음 — 셋업 화면 오른쪽 위 작은 지도의 1·2·3·4와 같은 자리.
 그다음부터 CCTV 좌표 = 언리얼 좌표. 언리얼 쪽 설명은 `unreal/README.md`.
+
+## 손끝 추적 (손 시연용)
+`config.json`의 `tune`에서 `"point_mode": "finger"` (2026-11-19 적용).
+- 배경과 달라진 덩어리 중 **피부색만** 남김 → 손가락 그림자·소매가 빠짐
+- 그 덩어리에서 화면 가장자리(팔이 들어온 쪽)와 가장 먼 끝 = 손끝 (`tip_band` 0.96: 진짜 끝 근처만 후보)
+- 손 전체가 화면에 보이게 카메라를 높이 두면 `"use_mediapipe": true` + `pip3 install mediapipe`로 손 인식도 쓸 수 있음
+- 비교 사진: `docs/finger_before_after.jpg` (빨강 = 그 순간 찾은 점, 파랑 = 최종 위치)

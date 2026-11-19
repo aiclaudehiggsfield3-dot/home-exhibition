@@ -48,7 +48,10 @@ DEFAULT_CFG = {
         "lost_s": 10.0,               # 출구 아닌 곳에서 사라지면 이만큼 기다린 뒤 종료
         "exit_margin_cm": 40,
         "foot_point": True,           # (예전 설정) point_mode가 없을 때만 씀
-        "point_mode": "foot",         # 위치로 삼을 점: foot(위에서 본 사람의 발) · tip(손끝: 화면 가장자리에서 가장 먼 끝) · center(덩어리 중심)
+        "point_mode": "foot",         # finger(손끝: 손 인식 → 피부색) 추천은 손 시연 때
+        "use_mediapipe": False,       # True + pip3 install mediapipe → 손 전체가 보일 때 검지 끝을 손 인식으로 (손 일부만 보이면 피부색 방식이 더 안정적)
+        "tip_band": 0.85,             # 끝점 후보 범위 (손끝은 0.96)
+        "skin_lo": [40, 136, 77], "skin_hi": [255, 180, 130],   # 피부색 범위 (YCrCb)         # 위치로 삼을 점: foot(위에서 본 사람의 발) · tip(손끝: 화면 가장자리에서 가장 먼 끝) · center(덩어리 중심)
         "foot_radius_cm": 15,
         "max_jump_cm": 80,
         "smooth_n": 5,                # 위치는 최근 이만큼의 중간값 (튀는 점 거르기)
@@ -387,6 +390,8 @@ class Tracker:
             cx, cy = self.foot_of(cnt_full, (cx, cy))
         elif mode == "tip":
             cx, cy = self.tip_of(cnt_full, (cx, cy))
+        elif mode == "finger":
+            cx, cy = self.finger_of(frame, g, person_mask, cnt_full, (cx, cy))
         self.prev_foot_proc = (cx * self.scale, cy * self.scale)
         return (cx, cy, cnt_full), fg
 
@@ -424,6 +429,49 @@ class Tracker:
         med = cv2.GaussianBlur(med, (3, 3), 0)
         return cv2.resize(med, (pw, ph), interpolation=cv2.INTER_LINEAR)
 
+    def finger_of(self, frame, g, person_mask, cnt_full, ctr):
+        """손끝: ① MediaPipe 손 인식(설치돼 있고 손이 잡히면) → 검지 끝
+        ② 아니면 피부색만 남겨(그림자·소매 제외) 그 덩어리의 끝"""
+        self.finger_src = "blob"
+        if self.T.get("use_mediapipe", False):
+            tip = self.mp_tip(frame)
+            if tip is not None:
+                self.finger_src = "mediapipe"
+                self.prev_tip = tip
+                return tip
+        ycc = cv2.cvtColor(np.clip(g, 0, 255).astype(np.uint8), cv2.COLOR_BGR2YCrCb)
+        lo, hi = self.T.get("skin_lo", [40, 136, 77]), self.T.get("skin_hi", [255, 180, 130])
+        skin = cv2.inRange(ycc, np.array(lo, np.uint8), np.array(hi, np.uint8))
+        skin &= cv2.dilate(person_mask, np.ones((9, 9), np.uint8))
+        skin = cv2.morphologyEx(skin, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+        skin = cv2.morphologyEx(skin, cv2.MORPH_CLOSE, np.ones((7, 7), np.uint8))
+        cs, _ = cv2.findContours(skin, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cs = [c for c in cs if cv2.contourArea(c) > 0.25 * self.T["min_person_frac"] * self.pw * self.ph]
+        if not cs:
+            return self.tip_of(cnt_full, ctr)
+        self.finger_src = "skin"
+        c = max(cs, key=cv2.contourArea)
+        return self.tip_of((c.astype(np.float32) / self.scale).astype(np.int32), ctr)
+
+    def mp_tip(self, frame):
+        if getattr(self, "_mp", None) is None:
+            try:
+                import mediapipe as mp
+                self._mp = mp.solutions.hands.Hands(static_image_mode=False, max_num_hands=1, model_complexity=0,
+                                                    min_detection_confidence=0.5, min_tracking_confidence=0.4)
+                print("  손 인식(MediaPipe) 켜짐")
+            except Exception:
+                self._mp = False
+                print("  (MediaPipe가 없어서 피부색으로 손끝을 찾아요. 더 정확하게: pip3 install mediapipe)")
+        if not self._mp:
+            return None
+        sm = cv2.resize(frame, (640, int(frame.shape[0] * 640 / frame.shape[1])))
+        r = self._mp.process(cv2.cvtColor(sm, cv2.COLOR_BGR2RGB))
+        if not r.multi_hand_landmarks:
+            return None
+        lm = r.multi_hand_landmarks[0].landmark[8]                 # 8 = 검지 끝
+        return float(lm.x * frame.shape[1]), float(lm.y * frame.shape[0])
+
     def tip_of(self, cnt, ctr, edge=24):
         """손끝: 덩어리가 화면 가장자리에 닿은 곳(팔 쪽)에서 가장 먼 끝.
         후보가 여럿이면(최대 거리의 85% 이상) 직전 손끝에 가장 가까운 것 — 손가락 사이를 오가지 않게."""
@@ -436,7 +484,7 @@ class Tracker:
             return float(ctr[0]), float(ctr[1])
         q = pts[inner]
         dist = np.hypot(q[:, 0] - base[0], q[:, 1] - base[1])
-        cand = q[dist >= dist.max() * 0.85]
+        cand = q[dist >= dist.max() * self.T.get("tip_band", 0.85)]
         prev = getattr(self, "prev_tip", None)
         if prev is not None and len(cand) > 1:
             k = int(np.argmin(np.hypot(cand[:, 0] - prev[0], cand[:, 1] - prev[1])))
