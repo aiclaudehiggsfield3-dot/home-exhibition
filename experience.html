@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Home Sweet Home — 직접 체험해 보기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#14120f;--ink:#f3ece2;--mute:#a59a8b;--line:#3a332b;--card:#1e1b17;--warm:#e0763f;--amber:#d98a2b}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;line-height:1.55;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--line)}
+header a{color:var(--mute);text-decoration:none;font-size:14px}header a:hover{color:var(--ink)}
+header h1{font-size:18px;margin:0}header .note{font-size:12.5px;color:var(--mute);margin-left:auto}
+main{flex:1;display:grid;grid-template-columns:1fr 380px;gap:14px;padding:14px 18px;min-height:0}
+.stage{position:relative;border-radius:14px;overflow:hidden;background:#000;min-height:420px}
+#fp{width:100%;height:100%;display:block;cursor:grab;touch-action:none}#fp.drag{cursor:grabbing}#fp.hot{cursor:pointer}
+.hint{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:#000b;border:1px solid #fff2;padding:8px 16px;border-radius:99px;font-size:14.5px;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis}
+.announce{position:absolute;left:50%;top:18%;transform:translateX(-50%);text-align:center;pointer-events:none;opacity:0;transition:opacity .6s}
+.announce.show{opacity:1}
+.announce b{display:block;font-size:30px;letter-spacing:-.5px;text-shadow:0 2px 12px #000}
+.announce span{display:inline-block;margin-top:8px;font-size:15px;background:#0d3b66e6;border:1px solid #6fa8dc;padding:4px 14px;border-radius:6px}
+.hud{position:absolute;right:12px;top:12px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+button{font:inherit;font-size:13.5px;border:1px solid #fff3;background:#000a;color:var(--ink);border-radius:99px;padding:5px 13px;cursor:pointer}
+button:hover{border-color:var(--warm)}button.on{background:var(--warm);border-color:var(--warm);color:#fff}
+button.big{font-size:17px;padding:11px 26px;background:var(--warm);border-color:var(--warm);color:#fff;font-weight:700}
+.hidden{display:none!important}
+.overlay{position:absolute;inset:0;background:#0a0908e8;display:grid;place-items:center;padding:24px;overflow:auto}
+.overlay .in{max-width:640px;width:100%}
+.overlay h2{font-size:26px;margin:0 0 8px}.overlay p{color:var(--mute);margin:6px 0}
+.overlay ol{padding-left:20px;color:var(--mute);font-size:14.5px;margin:12px 0 18px}
+.res{display:grid;grid-template-columns:1fr 170px;gap:18px;align-items:start}
+.res table{width:100%;border-collapse:collapse;font-size:14.5px}.res td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top}.res td:first-child{color:var(--mute);width:90px}
+.qr svg{width:170px;height:170px;background:#fff;border-radius:10px;padding:6px;display:block}
+.qr a{display:block;font-size:12.5px;color:var(--warm);margin-top:6px;text-align:center}
+aside{display:flex;flex-direction:column;gap:12px;min-height:0;overflow:auto}
+.cctv{position:relative;border-radius:10px;overflow:hidden;background:#000;border:1px solid #333;aspect-ratio:4/3;flex:none}
+#cc{width:100%;height:100%;display:block;filter:saturate(.6) contrast(1.1) brightness(1.05)}
+.scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,#0000 0 2px,#0000001f 2px 3px);mix-blend-mode:multiply}
+.ccl{position:absolute;left:10px;right:10px;display:flex;justify-content:space-between;font:600 12.5px/1.2 ui-monospace,Menlo,monospace;color:#fff;text-shadow:0 1px 2px #000}
+.cct{top:8px}.ccb{bottom:8px}
+#rec{color:#bbb}#rec.on{color:#ff4d4d}#rec.on::before{content:"● ";animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.panel h3{font-size:12.5px;color:var(--mute);font-weight:500;margin:0 0 6px;display:flex;justify-content:space-between}
+.meter{height:12px;border-radius:99px;background:#2c2620;overflow:hidden}.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4c9a62,#d98a2b 60%,#d3423b);transition:width .2s}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.big{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+#log{list-style:none;margin:0;padding:0;font-size:13px;max-height:220px;overflow:auto}
+#log li{display:grid;grid-template-columns:46px 1fr;gap:6px;padding:4px 0;border-bottom:1px solid var(--line)}
+#log li span{font-family:ui-monospace,Menlo,monospace;color:var(--mute)}
+#log li.new{animation:flash 1.2s}@keyframes flash{from{background:#e0763f44}to{background:#0000}}
+.tag{display:inline-block;font-size:11.5px;border-radius:99px;padding:0 8px;background:#3a2c1c;color:#f0b77f;margin-left:4px}
+@media (max-width:980px){main{grid-template-columns:1fr}.stage{min-height:62vh}aside{overflow:visible}}
+</style></head><body>
+<header>
+  <a href="index.html">← 현황판</a>
+  <h1>Home Sweet Home · 직접 체험해 보기</h1>
+  <span class="note">치수·배치는 본안(L_Opt5B) 기준 · 소리·TV 영상은 <b>임시</b>(실제 소리는 서지오 제작, 영상 미정)</span>
+</header>
+<main>
+  <div class="stage">
+    <canvas id="fp"></canvas>
+    <div id="announce" class="announce"><b id="annB"></b><span id="annS"></span></div>
+    <div class="hud">
+      <button id="stand" class="hidden">일어나기</button>
+      <button id="ff">⏩ 시간 ×1</button>
+      <button id="mute">🔊 소리 켜짐</button>
+    </div>
+    <div id="hint" class="hint">드래그해서 둘러보기</div>
+    <div id="start" class="overlay"><div class="in">
+      <h2>퇴근길 지하철, 그리고 집</h2>
+      <p>3×3m 설치 공간을 실제 치수로 옮겨 놓았어요. 관객이 되어 순서대로 겪어 보세요.</p>
+      <ol>
+        <li>좁은 지하철 칸에서 <b>손잡이</b>를 잡으면 안내방송과 도착 음악이 나오고 열차가 멈춰요.</li>
+        <li><b>집 문</b>을 열면 불이 켜지고 TV와 영상이 재생돼요. 천장 CCTV 녹화도 시작돼요. 문이 닫히면 지하철 소리가 끊겨요.</li>
+        <li><b>소파·담요·리모컨</b>을 눌러 보세요. 물건마다 다른 소리가 나요.</li>
+        <li>머무는 동안 모든 소리의 볼륨이 조금씩 커져요. 언제 나갈지는 내가 정해요.</li>
+        <li><b>출구</b>로 나가면 QR과 함께 내가 머문 기록(타임랩스)을 보여 줘요.</li>
+      </ol>
+      <p style="font-size:13px">드래그: 둘러보기 · 반짝이는 물건 클릭: 행동 · 소리가 나니 볼륨을 확인하세요.</p>
+      <p style="margin-top:16px"><button id="go" class="big">체험 시작</button></p>
+    </div></div>
+    <div id="end" class="overlay hidden"><div class="in">
+      <h2>당신이 머문 집</h2>
+      <p>출구 옆 화면에 QR이 떴어요. 오른쪽 CCTV 화면에서 내 동선 타임랩스가 재생돼요.</p>
+      <div class="res" style="margin-top:14px">
+        <table><tbody id="resT"></tbody></table>
+        <div class="qr"><svg width="41mm" height="41mm" version="1.1" viewBox="0 0 41 41" xmlns="http://www.w3.org/2000/svg"><path d="M2,2H3V3H2zM3,2H4V3H3zM4,2H5V3H4zM5,2H6V3H5zM6,2H7V3H6zM7,2H8V3H7zM8,2H9V3H8zM10,2H11V3H10zM12,2H13V3H12zM16,2H17V3H16zM17,2H18V3H17zM18,2H19V3H18zM19,2H20V3H19zM23,2H24V3H23zM25,2H26V3H25zM27,2H28V3H27zM29,2H30V3H29zM30,2H31V3H30zM32,2H33V3H32zM33,2H34V3H33zM34,2H35V3H34zM35,2H36V3H35zM36,2H37V3H36zM37,2H38V3H37zM38,2H39V3H38zM2,3H3V4H2zM8,3H9V4H8zM11,3H12V4H11zM13,3H14V4H13zM16,3H17V4H16zM20,3H21V4H20zM21,3H22V4H21zM24,3H25V4H24zM26,3H27V4H26zM27,3H28V4H27zM30,3H31V4H30zM32,3H33V4H32zM38,3H39V4H38zM2,4H3V5H2zM4,4H5V5H4zM5,4H6V5H5zM6,4H7V5H6zM8,4H9V5H8zM13,4H14V5H13zM14,4H15V5H14zM16,4H17V5H16zM19,4H20V5H19zM20,4H21V5H20zM22,4H23V5H22zM23,4H24V5H23zM24,4H25V5H24zM28,4H29V5H28zM32,4H33V5H32zM34,4H35V5H34zM35,4H36V5H35zM36,4H37V5H36zM38,4H39V5H38zM2,5H3V6H2zM4,5H5V6H4zM5,5H6V6H5zM6,5H7V6H6zM8,5H9V6H8zM10,5H11V6H10zM12,5H13V6H12zM13,5H14V6H13zM17,5H18V6H17zM18,5H19V6H18zM20,5H21V6H20zM21,5H22V6H21zM25,5H26V6H25zM27,5H28V6H27zM28,5H29V6H28zM30,5H31V6H30zM32,5H33V6H32zM34,5H35V6H34zM35,5H36V6H35zM36,5H37V6H36zM38,5H39V6H38zM2,6H3V7H2zM4,6H5V7H4zM5,6H6V7H5zM6,6H7V7H6zM8,6H9V7H8zM10,6H11V7H10zM11,6H12V7H11zM13,6H14V7H13zM16,6H17V7H16zM17,6H18V7H17zM25,6H26V7H25zM27,6H28V7H27zM28,6H29V7H28zM29,6H30V7H29zM30,6H31V7H30zM32,6H33V7H32zM34,6H35V7H34zM35,6H36V7H35zM36,6H37V7H36zM38,6H39V7H38zM2,7H3V8H2zM8,7H9V8H8zM10,7H11V8H10zM13,7H14V8H13zM14,7H15V8H14zM16,7H17V8H16zM17,7H18V8H17zM20,7H21V8H20zM21,7H22V8H21zM24,7H25V8H24zM28,7H29V8H28zM32,7H33V8H32zM38,7H39V8H38zM2,8H3V9H2zM3,8H4V9H3zM4,8H5V9H4zM5,8H6V9H5zM6,8H7V9H6zM7,8H8V9H7zM8,8H9V9H8zM10,8H11V9H10zM12,8H13V9H12zM14,8H15V9H14zM16,8H17V9H16zM18,8H19V9H18zM20,8H21V9H20zM22,8H23V9H22zM24,8H25V9H24zM26,8H27V9H26zM28,8H29V9H28zM30,8H31V9H30zM32,8H33V9H32zM33,8H34V9H33zM34,8H35V9H34zM35,8H36V9H35zM36,8H37V9H36zM37,8H38V9H37zM38,8H39V9H38zM10,9H11V10H10zM11,9H12V10H11zM12,9H13V10H12zM14,9H15V10H14zM15,9H16V10H15zM17,9H18V10H17zM18,9H19V10H18zM19,9H20V10H19zM21,9H22V10H21zM22,9H23V10H22zM23,9H24V10H23zM25,9H26V10H25zM26,9H27V10H26zM29,9H30V10H29zM2,10H3V11H2zM6,10H7V11H6zM8,10H9V11H8zM9,10H10V11H9zM10,10H11V11H10zM12,10H13V11H12zM13,10H14V11H13zM14,10H15V11H14zM15,10H16V11H15zM17,10H18V11H17zM19,10H20V11H19zM21,10H22V11H21zM22,10H23V11H22zM23,10H24V11H23zM24,10H25V11H24zM31,10H32V11H31zM32,10H33V11H32zM33,10H34V11H33zM34,10H35V11H34zM35,10H36V11H35zM38,10H39V11H38zM2,11H3V12H2zM3,11H4V12H3zM4,11H5V12H4zM5,11H6V12H5zM7,11H8V12H7zM9,11H10V12H9zM10,11H11V12H10zM11,11H12V12H11zM12,11H13V12H12zM13,11H14V12H13zM15,11H16V12H15zM16,11H17V12H16zM20,11H21V12H20zM24,11H25V12H24zM25,11H26V12H25zM28,11H29V12H28zM29,11H30V12H29zM34,11H35V12H34zM35,11H36V12H35zM36,11H37V12H36zM37,11H38V12H37zM2,12H3V13H2zM3,12H4V13H3zM4,12H5V13H4zM6,12H7V13H6zM8,12H9V13H8zM10,12H11V13H10zM11,12H12V13H11zM15,12H16V13H15zM16,12H17V13H16zM17,12H18V13H17zM18,12H19V13H18zM19,12H20V13H19zM20,12H21V13H20zM22,12H23V13H22zM23,12H24V13H23zM25,12H26V13H25zM26,12H27V13H26zM29,12H30V13H29zM30,12H31V13H30zM31,12H32V13H31zM33,12H34V13H33zM36,12H37V13H36zM2,13H3V14H2zM3,13H4V14H3zM4,13H5V14H4zM5,13H6V14H5zM9,13H10V14H9zM10,13H11V14H10zM13,13H14V14H13zM14,13H15V14H14zM15,13H16V14H15zM16,13H17V14H16zM17,13H18V14H17zM19,13H20V14H19zM23,13H24V14H23zM24,13H25V14H24zM26,13H27V14H26zM34,13H35V14H34zM36,13H37V14H36zM37,13H38V14H37zM2,14H3V15H2zM3,14H4V15H3zM4,14H5V15H4zM5,14H6V15H5zM8,14H9V15H8zM10,14H11V15H10zM13,14H14V15H13zM16,14H17V15H16zM17,14H18V15H17zM19,14H20V15H19zM21,14H22V15H21zM22,14H23V15H22zM23,14H24V15H23zM25,14H26V15H25zM26,14H27V15H26zM29,14H30V15H29zM31,14H32V15H31zM32,14H33V15H32zM33,14H34V15H33zM36,14H37V15H36zM37,14H38V15H37zM38,14H39V15H38zM3,15H4V16H3zM9,15H10V16H9zM12,15H13V16H12zM14,15H15V16H14zM17,15H18V16H17zM19,15H20V16H19zM20,15H21V16H20zM24,15H25V16H24zM25,15H26V16H25zM27,15H28V16H27zM28,15H29V16H28zM29,15H30V16H29zM30,15H31V16H30zM34,15H35V16H34zM35,15H36V16H35zM2,16H3V17H2zM4,16H5V17H4zM6,16H7V17H6zM8,16H9V17H8zM9,16H10V17H9zM12,16H13V17H12zM13,16H14V17H13zM14,16H15V17H14zM15,16H16V17H15zM16,16H17V17H16zM17,16H18V17H17zM19,16H20V17H19zM20,16H21V17H20zM24,16H25V17H24zM25,16H26V17H25zM26,16H27V17H26zM28,16H29V17H28zM29,16H30V17H29zM31,16H32V17H31zM33,16H34V17H33zM34,16H35V17H34zM35,16H36V17H35zM36,16H37V17H36zM2,17H3V18H2zM3,17H4V18H3zM4,17H5V18H4zM7,17H8V18H7zM9,17H10V18H9zM10,17H11V18H10zM11,17H12V18H11zM13,17H14V18H13zM14,17H15V18H14zM15,17H16V18H15zM16,17H17V18H16zM19,17H20V18H19zM21,17H22V18H21zM22,17H23V18H22zM23,17H24V18H23zM25,17H26V18H25zM28,17H29V18H28zM29,17H30V18H29zM31,17H32V18H31zM32,17H33V18H32zM33,17H34V18H33zM34,17H35V18H34zM36,17H37V18H36zM38,17H39V18H38zM3,18H4V19H3zM5,18H6V19H5zM8,18H9V19H8zM10,18H11V19H10zM12,18H13V19H12zM14,18H15V19H14zM17,18H18V19H17zM19,18H20V19H19zM22,18H23V19H22zM23,18H24V19H23zM24,18H25V19H24zM25,18H26V19H25zM26,18H27V19H26zM31,18H32V19H31zM32,18H33V19H32zM33,18H34V19H33zM35,18H36V19H35zM36,18H37V19H36zM37,18H38V19H37zM2,19H3V20H2zM3,19H4V20H3zM4,19H5V20H4zM7,19H8V20H7zM9,19H10V20H9zM10,19H11V20H10zM14,19H15V20H14zM16,19H17V20H16zM17,19H18V20H17zM18,19H19V20H18zM19,19H20V20H19zM20,19H21V20H20zM24,19H25V20H24zM25,19H26V20H25zM26,19H27V20H26zM29,19H30V20H29zM30,19H31V20H30zM34,19H35V20H34zM35,19H36V20H35zM37,19H38V20H37zM7,20H8V21H7zM8,20H9V21H8zM12,20H13V21H12zM13,20H14V21H13zM15,20H16V21H15zM17,20H18V21H17zM19,20H20V21H19zM22,20H23V21H22zM24,20H25V21H24zM25,20H26V21H25zM26,20H27V21H26zM29,20H30V21H29zM31,20H32V21H31zM32,20H33V21H32zM36,20H37V21H36zM2,21H3V22H2zM5,21H6V22H5zM7,21H8V22H7zM9,21H10V22H9zM10,21H11V22H10zM12,21H13V22H12zM13,21H14V22H13zM15,21H16V22H15zM16,21H17V22H16zM17,21H18V22H17zM19,21H20V22H19zM21,21H22V22H21zM23,21H24V22H23zM28,21H29V22H28zM34,21H35V22H34zM35,21H36V22H35zM36,21H37V22H36zM37,21H38V22H37zM4,22H5V23H4zM5,22H6V23H5zM6,22H7V23H6zM8,22H9V23H8zM9,22H10V23H9zM14,22H15V23H14zM15,22H16V23H15zM17,22H18V23H17zM19,22H20V23H19zM21,22H22V23H21zM22,22H23V23H22zM23,22H24V23H23zM26,22H27V23H26zM29,22H30V23H29zM30,22H31V23H30zM31,22H32V23H31zM32,22H33V23H32zM33,22H34V23H33zM36,22H37V23H36zM2,23H3V24H2zM3,23H4V24H3zM6,23H7V24H6zM10,23H11V24H10zM11,23H12V24H11zM12,23H13V24H12zM14,23H15V24H14zM15,23H16V24H15zM17,23H18V24H17zM18,23H19V24H18zM22,23H23V24H22zM25,23H26V24H25zM27,23H28V24H27zM28,23H29V24H28zM29,23H30V24H29zM30,23H31V24H30zM33,23H34V24H33zM34,23H35V24H34zM5,24H6V25H5zM7,24H8V25H7zM8,24H9V25H8zM10,24H11V25H10zM13,24H14V25H13zM14,24H15V25H14zM16,24H17V25H16zM17,24H18V25H17zM19,24H20V25H19zM20,24H21V25H20zM23,24H24V25H23zM25,24H26V25H25zM29,24H30V25H29zM31,24H32V25H31zM32,24H33V25H32zM33,24H34V25H33zM34,24H35V25H34zM35,24H36V25H35zM36,24H37V25H36zM7,25H8V26H7zM9,25H10V26H9zM10,25H11V26H10zM11,25H12V26H11zM12,25H13V26H12zM13,25H14V26H13zM15,25H16V26H15zM17,25H18V26H17zM18,25H19V26H18zM19,25H20V26H19zM20,25H21V26H20zM22,25H23V26H22zM23,25H24V26H23zM26,25H27V26H26zM29,25H30V26H29zM30,25H31V26H30zM33,25H34V26H33zM34,25H35V26H34zM36,25H37V26H36zM37,25H38V26H37zM2,26H3V27H2zM3,26H4V27H3zM4,26H5V27H4zM5,26H6V27H5zM7,26H8V27H7zM8,26H9V27H8zM9,26H10V27H9zM10,26H11V27H10zM11,26H12V27H11zM12,26H13V27H12zM15,26H16V27H15zM17,26H18V27H17zM19,26H20V27H19zM20,26H21V27H20zM21,26H22V27H21zM23,26H24V27H23zM24,26H25V27H24zM31,26H32V27H31zM32,26H33V27H32zM33,26H34V27H33zM35,26H36V27H35zM36,26H37V27H36zM2,27H3V28H2zM4,27H5V28H4zM11,27H12V28H11zM15,27H16V28H15zM17,27H18V28H17zM18,27H19V28H18zM20,27H21V28H20zM23,27H24V28H23zM25,27H26V28H25zM27,27H28V28H27zM28,27H29V28H28zM29,27H30V28H29zM30,27H31V28H30zM31,27H32V28H31zM34,27H35V28H34zM35,27H36V28H35zM36,27H37V28H36zM5,28H6V29H5zM7,28H8V29H7zM8,28H9V29H8zM9,28H10V29H9zM14,28H15V29H14zM17,28H18V29H17zM18,28H19V29H18zM19,28H20V29H19zM20,28H21V29H20zM22,28H23V29H22zM23,28H24V29H23zM25,28H26V29H25zM27,28H28V29H27zM28,28H29V29H28zM29,28H30V29H29zM31,28H32V29H31zM36,28H37V29H36zM9,29H10V30H9zM11,29H12V30H11zM15,29H16V30H15zM16,29H17V30H16zM17,29H18V30H17zM19,29H20V30H19zM20,29H21V30H20zM21,29H22V30H21zM22,29H23V30H22zM23,29H24V30H23zM25,29H26V30H25zM26,29H27V30H26zM28,29H29V30H28zM29,29H30V30H29zM30,29H31V30H30zM32,29H33V30H32zM34,29H35V30H34zM36,29H37V30H36zM37,29H38V30H37zM2,30H3V31H2zM3,30H4V31H3zM8,30H9V31H8zM9,30H10V31H9zM10,30H11V31H10zM11,30H12V31H11zM14,30H15V31H14zM15,30H16V31H15zM16,30H17V31H16zM19,30H20V31H19zM23,30H24V31H23zM24,30H25V31H24zM26,30H27V31H26zM29,30H30V31H29zM30,30H31V31H30zM31,30H32V31H31zM32,30H33V31H32zM33,30H34V31H33zM34,30H35V31H34zM36,30H37V31H36zM37,30H38V31H37zM38,30H39V31H38zM10,31H11V32H10zM12,31H13V32H12zM16,31H17V32H16zM17,31H18V32H17zM18,31H19V32H18zM19,31H20V32H19zM20,31H21V32H20zM23,31H24V32H23zM25,31H26V32H25zM28,31H29V32H28zM30,31H31V32H30zM34,31H35V32H34zM2,32H3V33H2zM3,32H4V33H3zM4,32H5V33H4zM5,32H6V33H5zM6,32H7V33H6zM7,32H8V33H7zM8,32H9V33H8zM10,32H11V33H10zM11,32H12V33H11zM13,32H14V33H13zM17,32H18V33H17zM18,32H19V33H18zM20,32H21V33H20zM22,32H23V33H22zM23,32H24V33H23zM25,32H26V33H25zM26,32H27V33H26zM27,32H28V33H27zM28,32H29V33H28zM30,32H31V33H30zM32,32H33V33H32zM34,32H35V33H34zM2,33H3V34H2zM8,33H9V34H8zM11,33H12V34H11zM12,33H13V34H12zM13,33H14V34H13zM14,33H15V34H14zM19,33H20V34H19zM21,33H22V34H21zM22,33H23V34H22zM23,33H24V34H23zM24,33H25V34H24zM28,33H29V34H28zM30,33H31V34H30zM34,33H35V34H34zM35,33H36V34H35zM36,33H37V34H36zM38,33H39V34H38zM2,34H3V35H2zM4,34H5V35H4zM5,34H6V35H5zM6,34H7V35H6zM8,34H9V35H8zM10,34H11V35H10zM12,34H13V35H12zM13,34H14V35H13zM14,34H15V35H14zM16,34H17V35H16zM17,34H18V35H17zM18,34H19V35H18zM19,34H20V35H19zM23,34H24V35H23zM24,34H25V35H24zM30,34H31V35H30zM31,34H32V35H31zM32,34H33V35H32zM33,34H34V35H33zM34,34H35V35H34zM35,34H36V35H35zM36,34H37V35H36zM37,34H38V35H37zM2,35H3V36H2zM4,35H5V36H4zM5,35H6V36H5zM6,35H7V36H6zM8,35H9V36H8zM12,35H13V36H12zM14,35H15V36H14zM17,35H18V36H17zM18,35H19V36H18zM20,35H21V36H20zM21,35H22V36H21zM24,35H25V36H24zM25,35H26V36H25zM27,35H28V36H27zM31,35H32V36H31zM32,35H33V36H32zM33,35H34V36H33zM35,35H36V36H35zM37,35H38V36H37zM38,35H39V36H38zM2,36H3V37H2zM4,36H5V37H4zM5,36H6V37H5zM6,36H7V37H6zM8,36H9V37H8zM12,36H13V37H12zM17,36H18V37H17zM18,36H19V37H18zM23,36H24V37H23zM25,36H26V37H25zM27,36H28V37H27zM28,36H29V37H28zM31,36H32V37H31zM32,36H33V37H32zM36,36H37V37H36zM2,37H3V38H2zM8,37H9V38H8zM11,37H12V38H11zM12,37H13V38H12zM13,37H14V38H13zM14,37H15V38H14zM15,37H16V38H15zM16,37H17V38H16zM17,37H18V38H17zM18,37H19V38H18zM19,37H20V38H19zM22,37H23V38H22zM23,37H24V38H23zM24,37H25V38H24zM28,37H29V38H28zM29,37H30V38H29zM34,37H35V38H34zM36,37H37V38H36zM37,37H38V38H37zM2,38H3V39H2zM3,38H4V39H3zM4,38H5V39H4zM5,38H6V39H5zM6,38H7V39H6zM7,38H8V39H7zM8,38H9V39H8zM10,38H11V39H10zM11,38H12V39H11zM12,38H13V39H12zM13,38H14V39H13zM17,38H18V39H17zM19,38H20V39H19zM20,38H21V39H20zM21,38H22V39H21zM22,38H23V39H22zM23,38H24V39H23zM24,38H25V39H24zM29,38H30V39H29zM32,38H33V39H32zM33,38H34V39H33zM35,38H36V39H35zM36,38H37V39H36zM37,38H38V39H37zM38,38H39V39H38z" id="qr-path" fill="#000000" fill-opacity="1" fill-rule="nonzero" stroke="none"/></svg><a href="reports/result_sample.html" target="_blank">결과 페이지 견본 열기 ↗</a></div>
+      </div>
+      <p style="margin-top:14px;font-size:14px">"편안함이 안주가 되는 데 얼마나 걸렸나요?"</p>
+      <p style="margin-top:16px"><button id="again" class="big">다시 체험하기</button> <button id="replay">타임랩스 다시 보기</button></p>
+    </div></div>
+  </div>
+  <aside>
+    <div class="cctv"><canvas id="cc"></canvas><div class="scan"></div>
+      <div class="ccl cct"><span>CAM 01 · 천장</span><span id="rec">LIVE</span></div>
+      <div class="ccl ccb"><span id="ccTime">2026-11-19 00:00:00</span><span id="ccMode"></span></div>
+    </div>
+    <div class="row">
+      <div class="panel"><h3>머문 시간</h3><div class="big" id="stay">0:00</div></div>
+      <div class="panel"><h3>볼륨 <span id="volTxt">—</span></h3><div class="meter" style="margin-top:12px"><i id="vol"></i></div></div>
+    </div>
+    <div class="panel"><h3>CCTV 기록 <span>만진 물건 · 시간</span></h3><ol id="log"></ol></div>
+    <div class="panel" style="font-size:12.5px;color:var(--mute)">CCTV는 위에서 본 움직임만 기록하고(얼굴 X), 빨간 선이 관객 동선이에요. 감지 방식(센서 / CCTV만)은 아직 검토 중이라 이 체험에서는 클릭으로 대신해요.</div>
+  </aside>
+</main>
+<script type="importmap">{"imports":{"three":"./assets/vendor/three.module.min.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+const $=id=>document.getElementById(id);
+const fpC=$('fp'), ccC=$('cc');
+const R=new THREE.WebGLRenderer({canvas:fpC,antialias:true,preserveDrawingBuffer:true});
+R.setPixelRatio(Math.min(devicePixelRatio,2)); R.toneMapping=THREE.ACESFilmicToneMapping; R.toneMappingExposure=1.15;
+const RC=new THREE.WebGLRenderer({canvas:ccC,antialias:true,preserveDrawingBuffer:true});
+RC.setPixelRatio(1); RC.toneMapping=THREE.ACESFilmicToneMapping; RC.toneMappingExposure=1.25;
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x0b0a09);
+const cam=new THREE.PerspectiveCamera(68,1,0.03,40); cam.rotation.order='YXZ'; cam.layers.enable(1);
+const ccam=new THREE.PerspectiveCamera(54,4/3,0.1,20); ccam.layers.set(0); ccam.layers.enable(2);
+ccam.position.set(1.5,2.38,1.91); ccam.up.set(0,0,-1); ccam.lookAt(1.5,0,1.92);
+
+// ---------- helpers (단위 m · x: 왼→오 · z: 지하철(0)→집(3)) ----------
+const M=(c,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:.85,metalness:0,...o});
+function box(w,h,d,mat,x,y0,z,parent=scene){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y0+h/2,z);parent.add(m);return m;}
+function cyl(r1,r2,h,mat,x,y0,z,seg=20){const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,seg),mat);m.position.set(x,y0+h/2,z);scene.add(m);return m;}
+function canvasTex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');draw(g,w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return {c,g,t};}
+const layer=(o,n)=>{o.layers.set(n);o.traverse?.(k=>k.layers.set(n));return o;};
+const actionables=[];
+function act(obj,name,matList){obj.traverse(k=>{k.userData.action=name;});actionables.push({obj,name,mats:matList||collectMats(obj)});return obj;}
+function collectMats(o){const s=new Set();o.traverse(k=>{if(k.material)s.add(k.material);});return [...s];}
+
+// ---------- 바닥 · 벽 ----------
+const H=2.4, cream=M(0xe9dcc4), subWall=M(0x9aa1a8), subFloor=M(0x4d5258), wood=M(0x7a4a2c,{roughness:.7});
+box(3,.02,.72,subFloor,1.5,-.02,.36); box(3,.02,2.18,wood,1.5,-.02,1.91);
+box(.05,H,.77,subWall,-.025,0,.385); box(.05,H,.77,subWall,3.025,0,.385);
+box(.05,H,2.23,cream,-.025,0,1.885); box(.05,H,2.23,cream,3.025,0,1.885);
+box(3.1,H,.05,subWall,1.5,0,-.025);
+// 아래쪽 벽 (출구 X10~90)
+box(.15,H,.05,cream,.025,0,3.025); box(2.15,H,.05,cream,1.975,0,3.025); box(.8,.4,.05,cream,.5,2.0,3.025);
+// 가벽: 판 185 + 문 80(X190~270) + 판 25 (지하철 쪽 회색, 집 쪽 크림)
+const pmat=[cream,cream,cream,cream,cream,subWall];
+const pw=(w,h,x,y0)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,.1),pmat);m.position.set(x,y0+h/2,.77);scene.add(m);};
+pw(1.9,H,.95,0); pw(.3,H,2.85,0); pw(.8,.4,2.3,2.0);
+// 천장 (1인칭에서만 보임 — CCTV 시야를 가리지 않게)
+layer(box(3,.02,.72,M(0xb9bec4),1.5,2.15,.36),1);
+layer(box(3,.02,2.18,M(0xf1e7d6),1.5,2.4,1.91),1);
+
+// ---------- 지하철 칸 ----------
+const led=box(2.6,.03,.08,M(0xffffff,{emissive:0xdfe9ff,emissiveIntensity:2}),1.5,2.11,.36);
+const steel=M(0xc9cdd2,{metalness:.8,roughness:.3});
+const rails=[.23,.6].map(z=>{const r=new THREE.Mesh(new THREE.CylinderGeometry(.013,.013,2.8,12),steel);r.rotation.z=Math.PI/2;r.position.set(1.5,1.95,z);scene.add(r);return r;});
+const handleMat=M(0xe8e8e8,{emissive:0xffd27a,emissiveIntensity:0});
+const strapMat=M(0x3a3f45);
+const handles=new THREE.Group();scene.add(handles);
+for(const z of [.23,.6])for(let i=0;i<7;i++){const x=.35+i*.385;
+  const g=new THREE.Group();g.position.set(x,0,z);
+  const s=new THREE.Mesh(new THREE.BoxGeometry(.022,.15,.01),strapMat);s.position.y=1.875;g.add(s);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.045,.009,10,24),handleMat);ring.position.y=1.76;g.add(ring);
+  handles.add(g);}
+act(handles,'handle',[handleMat]);
+// 광고 · 노선도 (안쪽 벽 z=0)
+function adTex(i){return canvasTex(256,170,(g,w,h)=>{
+  const cols=['#c8643c','#7fc8a0','#e3c45a','#f1ece4','#6fb0d8'];g.fillStyle=cols[i];g.fillRect(0,0,w,h);
+  g.fillStyle='#111';g.font='bold 30px Noto Sans KR, sans-serif';
+  if(i===3){g.fillStyle='#fff';g.fillRect(0,0,w,h);g.strokeStyle='#2f7d32';g.lineWidth=7;g.beginPath();g.moveTo(18,95);g.lineTo(238,95);g.stroke();
+    const st=['회사','환승','…','집'];st.forEach((n,k)=>{const x=24+k*68;g.fillStyle=k===3?'#d3423b':'#fff';g.strokeStyle='#2f7d32';g.lineWidth=4;g.beginPath();g.arc(x,95,11,0,7);g.fill();g.stroke();g.fillStyle='#222';g.font='bold 20px sans-serif';g.fillText(n,x-14,135);});
+    g.font='bold 22px sans-serif';g.fillStyle='#222';g.fillText('노선도',18,36);}
+  else{g.fillText(['더 빨리','쉬어도 돼요','오늘도 출근','',' 대출 상담'][i],18,70);g.font='18px sans-serif';g.fillText('광고',18,130);}
+}).t;}
+for(let i=0;i<5;i++){const p=new THREE.Mesh(new THREE.PlaneGeometry(.46,.3),new THREE.MeshStandardMaterial({map:adTex(i),roughness:.6}));p.position.set(.32+i*.59,1.72,.006);scene.add(p);}
+// 사람 실루엣 판
+const sil=new THREE.Shape();sil.moveTo(-.2,0);sil.lineTo(-.22,1.05);sil.quadraticCurveTo(-.22,1.38,-.08,1.4);sil.lineTo(-.07,1.47);
+sil.absarc(0,1.58,.11,-Math.PI*.6,Math.PI*1.6,false);sil.lineTo(.08,1.4);sil.quadraticCurveTo(.22,1.38,.22,1.05);sil.lineTo(.2,0);sil.lineTo(-.2,0);
+const silMat=new THREE.MeshStandardMaterial({color:0x15171a,side:THREE.DoubleSide,roughness:1});
+[[.55,.1],[1.45,.12],[2.5,.1]].forEach(([x,z],k)=>{const m=new THREE.Mesh(new THREE.ShapeGeometry(sil),silMat);m.position.set(x,0,z);m.scale.setScalar(1+(k%2)*.06);scene.add(m);});
+
+// ---------- 집 ----------
+// 문 (X190~270, 경첩 오른쪽, 집 쪽으로 열림)
+const door=new THREE.Group();door.position.set(2.7,0,.82);scene.add(door);
+const doorMat=M(0xb07a4a,{emissive:0xffb060,emissiveIntensity:0});
+box(.8,2.0,.04,doorMat,-.4,0,.02,door);box(.03,.03,.06,M(0x333333,{metalness:.7}),-.72,1.0,.02,door);
+act(door,'door',[doorMat]);
+// 출구 문 (아래쪽 벽 X10~90, 바깥으로 열림, 잠기지 않음)
+const exitD=new THREE.Group();exitD.position.set(.9,0,3.0);scene.add(exitD);
+const exitMat=M(0xd8cdb8,{emissive:0xffb060,emissiveIntensity:0});
+box(.8,2.0,.04,exitMat,-.4,0,0,exitD);box(.03,.03,.06,M(0x333333,{metalness:.7}),-.72,1.0,-.03,exitD);
+act(exitD,'exit',[exitMat]);
+const exitSign=new THREE.Mesh(new THREE.PlaneGeometry(.3,.1),new THREE.MeshBasicMaterial({map:canvasTex(240,80,(g,w,h)=>{g.fillStyle='#1d7a45';g.fillRect(0,0,w,h);g.fillStyle='#fff';g.font='bold 44px sans-serif';g.fillText('출구',72,57);}).t}));
+exitSign.position.set(.5,2.15,2.995);exitSign.rotation.y=Math.PI;scene.add(exitSign);
+// QR 화면 (출구 옆)
+const qrScr=canvasTex(256,192,(g,w,h)=>{g.fillStyle='#111';g.fillRect(0,0,w,h);g.fillStyle='#666';g.font='20px sans-serif';g.fillText('QR 화면 대기',70,100);});
+const qrMesh=new THREE.Mesh(new THREE.PlaneGeometry(.32,.24),new THREE.MeshBasicMaterial({map:qrScr.t,toneMapped:false}));
+qrMesh.position.set(1.2,1.3,2.995);qrMesh.rotation.y=Math.PI;scene.add(qrMesh);box(.36,.28,.02,M(0x222222),1.2,1.16,3.0);
+// 스탠드 2 · 화분 · 선반
+const shadeMat=M(0xfff0d8,{emissive:0xffc48a,emissiveIntensity:0,roughness:1});
+function lamp(x,z){cyl(.12,.12,.03,M(0x2b2b2b),x,0,z);cyl(.012,.012,1.3,M(0x2b2b2b),x,.03,z);const s=cyl(.11,.17,.26,shadeMat,x,1.3,z);return s;}
+lamp(.48,.94);lamp(2.82,2.86);
+box(.26,.3,.24,M(0x9a6b4a),.86,0,.94);const leaf=new THREE.Mesh(new THREE.IcosahedronGeometry(.2,1),M(0x6aa84f));leaf.position.set(.86,.52,.94);scene.add(leaf);
+box(.56,.8,.28,M(0xc0884f),1.31,0,.97);box(.12,.14,.1,M(0x3a3a3a),1.5,.8,.95);box(.18,.22,.04,M(0x5b7fa6),1.15,.8,.97);
+// TV장 + 브라운관 (오른쪽을 바라봄)
+box(.45,.5,.6,M(0xd9c9ad),.485,0,1.86);
+box(.42,.38,.46,M(0xcfc6b6),.47,.5,1.86);box(.03,.32,.4,M(0x2a2a2a),.69,.53,1.86);
+const tv=canvasTex(256,192,(g,w,h)=>{g.fillStyle='#000';g.fillRect(0,0,w,h);});
+const screen=new THREE.Mesh(new THREE.PlaneGeometry(.35,.26),new THREE.MeshBasicMaterial({map:tv.t,toneMapped:false}));
+screen.position.set(.707,.69,1.86);screen.rotation.y=Math.PI/2;scene.add(screen);
+[[-1],[1]].forEach(([s])=>{const a=new THREE.Mesh(new THREE.CylinderGeometry(.005,.005,.4,6),steel);a.position.set(.45,1.05,1.86+s*.08);a.rotation.x=s*.45;scene.add(a);});
+// 러그
+box(1.02,.012,1.07,M(0xe7dcc6),1.4,0,1.96);
+// 작은 소파 (폭 101 · 깊이 67, TV를 바라봄)
+const sofaMat=M(0xc4622d,{emissive:0xffa060,emissiveIntensity:0});
+const sofa=new THREE.Group();scene.add(sofa);
+box(.55,.42,.79,sofaMat,2.275,0,2.145,sofa);box(.16,.85,1.01,sofaMat,2.59,0,2.145,sofa);
+box(.55,.6,.13,sofaMat,2.275,0,1.705,sofa);box(.55,.6,.13,sofaMat,2.275,0,2.585,sofa);
+act(sofa,'sofa',[sofaMat]);
+const blanketMat=M(0x2f8f7c,{emissive:0x8affe0,emissiveIntensity:0});
+const blanket=box(.33,.06,.33,blanketMat,2.25,.42,2.36);act(blanket,'blanket',[blanketMat]);
+const remoteMat=M(0x1b1b1b,{emissive:0xffe08a,emissiveIntensity:0,roughness:.5});
+const remote=box(.05,.025,.16,remoteMat,2.28,.6,1.70);act(remote,'remote',[remoteMat]);
+// 천장 CCTV 카메라 (1인칭에서만 보임)
+const camBox=layer(box(.1,.06,.1,M(0x1a1a1a),1.5,2.33,1.91),1);
+const recLed=layer(new THREE.Mesh(new THREE.SphereGeometry(.012,8,8),new THREE.MeshBasicMaterial({color:0x330000})),1);recLed.position.set(1.54,2.32,1.95);scene.add(recLed);
+
+// ---------- 조명 ----------
+scene.add(new THREE.HemisphereLight(0xffffff,0x202020,.35));
+const subL=[.8,2.2].map(x=>{const l=new THREE.PointLight(0xdfe9ff,2.2,4,1);l.position.set(x,2.0,.36);scene.add(l);return l;});
+const homeL=[[.48,1.35,.94],[2.82,1.35,2.86],[1.5,2.1,2.0]].map(([x,y,z],i)=>{const l=new THREE.PointLight(0xffc28a,0,6,1);l.position.set(x,y,z);l.userData.max=i<2?2.6:1.1;scene.add(l);return l;});
+const tvL=new THREE.PointLight(0xff9a50,0,2.6,1);tvL.position.set(.95,.75,1.86);scene.add(tvL);
+
+// ---------- CCTV 전용: 관객 표시 · 동선 ----------
+const avatar=new THREE.Group();
+const avMat=new THREE.MeshBasicMaterial({color:0x48c6ff});
+const avBody=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,1.1,20),avMat);avBody.position.y=.55;avatar.add(avBody);
+const avHead=new THREE.Mesh(new THREE.SphereGeometry(.085,16,12),avMat);avHead.position.y=1.2;avatar.add(avHead);
+layer(avatar,2);scene.add(avatar);avatar.visible=false;
+const MAXP=6000,trailPos=new Float32Array(MAXP*3),trailGeo=new THREE.BufferGeometry();
+trailGeo.setAttribute('position',new THREE.BufferAttribute(trailPos,3));trailGeo.setDrawRange(0,0);
+const trail=layer(new THREE.Line(trailGeo,new THREE.LineBasicMaterial({color:0xff3b3b})),2);scene.add(trail);
+const trailPts=layer(new THREE.Points(trailGeo,new THREE.PointsMaterial({color:0xff2a2a,size:5,sizeAttenuation:false})),2);scene.add(trailPts);trail.frustumCulled=false;trailPts.frustumCulled=false;
+
+// ---------- 상태 ----------
+const S={state:'intro',t:0,speed:1,rec:false,enterT:0,exitT:0,seated:false,channel:0,tvOn:false,blanket:false,
+  samples:[],touched:[],remoteN:0,sway:0,stopping:0,houseVol:0,lightK:0,lapse:null,muted:false};
+const LOOK={tv:new THREE.Vector3(.707,.69,1.86)};
+let yaw=0,pitch=0;
+function setLook(v,p=cam.position){const d=v.clone().sub(p).normalize();yaw=Math.atan2(-d.x,-d.z);pitch=Math.asin(THREE.MathUtils.clamp(d.y,-1,1));}
+cam.position.set(.55,1.6,.42);setLook(new THREE.Vector3(3,1.55,.42));
+
+// ---------- 트윈 ----------
+const tweens=[];
+function tween(dur,fn,done){return new Promise(res=>tweens.push({t:0,dur,fn,done:()=>{done&&done();res();}}));}
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+function angLerp(a,b,t){let d=((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;return a+d*t;}
+async function moveTo(p,look,dur=1.2){const p0=cam.position.clone(),y0=yaw,x0=pitch;const P=new THREE.Vector3(...p);
+  const d=new THREE.Vector3(...look).sub(P).normalize();const y1=Math.atan2(-d.x,-d.z),x1=Math.asin(d.y);
+  await tween(dur,t=>{const e=ease(t);cam.position.lerpVectors(p0,P,e);yaw=angLerp(y0,y1,e);pitch=x0+(x1-x0)*e;});}
+
+// ---------- 소리 (임시 · WebAudio 합성) ----------
+let AC,master,subG,houseBus,comfortG,fireG,annG;
+function noise(type='white',sec=3){const n=AC.sampleRate*sec,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);let last=0,b0=0,b1=0,b2=0;
+  for(let i=0;i<n;i++){const w=Math.random()*2-1;if(type==='brown'){last=(last+.02*w)/1.02;d[i]=last*3.5;}else if(type==='pink'){b0=.99765*b0+w*.099;b1=.963*b1+w*.2965;b2=.57*b2+w*1.0526;d[i]=(b0+b1+b2+w*.1848)*.18;}else d[i]=w;}return b;}
+function loop(buf,dest,filter,freq){const s=AC.createBufferSource();s.buffer=buf;s.loop=true;let n=s;if(filter){const f=AC.createBiquadFilter();f.type=filter;f.frequency.value=freq;s.connect(f);n=f;}n.connect(dest);s.start();return s;}
+function gain(v,dest){const g=AC.createGain();g.gain.value=v;g.connect(dest);return g;}
+function initAudio(){AC=new (window.AudioContext||window.webkitAudioContext)();master=gain(1,AC.destination);
+  subG=gain(.55,master);loop(noise('brown'),subG,'lowpass',380);const o=AC.createOscillator();o.frequency.value=46;const og=gain(.12,subG);o.connect(og);o.start();
+  const lfo=AC.createOscillator();lfo.frequency.value=.7;const lg=gain(.05,og.gain);lfo.connect(lg);lfo.start();
+  houseBus=gain(0,master);comfortG=gain(.22,houseBus);loop(noise('pink'),comfortG,'lowpass',900);
+  const hum=AC.createOscillator();hum.frequency.value=15700;const hg=gain(.004,comfortG);hum.connect(hg);hum.start();
+  fireG=gain(0,houseBus);loop(noise('brown'),gain(.5,fireG),'lowpass',260);
+  setInterval(()=>{if(!AC||fireG.gain.value<.01)return;const n=1+Math.floor(Math.random()*3);for(let k=0;k<n;k++){const s=AC.createBufferSource();s.buffer=crackBuf;const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=1500+Math.random()*2500;const g=AC.createGain();const t=AC.currentTime+Math.random()*.25;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.5+Math.random()*.6,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.05+Math.random()*.06);s.connect(f);f.connect(g);g.connect(fireG);s.start(t);s.stop(t+.15);}},180);
+  annG=gain(.5,master);}
+let crackBuf;
+function tone(f,t,d,v=.25,type='sine',dest=annG){const o=AC.createOscillator();o.type=type;o.frequency.value=f;const g=AC.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(dest);o.start(t);o.stop(t+d+.05);}
+function chime(){const t=AC.currentTime;tone(659,t,.9);tone(523,t+.55,1.2);}
+function arrivalMusic(){const t=AC.currentTime+.1;[523,659,784,1047,784,880,1047].forEach((f,i)=>tone(f,t+i*.26,.5,.16,'triangle'));}
+function remoteBlip(){const t=AC.currentTime;tone(1800,t,.04,.2,'square',houseBus);const s=AC.createBufferSource();s.buffer=crackBuf;const f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=900;const g=AC.createGain();g.gain.setValueAtTime(.25,t+.05);g.gain.exponentialRampToValueAtTime(.0001,t+.45);s.connect(f);f.connect(g);g.connect(houseBus);s.start(t+.05);s.stop(t+.5);}
+function speak(txt){try{const u=new SpeechSynthesisUtterance(txt);u.lang='ko-KR';u.rate=.95;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+const ramp=(g,v,s=.4)=>g&&g.gain.setTargetAtTime(v,AC.currentTime,s);
+
+// ---------- TV ----------
+const TVCH=['영상 1','영상 2','영상 3'];let osdUntil=0;
+function drawTV(time){const g=tv.g,w=256,h=192;
+  if(!S.tvOn){g.fillStyle='#050505';g.fillRect(0,0,w,h);tv.t.needsUpdate=true;return;}
+  const ch=S.channel%3;
+  if(ch===0){g.fillStyle='#120804';g.fillRect(0,0,w,h);for(let i=0;i<7;i++){const x=128+Math.sin(time*1.7+i*1.3)*22+(i-3)*12,y=150-Math.abs(Math.sin(time*3.1+i))*30;
+      const r=40+Math.sin(time*5+i*2)*10;const gr=g.createRadialGradient(x,y,2,x,y,r);gr.addColorStop(0,'rgba(255,220,140,.9)');gr.addColorStop(.4,'rgba(240,120,40,.55)');gr.addColorStop(1,'rgba(80,20,0,0)');g.fillStyle=gr;g.fillRect(0,0,w,h);}}
+  else if(ch===1){const im=g.createImageData(64,48);for(let i=0;i<im.data.length;i+=4){const v=Math.random()*200;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255;}
+      const c=document.createElement('canvas');c.width=64;c.height=48;c.getContext('2d').putImageData(im,0,0);g.imageSmoothingEnabled=false;g.drawImage(c,0,0,w,h);}
+  else{['#c0c0c0','#c0c000','#00c0c0','#00c000','#c000c0','#c00000','#0000c0'].forEach((c,i)=>{g.fillStyle=c;g.fillRect(i*w/7,0,w/7+1,h*.72);});g.fillStyle='#111';g.fillRect(0,h*.72,w,h);}
+  g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,h-26,w,26);g.fillStyle='#ddd';g.font='15px sans-serif';g.fillText(`${TVCH[ch]} · 임시 화면 (영상 미정)`,8,h-8);
+  if(time<osdUntil){g.fillStyle='#4dff6a';g.font='bold 30px monospace';g.fillText(`CH ${ch+1}`,w-100,36);}
+  for(let y=0;y<h;y+=3){g.fillStyle='rgba(0,0,0,.18)';g.fillRect(0,y,w,1);}
+  tv.t.needsUpdate=true;}
+
+// ---------- 기록 ----------
+const fmt=s=>{s=Math.max(0,Math.floor(s));return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;};
+const fmt2=s=>{s=Math.max(0,Math.floor(s));return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;};
+function log(txt){const li=document.createElement('li');li.className='new';li.innerHTML=`<span>${fmt2(S.t)}</span><div>${txt}</div>`;$('log').prepend(li);}
+function touch(name){S.touched.push({name,t:S.t-S.enterT});}
+const hint=t=>$('hint').textContent=t;
+function announce(b,s){$('annB').textContent=b;$('annS').textContent=s;$('announce').classList.add('show');}
+const unannounce=()=>$('announce').classList.remove('show');
+const T0=new Date();
+
+// ---------- 행동 ----------
+const enabled=()=>({intro:[],subway:['handle'],arriving:[],stopped:['door'],entering:[],house:['sofa','blanket','remote','exit'],seated:['blanket','remote','exit','sofa'],busy:[],leaving:[],end:[]})[S.state]||[];
+async function onAction(a){
+  if(!enabled().includes(a))return;
+  if(a==='handle'){S.state='arriving';hint('안내방송 중…');log('손잡이를 잡음');
+    chime();setTimeout(()=>{announce('이번 역은 집, 집입니다','♪ 곧 도착하겠습니다');speak('이번 역은 집, 집입니다. 곧 도착하겠습니다.');},900);
+    setTimeout(arrivalMusic,3200);
+    setTimeout(()=>{S.stopping=1;log('열차 정차');},5600);
+    setTimeout(async()=>{unannounce();const p=cam.position;await moveTo([p.x,p.y,p.z],[2.3,1.1,.77],1.2);S.state='stopped';hint('열차가 멈췄어요. 반짝이는 집 문을 클릭하세요');},7400);}
+  if(a==='door'){S.state='entering';hint('');
+    tween(1.2,t=>door.rotation.y=ease(t)*1.5);
+    S.rec=true;S.enterT=S.t;$('rec').className='on';$('rec').textContent='REC';avatar.visible=true;recLed.material.color.set(0xff2020);
+    log('문 열림 · 불 켜짐 · TV·영상 재생 · <b>녹화 시작</b>');
+    tween(1.6,t=>S.lightK=t);S.tvOn=true;ramp(houseBus,.3,.6);
+    await moveTo([2.3,1.6,.5],[2.3,1.5,1.5],.8);await moveTo([2.25,1.6,1.25],[1.5,1.2,2.0],1.1);await moveTo([1.75,1.6,1.65],[.707,.8,1.86],1.0);
+    await tween(1.4,t=>door.rotation.y=1.5*(1-ease(t)));ramp(subG,0,.15);log('문 닫힘 · 지하철 소리 끊김');
+    S.state='house';hint('소파·담요·리모컨을 눌러 보세요 · 나가고 싶으면 출구');}
+  if(a==='sofa'){if(S.seated)return;await sit();}
+  if(a==='blanket'){if(S.blanket)return;if(!S.seated)await sit();S.blanket=true;touch('담요');log('담요를 덮음 · <b>모닥불 소리</b>');ramp(fireG,.9,.8);
+    const p0=blanket.position.clone();tween(.9,t=>{const e=ease(t);blanket.position.lerpVectors(p0,new THREE.Vector3(2.08,.5,2.13),e);blanket.scale.set(1+e*.9,1-e*.4,1+e*1.4);});}
+  if(a==='remote'){if(!S.seated)await sit();S.remoteN++;S.channel++;osdUntil=performance.now()/1000+1.6;touch('리모컨');remoteBlip();log(`리모컨 · 채널 ${S.channel%3+1}로 바뀜`);
+    const y0=remote.position.y;tween(.35,t=>remote.position.y=y0+Math.sin(t*Math.PI)*.04);}
+  if(a==='exit'){S.state='busy';if(S.seated)await standUp();S.state='leaving';hint('');
+    await moveTo([.55,1.6,2.5],[.5,1.5,3.2],1.0);tween(1.0,t=>exitD.rotation.y=ease(t)*1.4);drawQR();
+    S.exitT=S.t;log('출구 문 열림 · <b>QR 표시</b> · 녹화 종료');ramp(houseBus,0,.5);ramp(fireG,0,.5);
+    await moveTo([.5,1.6,3.6],[.5,1.5,4.5],1.4);S.rec=false;$('rec').className='';$('rec').textContent='종료';showEnd();}
+}
+async function sit(){S.state='busy';$('stand').classList.add('hidden');
+  await moveTo([1.95,1.6,2.12],[.707,.8,1.86],.8);await moveTo([2.32,1.08,2.12],[.707,.69,1.86],.8);
+  S.seated=true;if(!S.touched.some(x=>x.name==='소파')){touch('소파');}log('소파에 앉음');S.state='seated';$('stand').classList.remove('hidden');hint('담요·리모컨을 눌러 보세요 · 일어나기 / 출구');}
+async function standUp(){S.state='busy';$('stand').classList.add('hidden');await moveTo([1.95,1.6,2.12],[.707,.9,1.86],.8);S.seated=false;log('일어남');S.state='house';hint('소파·담요·리모컨 · 나가고 싶으면 출구');}
+$('stand').onclick=()=>{if(S.state==='seated')standUp();};
+
+// ---------- QR · 결과 ----------
+const qrSvg=document.querySelector('.qr svg');
+function drawQR(){const img=new Image();const svg=new XMLSerializer().serializeToString(qrSvg);
+  img.onload=()=>{const g=qrScr.g;g.fillStyle='#fff';g.fillRect(0,0,256,192);g.drawImage(img,72,14,112,112);g.fillStyle='#111';g.font='bold 17px sans-serif';g.fillText('당신이 머문 집',66,150);g.font='13px sans-serif';g.fillText('휴대폰으로 찍어 보세요',62,174);qrScr.t.needsUpdate=true;};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);}
+function showEnd(){S.state='end';hint('');const stay=S.exitT-S.enterT;
+  const items=S.touched.map(x=>`${x.name} ${fmt(x.t)}`);
+  const uniq=[...new Set(S.touched.map(x=>x.name))];
+  $('resT').innerHTML=`<tr><td>머문 시간</td><td><b>${fmt(stay)}</b> <span class="tag">예시 평균 4:10</span></td></tr>
+  <tr><td>만진 물건</td><td>${uniq.length?uniq.join(' · '):'없음'}${S.remoteN?` <span class="tag">리모컨 ${S.remoteN}번</span>`:''}</td></tr>
+  <tr><td>시간순</td><td style="font-size:13px">${items.length?items.join(' → '):'—'}</td></tr>
+  <tr><td>마지막 볼륨</td><td>${Math.round(S.houseVol*100)}%</td></tr>`;
+  $('end').classList.remove('hidden');startLapse();}
+function startLapse(){if(!S.samples.length)return;S.lapse={t:0,dur:12};$('ccMode').textContent='타임랩스 ×'+Math.max(1,Math.round((S.exitT-S.enterT)/12));}
+$('again').onclick=()=>location.reload();$('replay').onclick=()=>startLapse();
+
+// ---------- 입력: 드래그로 둘러보기 · 클릭으로 행동 ----------
+const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();let down=null,hover=null;
+function pick(e){const r=fpC.getBoundingClientRect();ndc.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(ndc,cam);ray.layers.set(0);
+  const hits=ray.intersectObjects(actionables.map(a=>a.obj),true);for(const h of hits){const a=h.object.userData.action;if(a)return enabled().includes(a)?a:null;}return null;}
+fpC.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY,yaw,pitch,moved:false};fpC.setPointerCapture(e.pointerId);});
+fpC.addEventListener('pointermove',e=>{if(down){const dx=e.clientX-down.x,dy=e.clientY-down.y;if(Math.abs(dx)+Math.abs(dy)>5){down.moved=true;fpC.classList.add('drag');}
+    if(down.moved&&!['entering','busy','leaving'].includes(S.state)){yaw=down.yaw+dx*.004;pitch=THREE.MathUtils.clamp(down.pitch+dy*.004,-1.2,1.2);}}
+  else{hover=pick(e);fpC.classList.toggle('hot',!!hover);}});
+fpC.addEventListener('pointerup',e=>{fpC.classList.remove('drag');if(down&&!down.moved){const a=pick(e);if(a)onAction(a);}down=null;});
+
+$('go').onclick=()=>{initAudio();crackBuf=noise('white',.5);$('start').classList.add('hidden');S.state='subway';hint('손잡이를 클릭해서 잡아 보세요 · 드래그로 둘러보기');log('지하철 칸 입장');};
+$('ff').onclick=()=>{S.speed=S.speed===1?6:1;$('ff').textContent=`⏩ 시간 ×${S.speed}`;$('ff').classList.toggle('on',S.speed>1);};
+$('mute').onclick=()=>{S.muted=!S.muted;if(master)master.gain.value=S.muted?0:1;$('mute').textContent=S.muted?'🔇 소리 꺼짐':'🔊 소리 켜짐';};
+window.__S=S;window.__act=onAction;
+
+// ---------- 크기 ----------
+function resize(){const r=fpC.parentElement.getBoundingClientRect();R.setSize(r.width,r.height,false);cam.aspect=r.width/r.height;cam.updateProjectionMatrix();
+  const c=ccC.parentElement.getBoundingClientRect();RC.setSize(Math.round(c.width),Math.round(c.width*3/4),false);}
+addEventListener('resize',resize);resize();
+
+// ---------- 루프 ----------
+const clock=new THREE.Clock();let sampleAcc=0;
+function frame(){const dt=Math.min(clock.getDelta(),.25),now=performance.now()/1000;
+  for(let i=tweens.length-1;i>=0;i--){const w=tweens[i];w.t+=dt;const k=Math.min(w.t/w.dur,1);w.fn(k);if(k>=1){tweens.splice(i,1);w.done();}}
+  if(S.state!=='intro'&&S.state!=='end')S.t+=dt*(S.rec?S.speed:1);
+  // 열차 흔들림
+  const moving=['intro','subway','arriving'].includes(S.state)||(S.stopping&&S.stopping<1.01&&S.state==='arriving');
+  S.sway=THREE.MathUtils.lerp(S.sway,moving&&!S.stopping?1:0,dt*1.2);
+  const sx=Math.sin(now*1.9)*.012*S.sway,sr=Math.sin(now*1.3)*.012*S.sway;
+  cam.rotation.set(pitch,yaw,sr);const base=cam.position.clone();cam.position.x+=sx;
+  // 조명
+  const k=S.lightK;homeL.forEach(l=>l.intensity=l.userData.max*k);shadeMat.emissiveIntensity=1.6*k;
+  tvL.intensity=S.tvOn?(.5+Math.sin(now*9)*.12+Math.random()*.08):0;
+  subL.forEach(l=>l.intensity=2.2*(S.rec&&S.state!=='stopped'?.55:1));
+  // 볼륨: 문이 열린 뒤 시간이 지날수록 모든 소리가 함께 커짐
+  if(S.enterT&&S.rec){const e=S.t-S.enterT;S.houseVol=Math.min(1,.3+.7*e/150);if(AC&&houseBus)houseBus.gain.setTargetAtTime(S.houseVol,AC.currentTime,.3);}
+  $('vol').style.width=(S.houseVol*100)+'%';$('volTxt').textContent=S.enterT?Math.round(S.houseVol*100)+'%':'—';
+  $('stay').textContent=fmt(S.enterT?((S.exitT||S.t)-S.enterT):0);
+  // 반짝이는 행동 대상
+  const en=enabled(),ph=.5+.5*Math.sin(now*4),SMALL=['handle','blanket','remote'];
+  actionables.forEach(a=>{const on=en.includes(a.name)&&!(a.name==='blanket'&&S.blanket)&&!(a.name==='sofa'&&S.seated);const big=!SMALL.includes(a.name);a.mats.forEach(m=>m.emissiveIntensity=on?(hover===a.name?(big?.35:.9):(big?.06+.14*ph:.25+.5*ph)):0);});
+  drawTV(now);
+  // CCTV: 관객 위치 · 동선
+  avatar.position.set(base.x,S.seated?-.35:0,base.z);
+  if(S.rec){sampleAcc+=dt;if(sampleAcc>.12){sampleAcc=0;const last=S.samples[S.samples.length-1];
+      if(!last||Math.hypot(last.x-base.x,last.z-base.z)>.02){S.samples.push({x:base.x,z:base.z,s:S.seated});const n=Math.min(S.samples.length,MAXP);trailPos.set([base.x,.03,base.z],(n-1)*3);trailGeo.setDrawRange(0,n);trailGeo.attributes.position.needsUpdate=true;}}}
+  if(S.lapse){const L=S.lapse;L.t+=dt;const f=Math.min(L.t/L.dur,1),n=Math.max(1,Math.floor(f*S.samples.length)),p=S.samples[n-1];
+    avatar.position.set(p.x,p.s?-.35:0,p.z);trailGeo.setDrawRange(0,n);if(f>=1){S.lapse=null;$('ccMode').textContent='타임랩스 끝';}}
+  recLed.visible=!S.rec||Math.floor(now*2)%2===0;
+  const tt=new Date(T0.getTime()+S.t*1000);$('ccTime').textContent=`2026-11-19 ${tt.toTimeString().slice(0,8)}`;
+  R.render(scene,cam);RC.render(scene,ccam);cam.position.copy(base);
+  requestAnimationFrame(frame);}
+frame();
+</script>
+</body></html>
