@@ -576,7 +576,7 @@ class Tracker:
 
 # ---------------------------------------------------------------- 현장 설정
 def run_setup(cfg, cfg_path, cap):
-    ok, frame = cap.read()
+    ok, frame = read_first(cap)
     if not ok:
         sys.exit("카메라 화면을 못 받았어요. --camera 번호를 확인하세요 (--list-cameras).")
     win = "SETUP"
@@ -626,6 +626,17 @@ def run_setup(cfg, cfg_path, cap):
     cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     cv2.destroyWindow(win)
     print(f"  저장했어요 → {cfg_path}\n  소파(cm): {cfg['zones']['sofa']}\n  출구(cm): {cfg['zones']['exit']}")
+
+
+def read_first(cap, wait_s=5.0):
+    """카메라가 첫 화면을 줄 때까지 기다린다 (아이폰 연속성 카메라는 1~2초 걸림)"""
+    t0 = time.monotonic()
+    while time.monotonic() - t0 < wait_s:
+        ok, f = cap.read()
+        if ok and f is not None and f.mean() > 3:
+            return True, f
+        time.sleep(0.05)
+    return False, None
 
 
 def open_source(args, cfg):
@@ -691,9 +702,9 @@ def main():
         run_setup(cfg, cfg_path, cap)
         cfg = load_cfg(cfg_path)
 
-    ok, frame = cap.read()
+    ok, frame = read_first(cap) if not args.video else cap.read()
     if not ok:
-        sys.exit("첫 화면을 못 받았어요.")
+        sys.exit("첫 화면을 못 받았어요. 아이폰이 잠긴 채 가로로 놓여 있는지, 카메라 번호(--list-cameras)가 맞는지 확인하세요.")
     fps = cap.get(cv2.CAP_PROP_FPS) or 30
     osc = Osc(cfg, enabled=not args.no_osc)
     tr = Tracker(cfg, (frame.shape[1], frame.shape[0]), osc, HERE / "results")
