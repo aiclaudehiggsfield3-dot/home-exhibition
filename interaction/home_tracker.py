@@ -36,6 +36,9 @@ DEFAULT_CFG = {
     "tune": {
         "proc_width": 640,            # 사람 감지용 축소 폭
         "diff_thresh": 26,            # 배경과의 밝기 차이 문턱
+        "shadow_remove": True,        # 색은 그대로인데 어두워지기만 한 곳(그림자)은 사람에서 뺌
+        "shadow_ratio": [0.3, 0.93],  # 그림자로 볼 밝기 비율 범위 (배경 대비)
+        "shadow_chroma": 0.035,       # 이보다 색 차이가 작으면 그림자
         "min_person_frac": 0.006,     # 화면 대비 사람 덩어리 최소 크기
         "move_cm": 12,                # 이만큼 옮겨지면 '만짐'
         "hide_free_s": 1.0,           # 가려진 것도 아닌데 안 보이면 '집어 감'
@@ -44,9 +47,16 @@ DEFAULT_CFG = {
         "absent_exit_s": 1.5,         # 출구 근처에서 사라지고 이만큼 지나면 퇴장
         "lost_s": 10.0,               # 출구 아닌 곳에서 사라지면 이만큼 기다린 뒤 종료
         "exit_margin_cm": 40,
-        "foot_point": True,           # 원근 때문에 몸이 바깥으로 늘어져 보이므로, 카메라 바로 아래에 가장 가까운 부분(발)을 위치로
+        "foot_point": True,           # (예전 설정) point_mode가 없을 때만 씀
+        "point_mode": "foot",         # 위치로 삼을 점: foot(위에서 본 사람의 발) · tip(손끝: 화면 가장자리에서 가장 먼 끝) · center(덩어리 중심)
         "foot_radius_cm": 15,
-        "max_jump_cm": 80,            # 한 프레임에 이보다 멀리 떨어진 덩어리는 같은 사람으로 안 봄
+        "max_jump_cm": 80,
+        "smooth_n": 5,                # 위치는 최근 이만큼의 중간값 (튀는 점 거르기)
+        "gate_frac_s": 0.75,          # 초당 화면 폭의 이 비율보다 빨리 튀면, 0.3초 넘게 이어질 때만 인정
+        "static_s": 3.0,              # 사람 덩어리가 이 시간 동안 전혀 안 움직이면 가짜(그림자 등)로 보고 배경으로 흡수
+        "static_seated_s": 30.0,      # 소파에 앉아 있을 때는 더 오래 기다림
+        "static_motion": 2.0,         # 이보다 화면 변화가 작으면 '안 움직임'
+            # 한 프레임에 이보다 멀리 떨어진 덩어리는 같은 사람으로 안 봄
         "seat_hold_cm": 50,           # 앉아 있을 때 위치가 이만큼 튀면 1초 이상 이어질 때만 인정
         "ghost_cm": {"blanket": 45, "remote": 15},
         "cover_margin_cm": 20,        # 사람 덩어리에서 이 거리 안이면 '가려진 것'
@@ -63,6 +73,7 @@ def load_cfg(path):
     cfg = json.loads(json.dumps(DEFAULT_CFG))
     if path.exists():
         user = json.loads(path.read_text(encoding="utf-8"))
+        cfg["_user_tune_keys"] = list(user.get("tune", {}).keys())
         for k, v in user.items():
             if isinstance(v, dict) and isinstance(cfg.get(k), dict):
                 cfg[k].update(v)
@@ -204,6 +215,7 @@ class Osc:
 class Tracker:
     def __init__(self, cfg, frame_wh, osc, results_dir, log=print):
         self.cfg, self.T = cfg, cfg["tune"]
+        self.user_tune = cfg.get("_user_tune_keys", [])
         self.fw, self.fh = frame_wh
         self.Hm, self.Hinv = floor_homography(cfg, frame_wh)
         self.osc, self.log = osc, log
@@ -231,6 +243,9 @@ class Tracker:
         self.prev_foot_proc = None
         self.jump_since = None
         self.speed, self.dt = 0.0, 0.0
+        self.prev_g, self.still_t = None, 0.0
+        self.gate_since = None
+        self.recent = []
         self.nadir = tuple(cfg["nadir_px"]) if cfg.get("nadir_px") else (self.fw / 2, self.fh / 2)
         Wc = cfg["floor_cm"][0]
         a, b = to_floor(self.Hinv, [[0, cfg["floor_cm"][1] / 2], [Wc, cfg["floor_cm"][1] / 2]])
@@ -266,7 +281,15 @@ class Tracker:
         stat = cv2.dilate(self.fg, np.ones((21, 21), np.uint8)) == 0
         gn = g * self.gain_map(g, stat)[..., :]
         diff = np.abs(gn - self.bg).max(axis=2)
-        fg = (diff > self.T["diff_thresh"]).astype(np.uint8) * 255
+        fgb = diff > self.T["diff_thresh"]
+        if self.T.get("shadow_remove", True):
+            sg, sb = gn.sum(axis=2) + 1.0, self.bg.sum(axis=2) + 1.0
+            ratio = sg / sb
+            chroma = np.abs(gn / sg[..., None] - self.bg / sb[..., None]).max(axis=2)
+            lo, hi = self.T["shadow_ratio"]
+            shadow = (ratio > lo) & (ratio < hi) & (chroma < self.T["shadow_chroma"])
+            fgb &= ~shadow
+        fg = fgb.astype(np.uint8) * 255
         fg = cv2.morphologyEx(fg, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
         fg = cv2.morphologyEx(fg, cv2.MORPH_CLOSE, np.ones((11, 11), np.uint8))
         fg = cv2.dilate(fg, np.ones((7, 7), np.uint8))
@@ -296,6 +319,12 @@ class Tracker:
             a_bg = 0.03 if idle else 0.01
             a_fg = 0.02 if idle else 0.012
         a_person = a_fg if idle else 0.0           # 빈 공간일 때 남은 덩어리는 배경으로 흡수
+        if best is not None and self.prev_g is not None:
+            motion = float(np.abs(g - self.prev_g).mean(axis=2)[person_mask > 0].mean())
+            self.still_t = (self.still_t + self.dt) if motion < self.T["static_motion"] else 0.0
+            if self.still_t > (self.T["static_seated_s"] if self.seated else self.T["static_s"]):
+                a_person = a_fg * 3                    # 오래 안 움직이는 덩어리 = 그림자·남은 물건 → 배경으로
+        self.prev_g = g
         rate = np.where(person_mask > 0, a_person, np.where(fg > 0, a_fg, a_bg)).astype(np.float32)
         self.bg += rate[..., None] * (gn - self.bg)
         if best is None:
@@ -303,8 +332,13 @@ class Tracker:
         M = cv2.moments(best)
         cx, cy = M["m10"] / M["m00"] / self.scale, M["m01"] / M["m00"] / self.scale
         cnt_full = (best.astype(np.float32) / self.scale).astype(np.int32)
-        if self.T.get("foot_point"):
+        mode = self.T.get("point_mode") or ("foot" if self.T.get("foot_point") else "center")
+        if "point_mode" not in self.user_tune and "foot_point" in self.user_tune:
+            mode = "foot" if self.T["foot_point"] else "center"        # 예전 설정 파일 호환
+        if mode == "foot":
             cx, cy = self.foot_of(cnt_full, (cx, cy))
+        elif mode == "tip":
+            cx, cy = self.tip_of(cnt_full, (cx, cy))
         self.prev_foot_proc = (cx * self.scale, cy * self.scale)
         return (cx, cy, cnt_full), fg
 
@@ -341,6 +375,28 @@ class Tracker:
         med = np.clip(med, 0.3, 3.0).astype(np.float32)
         med = cv2.GaussianBlur(med, (3, 3), 0)
         return cv2.resize(med, (pw, ph), interpolation=cv2.INTER_LINEAR)
+
+    def tip_of(self, cnt, ctr, edge=24):
+        """손끝: 덩어리가 화면 가장자리에 닿은 곳(팔 쪽)에서 가장 먼 끝.
+        후보가 여럿이면(최대 거리의 85% 이상) 직전 손끝에 가장 가까운 것 — 손가락 사이를 오가지 않게."""
+        pts = cnt.reshape(-1, 2).astype(np.float32)
+        at_edge = (pts[:, 0] < edge) | (pts[:, 0] > self.fw - edge) | (pts[:, 1] < edge) | (pts[:, 1] > self.fh - edge)
+        base = pts[at_edge].mean(axis=0) if at_edge.any() else np.float32(ctr)
+        m2 = 3 * edge                                         # 손끝은 화면 가장자리에 있을 수 없음
+        inner = (pts[:, 0] > m2) & (pts[:, 0] < self.fw - m2) & (pts[:, 1] > m2) & (pts[:, 1] < self.fh - m2)
+        if not inner.any():
+            return float(ctr[0]), float(ctr[1])
+        q = pts[inner]
+        dist = np.hypot(q[:, 0] - base[0], q[:, 1] - base[1])
+        cand = q[dist >= dist.max() * 0.85]
+        prev = getattr(self, "prev_tip", None)
+        if prev is not None and len(cand) > 1:
+            k = int(np.argmin(np.hypot(cand[:, 0] - prev[0], cand[:, 1] - prev[1])))
+            tip = cand[k]
+        else:
+            tip = q[int(np.argmax(dist))]
+        self.prev_tip = (float(tip[0]), float(tip[1]))
+        return self.prev_tip
 
     def foot_of(self, cnt, ctr):
         """카메라 바로 아래(nadir)에 가장 가까운 덩어리 끝 = 발. 바로 아래에 서 있으면 가운데."""
@@ -438,7 +494,19 @@ class Tracker:
         self.seen = self.markers_detect(frame)
         self.present_hist = (self.present_hist + [det is not None])[-6:]
         present = sum(self.present_hist) >= 4
+        if det is not None and self.recent:
+            last = self.recent[-1]
+            v = float(np.hypot(det[0] - last[0], det[1] - last[1])) / max(self.dt, 1e-3)
+            if v > self.T["gate_frac_s"] * self.fw and self.state == "IN":
+                self.gate_since = self.gate_since or t
+                if t - self.gate_since < 0.3:                 # 순간 점프는 무시 (직전 위치 유지)
+                    det = (last[0], last[1], det[2])
+            else:
+                self.gate_since = None
         if det is not None:
+            self.recent = (self.recent + [det[:2]])[-max(1, int(self.T["smooth_n"])):]
+            med = np.median(np.float32(self.recent), axis=0)
+            det = (float(med[0]), float(med[1]), det[2])
             fl = to_floor(self.Hm, [det[:2]])[0]
             if self.seated and self.person is not None and np.linalg.norm(fl - self.person[3]) > self.T["seat_hold_cm"]:
                 self.jump_since = self.jump_since or t
@@ -453,6 +521,8 @@ class Tracker:
             self.speed = float(np.hypot(fl[0] - h0[1], fl[1] - h0[2]) / max(t - h0[0], 0.3))
         elif not present:
             self.person = None
+            self.recent = []
+            self.prev_tip = None
 
         if self.state == "IDLE":
             W, H = self.cfg["floor_cm"]
@@ -663,6 +733,7 @@ def main():
     ap.add_argument("--headless", action="store_true", help="화면 없이 (테스트용)")
     ap.add_argument("--events-json", help="이벤트 기록을 파일로 (테스트용)")
     ap.add_argument("--save-video", help="인식 화면을 영상으로 저장")
+    ap.add_argument("--save-raw", help="표시 없는 원본 화면을 영상으로 저장 (나중에 --video로 다시 시험할 때)")
     ap.add_argument("--list-cameras", action="store_true")
     ap.add_argument("--floor-size", nargs=2, type=float, metavar=("가로cm", "세로cm"), help="바닥 크기만 바꿔 저장 (다시 클릭 안 해도 됨)")
     args = ap.parse_args()
@@ -708,7 +779,9 @@ def main():
     fps = cap.get(cv2.CAP_PROP_FPS) or 30
     osc = Osc(cfg, enabled=not args.no_osc)
     tr = Tracker(cfg, (frame.shape[1], frame.shape[0]), osc, HERE / "results")
-    writer = None
+    writer = raw_writer = None
+    if args.save_raw:
+        raw_writer = cv2.VideoWriter(args.save_raw, cv2.VideoWriter_fourcc(*"mp4v"), 15, (frame.shape[1], frame.shape[0]))
     if args.save_video:
         writer = cv2.VideoWriter(args.save_video, cv2.VideoWriter_fourcc(*"mp4v"), fps, (frame.shape[1], frame.shape[0]))
     print(f"실행 중 · OSC → {cfg['osc']['host']}:{cfg['osc']['port']}{' (꺼짐)' if args.no_osc else ''} · 끄기: ESC / q / 창 닫기 / 터미널에서 Ctrl+C")
@@ -718,6 +791,8 @@ def main():
     try:
         while ok:
             t = n / fps if args.video else time.monotonic() - t_start
+            if raw_writer:
+                raw_writer.write(frame)
             tr.process(frame, t)
             if writer or not args.headless:
                 view = tr.draw(frame, t)
@@ -748,6 +823,8 @@ def main():
     cv2.destroyAllWindows()
     if writer:
         writer.release()
+    if raw_writer:
+        raw_writer.release()
     if args.events_json:
         Path(args.events_json).write_text(json.dumps({"events": tr.events_out, "osc": [(a, list(v)) for a, v in osc.sent if a != "/home/pos"]}, ensure_ascii=False, indent=1), encoding="utf-8")
 

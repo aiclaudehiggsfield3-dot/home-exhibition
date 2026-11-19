@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>전체 기록 — Home Sweet Home</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head><body><nav class="nav"><div class="in"><a class="home" href="index.html">Home Sweet Home</a><a href="intent.html">01 기획 의도</a><a href="space.html">02 공간 소개</a><a href="furniture.html">03 가구 정리</a><a href="decisions.html">04 확정된 내용</a><a href="experience.html">05 직접 체험</a><a href="tech.html">06 인터랙션·장비</a><a href="history.html" class=cur>07 전체 기록</a></div></nav><div class="wrap"><h1 class="pt"><span style="color:var(--warm)">07</span> 전체 기록<small>버전 · 작업 · 보관 자료</small></h1>
+<p class="mute" style="margin:0 0 18px;font-size:14px">업데이트 11/19</p>
+<style>
+.tl{list-style:none;margin:0;padding:0}.day{margin:0 0 22px}
+.day h2{font-size:18px;margin:0 0 8px;display:flex;gap:10px;align-items:baseline}.day h2 small{font-size:13px;color:var(--mute);font-weight:400}
+.it{display:grid;grid-template-columns:52px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px}
+.it time{color:var(--mute);font-variant-numeric:tabular-nums;font-size:13.5px;padding-top:1px}
+.it .ver{display:inline-block;font-size:12px;font-weight:700;background:var(--ink);color:#fff;border-radius:6px;padding:1px 7px;margin-right:6px}
+.it .wk{display:inline-block;font-size:12px;background:#efe6da;color:#7a4a2c;border-radius:6px;padding:1px 7px;margin-right:6px}
+.it ul{margin:5px 0 0;padding-left:18px;color:var(--mute);font-size:14px}
+.it a{color:var(--warm)}.it img{display:block;max-width:420px;width:100%;border-radius:10px;border:1px solid var(--line);margin-top:8px}
+.arch{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.arch a{display:block;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px}.arch a:hover{border-color:var(--warm)}
+.arch span{display:block;font-size:13px;color:var(--mute)}
+#src{font-size:12.5px;color:var(--mute)}
+.filt{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap}.filt button{font:inherit;font-size:13.5px;border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 12px;cursor:pointer}.filt button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+</style>
+<section class="box"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+<p style="margin:0;font-size:15px"><span class="ver" style="display:inline-block;font-size:12px;font-weight:700;background:#211e1a;color:#fff;border-radius:6px;padding:1px 7px">ver</span> GitHub에 올린 버전 · <span style="display:inline-block;font-size:12px;background:#efe6da;color:#7a4a2c;border-radius:6px;padding:1px 7px">작업</span> 그날 한 일. 최신이 위.</p>
+<span id="src">불러오는 중…</span></div></section>
+<div class="filt"><button class="on" data-f="all">전체</button><button data-f="ver">버전만</button><button data-f="wk">작업만</button></div>
+<div id="tl"></div>
+<section class="box"><h2>보관 자료 <span class="mute" style="font-size:14px;font-weight:400">지난 기획 · 지금 설계 아님</span></h2><ul class="arch"><li><a href="archive/reports/status.html"><b>전체 현황 (ver7~9)</b><span>결정 현황·진행률·크브페·버전 기록, 이전 자료 전부</span></a></li><li><a href="archive/index.html"><b>예전 진행 기록 홈</b><span>주제별 진행 기록 (ver1~8)</span></a></li><li><a href="archive/reports/layout_review.html"><b>배치 검토 보고서</b><span>11/13 공간이 좁다 → 대안 3가지</span></a></li><li><a href="archive/reports/structure_plan_original.html"><b>전시 구조 계획</b><span>처음 구조안</span></a></li><li><a href="archive/reports/objects_current.html"><b>오브젝트 구조 (프로젝터안)</b><span>Unreal 오브젝트 목록</span></a></li><li><a href="archive/reports/home_v5_design.html"><b>안 5 공간 설계</b><span>지하철 → 집, 브라운관</span></a></li><li><a href="archive/reports/home_v5_variants.html"><b>안 5 변형 비교·추천</b><span>브라운관/프로젝터 × 가구 8가지</span></a></li><li><a href="archive/reports/objects_v5.html"><b>안 5 치수표</b><span>가벽·지하철 칸·가구</span></a></li><li><a href="archive/reports/home_interaction.html"><b>이전 인터랙션 설계</b><span>CCTV 감지·블루프린트 가이드 (센서안 이전)</span></a></li></ul></section>
+<script src="data/history.js"></script>
+<script>
+(function(){
+const REPO='aiclaudehiggsfield3-dot/home-exhibition';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clean=b=>(b||[]).map(l=>l.replace(/^[-•]\s*/,'')).filter(l=>l&&!/^(Co-Authored-By|Claude-Session)/.test(l));
+let FILTER='all', COMMITS=window.COMMITS||[];
+function render(){
+  const items=[];
+  const seen=new Set();
+  COMMITS.forEach(c=>{ if(seen.has(c.s))return; seen.add(c.s); const [d,t]=c.d.split(' '); items.push({k:'ver',date:d,time:t,text:c.s,body:clean(c.b)}); });
+  (window.WORKLOG||[]).forEach(w=>items.push({k:'wk',date:w.date,time:w.time,text:w.text,link:w.link}));
+  const by={}; items.filter(i=>FILTER==='all'||i.k===FILTER).forEach(i=>(by[i.date]=by[i.date]||[]).push(i));
+  const days=Object.keys(by).sort().reverse();
+  const W=['일','월','화','수','목','금','토'];
+  document.getElementById('tl').innerHTML=days.map(d=>{
+    const list=by[d].sort((a,b)=>b.time.localeCompare(a.time));
+    const dt=new Date(d+'T00:00:00');
+    return `<section class="box day"><h2>${+d.slice(5,7)}월 ${+d.slice(8,10)}일 (${W[dt.getDay()]})<small>${list.filter(i=>i.k==='ver').length}개 버전 · ${list.filter(i=>i.k==='wk').length}개 작업</small></h2><ul class="tl">`+
+      list.map(i=>{
+        let m=i.text, tag='';
+        if(i.k==='ver'){ const mm=m.match(/^(ver[\d.]+):\s*(.*)$/); if(mm){tag=mm[1];m=mm[2];} else tag='ver'; }
+        const link=i.link?(/\.(jpe?g|png)$/.test(i.link)?`<img src="${esc(i.link)}" alt="" loading="lazy">`:` <a href="${esc(i.link)}">보기 →</a>`):'';
+        return `<li class="it"><time>${esc(i.time)}</time><div>${i.k==='ver'?`<span class="ver">${esc(tag)}</span>`:'<span class="wk">작업</span>'}${esc(m)}${link}${i.body&&i.body.length?'<ul>'+i.body.map(b=>`<li>${esc(b)}</li>`).join('')+'</ul>':''}</div></li>`;
+      }).join('')+'</ul></section>';
+  }).join('');
+}
+document.querySelectorAll('.filt button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.filt button').forEach(x=>x.classList.remove('on'));b.classList.add('on');FILTER=b.dataset.f;render();});
+render();
+fetch(`https://api.github.com/repos/${REPO}/commits?per_page=100`).then(r=>r.ok?r.json():Promise.reject(r.status)).then(list=>{
+  const pad=n=>String(n).padStart(2,'0');
+  COMMITS=list.map(x=>{const t=new Date(x.commit.author.date);const lines=x.commit.message.split('\n');
+    return {h:x.sha.slice(0,7),d:`${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())} ${pad(t.getHours())}:${pad(t.getMinutes())}`,s:lines[0],b:lines.slice(1)};});
+  document.getElementById('src').textContent=`GitHub에서 최신 ${COMMITS.length}개 버전을 불러왔어요`; render();
+}).catch(()=>{document.getElementById('src').textContent='저장된 기록을 보여 주는 중 (GitHub 연결 안 됨)';});
+})();
+</script>
+<div class="pn"><a href="tech.html"><span>← 이전</span>06 인터랙션·장비</a><a class="r" href="index.html"><span>처음 →</span>목록</a></div></div></body></html>
