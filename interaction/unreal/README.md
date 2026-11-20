@@ -19,7 +19,8 @@
 | EX_QR_Screen (StaticMeshActor_116) | 출구 옆 QR 화면 — 머티리얼 M_QR (Tex 텍스처 × Show 밝기) |
 | EX_Fan (StaticMeshActor_0) | 노란 반투명 시야 부채꼴 (SM_Fan 90cm·60°, M_Fan) — 관객 눈 카메라에 붙어 같이 돎. 천장 위 약 246cm라 천장 CCTV에만 보이고 관객 눈 화면에는 안 보임. 형체와 같이 숨김/보임 |
 | EX_LookRef (TargetPoint_0) | 바라보는 방향 저장용 기준점 (보이지 않음, Movable) |
-| PL_TV | TV 채널 목록 (0 B_home · 1 A_society) — MediaPlate가 이 목록을 씀 |
+| PL_TV | TV 채널 목록 (0~2 TEST_CH1~3 · 3 B_home · 4 A_society) — 채널 '원본' 목록 |
+| PL_NOW | **TV 판(MediaPlate)이 실제로 트는 목록 — 영상 1개뿐**. 채널을 바꿀 때 이 한 칸을 PL_TV의 영상으로 바꿔 끼움 (11/20) |
 | 화면 나누기 | 왼쪽 = 천장 CCTV, 오른쪽 = 관객 눈 (DefaultEngine.ini: 2인 화면 세로 분할) |
 
 ## 블루프린트가 하는 일
@@ -42,8 +43,9 @@
 | `/home/result` | QR PNG를 텍스처로 읽어 **QR 화면에 표시** (다음 관객 `/home/enter` 때 꺼짐) |
 
 ## 블루프린트 고치는 법 (11/19)
-- 그래프는 `gen_bp1119.py`가 만든다: `python3 gen_bp1119.py <Saved 폴더> <EX_Snd_TV 내부 이름>` → `bp_v4.t3d`(11/19 17시 그래프) + 새 기능 = `bp_v9.t3d` (= 이 폴더의 `L_Current_OSC.t3d`). (bp_v5 = 소리 세 갈래 전, bp_v6 = 조명·TV가 문에서 켜지던 판, bp_v7 = 앉기 눈높이·채널 돌리기 전)
+- 그래프는 `gen_bp1119.py`가 만든다: `python3 gen_bp1119.py <Saved 폴더> <EX_Snd_TV 내부 이름>` → `bp_v4.t3d`(11/19 17시 그래프) + 새 기능 = `bp_v10.t3d` (= 이 폴더의 `L_Current_OSC.t3d`, 137노드). (bp_v5 = 소리 세 갈래 전, bp_v6 = 조명·TV가 문에서 켜지던 판, bp_v7 = 앉기 눈높이·채널 돌리기 전)
 - ⚠️ 붙이기 함정 (11/19): ① **입력기가 한글이면 Cmd+V가 그래프에 안 먹음** → 붙일 때만 영문. ② 그래프는 **두 번 클릭**한 뒤 ⌘A·Delete·⌘V (첫 클릭은 창 활성화). ③ 확인은 `os.system('pbcopy < /dev/null')`로 클립보드를 비운 뒤 ⌘A⌘C — 안 비우면 실패해도 원본이 남아 '성공'처럼 보임. ④ 에셋 저장은 `save_loaded_asset` 말고 `EditorAssetLibrary.save_asset(경로, only_if_is_dirty=False)` (PL_TV가 저장 안 돼 있었음).
 - EX_Snd_TV(임시 소리 S_TempTV, TV 자리 71·186·90)는 `Saved/ue1119g.py`가 만든다 (에디터 '백그라운드에서 CPU 덜 사용'도 끔).
 - 새 변수는 없음 (소리는 AmbientSound 액터, QR은 그 자리에서 머티리얼 인스턴스 생성) → 붙여 넣고 **컴파일만** 하면 됨.
-- 채널 바꾸기 주의: MediaPlate `Open()`은 항상 0번부터, 플레이어 `Next()`는 같은 영상만 다시 틂 → 플레이어의 `PlayOnOpen`을 켜고 `OpenPlaylistIndex(PL_TV, 지금이 A_society면 0 아니면 1)`.
+- 채널 바꾸기 (11/20 고침): 영상이 끝나면 다음 번호로 넘기는 건 **TV 판(MediaPlate 컴포넌트)이 자기 재생목록으로 직접** 함 (플레이어에 영상을 따로 열어도 판이 덮어씀). 그래서 판에는 영상 1개짜리 `PL_NOW`를 물려 두고, touch tv → `PL_NOW.Replace(0, PL_TV.Get(0))` → 판 `Open()`, 리모컨 → `PL_NOW.Replace(0, PL_TV.Get(횟수 % 5))` → 판 `Open()`. 목록에 하나뿐이라 끝나도 그 채널만 반복. 판 설정은 `Saved/pl1120.py`, 시험은 `Saved/tv1120.py`(시뮬레이트, 결과 `tv1120.txt`).
+- ⚠️ 확인용 복사 때 그래프를 두 번 클릭한 자리가 선(wire) 위면 **경유점(Knot)이 생김** → 확인은 그래프 왼쪽 빈 곳 한 번 클릭. ⌘C·⌘Z도 한글 입력이면 안 먹음.

@@ -6,11 +6,12 @@
 #  6) /home/level 소리 세 갈래 · 지하철 2초 페이드 · 빠른 반응(11/19 22:40)
 #  7) 앉으면 조명 · TV는 /home/touch tv로 켬 (11/19 23:00)
 #  8) 리모컨 채널 차례로 · 앉으면 눈높이 115cm (11/19 23:20)
-#  9) 관리자 소리 계기판 /home/meter (11/19 23:50)  → bp_v9.t3d
+#  9) 관리자 소리 계기판 /home/meter (11/19 23:50)
+# 10) 채널이 영상 끝나면 저절로 넘어가던 문제 → TV 판에 1개짜리 PL_NOW, 채널은 Replace 후 판 Open (11/20)  → bp_v10.t3d
 import re, sys, uuid
 
 SV = sys.argv[1] if len(sys.argv) > 1 else '.'
-SRC, DST = SV + '/bp_v4.t3d', SV + '/bp_v9.t3d'
+SRC, DST = SV + '/bp_v4.t3d', SV + '/bp_v10.t3d'
 TVSND = sys.argv[2] if len(sys.argv) > 2 else 'AmbientSound_2'   # EX_Snd_TV의 내부 이름 (언리얼에서 확인)
 LVL = "/Game/Exhibition/Maps/L_Current.L_Current:PersistentLevel."
 STD = ("PinType.PinSubCategoryMemberReference=(),PinType.PinValueType=(),PinType.ContainerType=None,PinType.bIsReference=False,"
@@ -457,6 +458,38 @@ link('M_GS', 'then', 'M_PRINT', 'execute'); link('M_GS', 'Value', 'M_PRINT', 'In
 # 신호 이름 디버그 글자는 화면에 안 찍고 로그로만 (계기판을 가리지 않게)
 for n_ in ('F_PRINT', 'X_PRINT'):
     nodes[n_]['pins'].append(P('bPrintToScreen', 'bool', default='false'))
+
+# ================================================================== 10) 채널 하나만 반복 (11/20)
+# 영상이 끝나면 다음 채널로 넘기는 건 TV 판(MediaPlate 컴포넌트)이 자기 재생목록으로 직접 함 →
+# 판에는 영상 1개짜리 PL_NOW를 물려 두고(언리얼에서 설정·저장, Saved/pl1120.py), 채널을 바꿀 땐
+# PL_NOW의 그 한 칸을 PL_TV.Get(번호)로 바꿔 끼운 뒤 판 Open() → 목록에 하나뿐이라 그 채널만 반복
+C_MSRC = cls('/Script/MediaAssets.MediaSource')
+PLNOW = '/Game/Exhibition/Media/PL_NOW.PL_NOW'
+def pl_get(name, x, y, comment, index='0'):
+    fn(name, '/Script/MediaAssets.MediaPlaylist', 'Get',
+       EXEC() + [P('self', 'object', obj=C_PL, defobj='/Game/Exhibition/Media/PL_TV.PL_TV'),
+                 P('Index', 'int', default=index), P('ReturnValue', 'object', obj=C_MSRC, out=True)], x, y, comment)
+def pl_replace(name, x, y, comment):
+    fn(name, '/Script/MediaAssets.MediaPlaylist', 'Replace',
+       EXEC() + [P('self', 'object', obj=C_PL, defobj=PLNOW), P('Index', 'int', default='0'),
+                 P('Replacement', 'object', obj=C_MSRC), P('ReturnValue', 'bool', out=True)], x, y, comment)
+def plate_open(name, tvc, x, y, comment):
+    fn(name, '/Script/MediaPlate.MediaPlateComponent', 'Open', EXEC() + [P('self', 'object', obj=C_MPC)], x, y, comment)
+    link(tvc, 'MediaPlateComponent', name, 'self')
+# 리모컨: C_NUM → Get(횟수%5) → PL_NOW 바꿔 끼움 → 판 Open → 지지직
+remove('T_OPEN')
+pl_get('C_GET', 4000, 2980, 'remote: 이 채널 영상')
+pl_replace('C_REP', 4300, 2980, 'remote: PL_NOW 한 칸을 이 채널로')
+plate_open('C_POPEN', 'TVC3', 4600, 2850, '리모컨 → 그 채널만 반복 (판 Open)')
+link('C_NUM', 'then', 'C_GET', 'execute'); link('C_MOD', 'ReturnValue', 'C_GET', 'Index')
+link('C_GET', 'then', 'C_REP', 'execute'); link('C_GET', 'ReturnValue', 'C_REP', 'Replacement')
+link('C_REP', 'then', 'C_POPEN', 'execute'); link('C_POPEN', 'then', 'T_STATIC', 'execute')
+# TV 켜기(touch tv): PL_NOW를 CH1로 되돌린 뒤 판 Open (F_TVOPEN)
+unlink('T_SW', 'tv', 'F_TVOPEN', 'execute')
+pl_get('V_GET0', 1100, 850, 'touch tv: CH1 영상')
+pl_replace('V_REP', 1400, 850, 'touch tv: PL_NOW를 CH1로')
+link('T_SW', 'tv', 'V_GET0', 'execute'); link('V_GET0', 'then', 'V_REP', 'execute')
+link('V_GET0', 'ReturnValue', 'V_REP', 'Replacement'); link('V_REP', 'then', 'F_TVOPEN', 'execute')
 
 # ------------------------------------------------------------------ 쓰기
 out = []

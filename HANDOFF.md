@@ -1,4 +1,4 @@
-# 인수인계: 기말 'home' 전시 — 2026-11-19 23:55 기준 (새 Claude는 이 파일부터 읽고 시작)
+# 인수인계: 기말 'home' 전시 — 2026-11-20 00:05 기준 (새 Claude는 이 파일부터 읽고 시작)
 
 사용자: **정지원** (영상학과 25학번). 인터랙션 담당.
 - 3인 팀: 정지원 · 서지오(사운드) · 최아원.
@@ -14,22 +14,22 @@
 - 터미널 명령은 **한 줄씩, 주석(#) 없이** 줘요. zsh가 `#`을 오류로 처리해요.
 - 사용자는 짧게 말해요 ("다시 ㄱㄱ", "다시해바"). 맥락을 보고 바로 진행해요.
 
-## ★ 지금 바로 알아야 할 것 (11/19 23:55)
+## ★ 지금 바로 알아야 할 것 (11/20 00:05)
 **실행**: Finder에서 `home-exhibition/시연시작.command` 더블클릭 → 언리얼 게임 창(왼쪽, 천장 CCTV | 관객 눈) + 시연 창(오른쪽)이 한 화면에 뜸 → 시연 창 클릭 → WASD·마우스(Q/E)·**C 소파 앉기**·3 TV·2 리모컨(다음 채널)·1 담요·0 퇴장 → ESC 두 번으로 끝 → 언리얼 닫힘 + `results/mouse/sessions/<날짜_시각>/시연기록.html` 자동으로 열림. 실제 카메라는 `카메라시연.command`(아직 카메라로 미시험).
 
 **감독 모니터 = 언리얼 화면 왼쪽(천장 CCTV)** (사용자와 정리). 소리를 언리얼이 내니까 소리 계기판도 여기. Python 창은 '카메라가 사람을 잘 잡나' 보는 기술 확인용.
 - 관리자 소리 계기판: Python `meter_lines()`(home_tracker.py)가 각 소리 단계 0~5(누적/`grow_s`를 5칸)와 **겹침 단계 0~5**((배율-1)/`overlap_gain`, CALM/MILD/UNCOMFORTABLE/UNPLEASANT)를 글자로 만들어 0.5초마다 `/home/meter` → 언리얼 PrintString(Key HOME_METER, 1.5초)로 화면 왼쪽 위에 덮어씀. ⚠️ 언리얼 OSC 글자는 한글(UTF-8)이 깨져서 **영어·ASCII만**. 정식 UMG 위젯은 Python으로 못 만들어 에디터에서 손으로 해야 함(필요하면 다음 작업).
 
-**블루프린트 = bp_v9** (`Saved/gen_bp1119.py . AmbientSound_2` → `bp_v9.t3d`, 노드 133, 저장 확인). 주요 반응: 문 = 지하철 2초 페이드아웃 · 앉음 = 조명 + 눈높이 115cm(-14°)/일어남 160cm · touch tv = TV 영상+TV 소리 · touch remote 횟수 = 채널(횟수 % PL_TV 5개) · level = 세 소리 볼륨 · meter = 계기판.
+**블루프린트 = bp_v10** (`Saved/gen_bp1119.py . AmbientSound_2` → `bp_v10.t3d`, 노드 137, 붙임·컴파일·저장·시뮬레이트 확인 11/20 00:05). 주요 반응: 문 = 지하철 2초 페이드아웃 · 앉음 = 조명 + 눈높이 115cm(-14°)/일어남 160cm · touch tv = TV 영상+TV 소리 · touch remote 횟수 = 채널(횟수 % PL_TV 5개, **그 채널만 반복**) · level = 세 소리 볼륨 · meter = 계기판.
 
 **⚠️ 알려진 문제 (다음에 고칠 것)**
-1. **TV 채널이 영상 끝나면 저절로 다음으로 넘어감** — PL_TV 재생목록 전체를 반복(loop)하는 설정이라 12초 테스트 영상이 끝나면 다음 채널로. 채널은 그 영상만 반복해야 함 → 방법 후보: 채널마다 재생목록(PL_CH1…)을 따로 만들거나, 미디어 끝(OnEndReached)에 같은 번호를 다시 열기.
+1. ~~TV 채널이 영상 끝나면 저절로 넘어감~~ → **11/20 고침**. 원인: 다음 번호로 넘기는 건 TV 판(MediaPlate 컴포넌트)이 자기 재생목록으로 직접 함. 해결: 판에 영상 1개짜리 `PL_NOW`를 물리고(`Saved/pl1120.py`, 레벨 저장됨), touch tv/리모컨 때 `PL_NOW.Replace(0, PL_TV.Get(번호))` → 판 `Open()`. 시험 `R('tv1120.py')` → `Saved/tv1120.txt` (CH1 18초 유지 → CH2 18초 유지 → CH3 18초 유지 확인). ⚠️ 플레이 중 Replace가 PL_NOW 에셋을 메모리에서 바꿔서 에디터가 'PL_NOW 저장할까요?'를 물을 수 있음 — 저장해도 무해(TV 켤 때 CH1로 되돌림).
 2. 한 화면 분할은 1920×1080(DELL)에서만 확인. 맥북 레티나 화면에서는 언리얼 창 크기가 다르게 잡힐 수 있음 → `config.json`의 `unreal_game.layout:"manual"` + `res`/`pos`로 조절.
 3. 원격 조작에서는 마우스로 몸 돌리기가 안 잡혀 E/Q로만 시험함 (실제 마우스는 사용자가 확인 필요).
 
 **언리얼 조작 함정 (11/19 밤에 겪음)**
 - 한글 입력기면 그래프에 **⌘V가 안 먹음** → 블루프린트 붙일 때만 `ctrl+space`로 영문, 끝나면 한글로 되돌림 (사용자는 평소 한영 전환 하지 말라고 함 — 붙일 때만 예외).
-- 그래프는 **두 번 클릭** 후 ⌘A·Delete·⌘V. 그래프 오른쪽 아래(1200,600 부근)는 안 보이는 Claude 창이 겹쳐 있어 키가 거기로 감 → 그래프 왼쪽(480,620) 클릭.
+- 그래프는 **두 번 클릭** 후 ⌘A·Delete·⌘V. ⚠️ 두 번 클릭한 자리가 선(wire) 위면 경유점(Knot)이 생김 → 붙인 뒤 확인 복사는 그래프 왼쪽 빈 곳(450,500 부근) **한 번** 클릭. ⌘C·⌘Z도 한글 입력이면 안 먹음. 그래프 오른쪽 아래(1200,600 부근)는 안 보이는 Claude 창이 겹쳐 있어 키가 거기로 감 → 그래프 왼쪽(480,620) 클릭.
 - 붙인 뒤 확인: `os.system('pbcopy < /dev/null')`로 클립보드 비우고 ⌘A⌘C → pbpaste → 노드 수·`bOrphanedPin`. 안 비우면 실패해도 원본이 남아 성공처럼 보임(실제로 빈 그래프가 저장된 적 있음).
 - 컴파일·저장 `R('ue1119i.py')`. 에셋 저장은 `EditorAssetLibrary.save_asset(경로, only_if_is_dirty=False)` (`save_loaded_asset`은 조용히 실패한 적 있음).
 - 블루프린트 창 앞으로: `unreal.get_editor_subsystem(unreal.AssetEditorSubsystem).open_editor_for_assets([bp])` (bp = `unreal.find_object(None,'/Game/Exhibition/Maps/L_Current.L_Current:PersistentLevel.L_Current')`).
@@ -189,7 +189,7 @@ python3 home_mouse.py --no-unreal
   | 액터(내부 이름) | 라벨 | 역할 |
   |---|---|---|
   | PointLight_1 · _2 | EX_Light_B_Warm_1 · _2 | 집 스탠드 (48,94)·(282,286), 3500K |
-  | MediaPlate_1 | EX_Screen_B_Home | 브라운관 TV, 채널 목록 PL_TV (0~2 TEST_CH1~3, 3 B_home, 4 A_society) |
+  | MediaPlate_1 | EX_Screen_B_Home | 브라운관 TV. 판이 트는 목록 = **PL_NOW(영상 1개)**, 채널 원본 = PL_TV (0~2 TEST_CH1~3, 3 B_home, 4 A_society) |
   | AmbientSound_2 | EX_Snd_TV | TV 소리 (S_TempTV, TV 자리) |
   | StaticMeshActor_27 | EX_Visitor | 관객 형체 (원기둥, 스케일 0.45·0.45·1.7) |
   | CineCameraActor_0 | EX_VisitorEye | 관객 1인칭 눈 — 형체에 붙음, 몸 앞 30cm·160cm·6° 아래·14mm·비율 고정 끔·**수동 노출 +1.5** |
@@ -210,13 +210,13 @@ python3 home_mouse.py --no-unreal
   4. 그래프 빈 곳 클릭 → ⌘A → Delete → ⌘V → **컴파일**(툴바의 "컴파일" 글자 버튼, 옆 아이콘은 콘텐츠 브라우저라 헷갈림) → "준비 완료" 확인 → 저장.
   5. 확인: 그래프 ⌘A ⌘C → `os.system('pbpaste > ".../Saved/bp_after_xxx.t3d"')` → VM에서 노드 수·`bOrphanedPin=True` 개수(0이어야) 확인.
   - 플레이 중에는 그래프가 읽기 전용이라 붙여넣기가 안 돼요 (먼저 플레이 끄기).
-- 채널 주의: MediaPlate `Open()`은 항상 0번부터. 블루프린트는 `PlayOnOpen` 켜고 `OpenPlaylistIndex(PL_TV, 리모컨 횟수 % Num)`. GetPlaylistIndex는 채널을 건너뛰어서 안 씀. ⚠️ 재생목록 반복 때문에 영상이 끝나면 다음 채널로 넘어감(★ 알려진 문제 1).
+- 채널: `PL_NOW.Replace(0, PL_TV.Get(리모컨 횟수 % PL_TV.Num))` → 판 `Open()` (11/20). 실제 TV 영상이 정해지면 PL_TV 내용만 바꾸면 됨.
 - 임시 소리 S_TempMusic · S_TempFire · S_TempSubway · S_TempStatic (`Content/Exhibition/Audio`, 원본 `interaction/unreal/temp_sounds/`) → 서지오 파일이 오면 같은 이름으로 교체.
 - 새 에셋: M_QR, M_Fan (Materials), SM_Fan (Meshes, 원본 `interaction/unreal/SM_Fan.obj`), PL_TV (Media).
 - DefaultEngine.ini: 2인 화면 세로 분할 (원본 DefaultEngine.ini.bak2). 에디터 개인설정 "백그라운드에서 CPU 덜 사용" 해제 권장. 언리얼 화면 녹화는 ⌘⇧5.
 
 ## 4. 바로 다음 할 일 (순서대로)
-1. **TV 채널 자동 넘어감 고치기** (위 알려진 문제 1).
+1. ~~TV 채널 자동 넘어감~~ (11/20 완료).
 2. 사용자가 맥에서 직접 시연: 실제 마우스로 몸 돌리기, 지하철 새 소리, 소리 세 갈래 크기·속도(`grow_s` 60초 등) 피드백 → config `tune` 숫자만 바꾸면 됨.
 3. **아이폰을 천장에 달기** → `--list-cameras` → `--setup` → `카메라시연.command`로 한 바퀴 (자세 인식 방향 부채꼴, 계기판도 확인).
 4. ArUco 마커 인쇄 → 담요·리모컨 실물 테스트.
@@ -234,7 +234,7 @@ python3 home_mouse.py --no-unreal
 | 언리얼 쪽 설명 | `interaction/unreal/README.md` |
 | 테스트 결과 사진 | `interaction/docs/` (eyecam_1119.png 등) |
 | 언리얼 작업 스크립트·결과·백업 | `AICLASS_prototype1/Saved/` (gen_bp1119.py, bp_v4/v5.t3d, ue1119a~e.py, cam1119b/c.py, cap1119.py, st1119.py, ev1119.py, p5.py, snd1119/, eyecam/, mouse_test/, backup_1119/) |
-| GitHub 커밋 | 마지막 **ver14.6** (3a3f1a3), ver14.7은 11/19 23:55에 사용자가 커밋 예정. `git log --oneline -5` |
+| GitHub 커밋 | 마지막 **ver14.6** (3a3f1a3), ver14.7(11/19 23:55)·ver14.8(11/20 채널 고침)은 사용자가 커밋 예정. `git log --oneline -5` |
 
 ## 6. 커밋할 때 주의
 - (옛 메모) **ver14.6 때 커밋 목록**: HANDOFF.md, data/history.js, interaction/README.md, interaction/home_mouse.py(게임식), interaction/home_tracker.py(바라보는 방향), interaction/unreal/L_Current_OSC.t3d · README.md · gen_bp1119.py, 새 파일 interaction/unreal/SM_Fan.obj.
