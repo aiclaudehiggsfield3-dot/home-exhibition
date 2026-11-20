@@ -1,4 +1,4 @@
-# 인수인계: 기말 'home' 전시 — 2026-11-20 00:05 기준 (새 Claude는 이 파일부터 읽고 시작)
+# 인수인계: 기말 'home' 전시 — 2026-11-20 15:20 기준 (새 Claude는 이 파일부터 읽고 시작)
 
 사용자: **정지원** (영상학과 25학번). 인터랙션 담당.
 - 3인 팀: 정지원 · 서지오(사운드) · 최아원.
@@ -14,7 +14,15 @@
 - 터미널 명령은 **한 줄씩, 주석(#) 없이** 줘요. zsh가 `#`을 오류로 처리해요.
 - 사용자는 짧게 말해요 ("다시 ㄱㄱ", "다시해바"). 맥락을 보고 바로 진행해요.
 
-## ★ 지금 바로 알아야 할 것 (11/20 00:05)
+## ★ 다른 컴퓨터에서 이어 하는 경우 (11/20 추가)
+- 언리얼 프로젝트(레벨·에셋)는 원래 저장소 밖이라 **`transfer/unreal_project_1120.zip`** 에 넣어 둠. 순서는 **`transfer/README.md`**: UE 5.4 설치 → zip 풀기 → 이 저장소를 `AICLASS_prototype1/` **안에** clone → `transfer/config.json`을 `interaction/config.json`으로 → pip 설치 → `시연시작.command`.
+- 아래 내용에 나오는 `/Users/jiwon/Documents/Unreal Projects/AICLASS_prototype1` 은 **원래 맥 경로**. 다른 컴퓨터에서는 zip을 푼 곳으로 바꿔 읽어요. 새 Claude는 `get_device_info`로 연결된 폴더를 먼저 확인해요.
+- 언리얼 콘솔 도우미는 경로 없는 버전을 써요: `R=lambda n:exec(open(unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_saved_dir())+n).read(),globals())` (zip의 `Saved/` 스크립트는 이 방식으로 고쳐 둠, 사본 `transfer/ue_scripts/`).
+- 전체 정리·문제점·발전 방향: **`interaction/docs/정리_문제점_방향_1120.md`** (원본은 정지원 계정의 Claude 문서, 그림 포함).
+
+## ★ 지금 바로 알아야 할 것 (11/20 15:20)
+**11/20 상태**: ver14.8까지 커밋 완료(TV 채널 반복 고침). 그 뒤 작업 정리·문제점·발전 방향을 문서로 만듦 → 다음 단계는 **'실제 방에서 한 바퀴'** (실제 장치 출력 · 카메라 자리 · 실물 인식). 크브페 지원서 마감 11/23(월) 23:59. 자세히는 위 정리 파일의 '바로 다음 할 일'과 '팀이 정할 것'.
+
 **실행**: Finder에서 `home-exhibition/시연시작.command` 더블클릭 → 언리얼 게임 창(왼쪽, 천장 CCTV | 관객 눈) + 시연 창(오른쪽)이 한 화면에 뜸 → 시연 창 클릭 → WASD·마우스(Q/E)·**C 소파 앉기**·3 TV·2 리모컨(다음 채널)·1 담요·0 퇴장 → ESC 두 번으로 끝 → 언리얼 닫힘 + `results/mouse/sessions/<날짜_시각>/시연기록.html` 자동으로 열림. 실제 카메라는 `카메라시연.command`(아직 카메라로 미시험).
 
 **감독 모니터 = 언리얼 화면 왼쪽(천장 CCTV)** (사용자와 정리). 소리를 언리얼이 내니까 소리 계기판도 여기. Python 창은 '카메라가 사람을 잘 잡나' 보는 기술 확인용.
@@ -228,13 +236,15 @@ python3 home_mouse.py --no-unreal
 ## 5. 진행 상황을 알 수 있는 파일
 | 무엇 | 어디 |
 |---|---|
+| **정리·문제점·발전 방향 (11/20)** | `interaction/docs/정리_문제점_방향_1120.md` |
+| **다른 컴퓨터로 옮기기** | `transfer/README.md`, `transfer/unreal_project_1120.zip` |
 | **전체 기록(날짜별 버전·작업)** | 홈페이지 `history.html`, 데이터 `data/history.js` (WORKLOG에 덧붙임, 마지막 11/19 22:05) |
 | 홈페이지 목록 | `index.html` → 01 기획 의도 · 02 공간 소개 · 03 가구 정리 · 04 확정된 내용 · 05 직접 체험(`experience.html`) · 06 인터랙션·장비 · 07 전체 기록 |
 | 인터랙션 설명·규칙·OSC 표·게임식 시연 | `interaction/README.md` |
 | 언리얼 쪽 설명 | `interaction/unreal/README.md` |
 | 테스트 결과 사진 | `interaction/docs/` (eyecam_1119.png 등) |
 | 언리얼 작업 스크립트·결과·백업 | `AICLASS_prototype1/Saved/` (gen_bp1119.py, bp_v4/v5.t3d, ue1119a~e.py, cam1119b/c.py, cap1119.py, st1119.py, ev1119.py, p5.py, snd1119/, eyecam/, mouse_test/, backup_1119/) |
-| GitHub 커밋 | 마지막 **ver14.6** (3a3f1a3), ver14.7(11/19 23:55)·ver14.8(11/20 채널 고침)은 사용자가 커밋 예정. `git log --oneline -5` |
+| GitHub 커밋 | 마지막 **ver14.8** (9a5e99e, 11/20 채널 고침). ver14.9 = 다른 컴퓨터용 transfer/ + 정리 문서 (사용자가 커밋 예정). `git log --oneline -5` |
 
 ## 6. 커밋할 때 주의
 - (옛 메모) **ver14.6 때 커밋 목록**: HANDOFF.md, data/history.js, interaction/README.md, interaction/home_mouse.py(게임식), interaction/home_tracker.py(바라보는 방향), interaction/unreal/L_Current_OSC.t3d · README.md · gen_bp1119.py, 새 파일 interaction/unreal/SM_Fan.obj.

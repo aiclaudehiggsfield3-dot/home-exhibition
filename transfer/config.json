@@ -1,0 +1,204 @@
+{
+  "camera": 1,
+  "frame_size": [
+    1280,
+    720
+  ],
+  "floor_px": [
+    [
+      247.0,
+      205.0
+    ],
+    [
+      904.0,
+      208.0
+    ],
+    [
+      950.0,
+      692.0
+    ],
+    [
+      130.0,
+      674.0
+    ]
+  ],
+  "floor_cm": [
+    300,
+    300
+  ],
+  "nadir_px": [
+    960.0,
+    3240.0
+  ],
+  "zones": {
+    "train": [
+      [
+        0,
+        0
+      ],
+      [
+        300,
+        0
+      ],
+      [
+        300,
+        77
+      ],
+      [
+        0,
+        77
+      ]
+    ],
+    "home": [
+      [
+        0,
+        77
+      ],
+      [
+        300,
+        77
+      ],
+      [
+        300,
+        300
+      ],
+      [
+        0,
+        300
+      ]
+    ],
+    "sofa": [
+      [
+        190,
+        155
+      ],
+      [
+        275,
+        155
+      ],
+      [
+        275,
+        275
+      ],
+      [
+        190,
+        275
+      ]
+    ],
+    "exit": [
+      [
+        5,
+        255
+      ],
+      [
+        95,
+        255
+      ],
+      [
+        95,
+        300
+      ],
+      [
+        5,
+        300
+      ]
+    ]
+  },
+  "markers": {
+    "1": "blanket",
+    "3": "blanket",
+    "2": "remote",
+    "4": "spare",
+    "5": "spare_small"
+  },
+  "osc": {
+    "host": "127.0.0.1",
+    "port": 8000
+  },
+  "result_base": "https://aiclaudehiggsfield3-dot.github.io/home-exhibition/r.html",
+  "tune": {
+    "proc_width": 640,
+    "diff_thresh": 26,
+    "shadow_remove": true,
+    "shadow_ratio": [
+      0.3,
+      0.93
+    ],
+    "shadow_chroma": 0.035,
+    "min_person_frac": 0.006,
+    "move_cm": 12,
+    "hide_free_s": 1.0,
+    "hide_under_s": 4.0,
+    "sit_s": 1.2,
+    "stand_s": 1.5,
+    "absent_exit_s": 1.5,
+    "lost_s": 10.0,
+    "exit_margin_cm": 40,
+    "foot_point": true,
+    "point_mode": "foot",
+    "use_mediapipe": false,
+    "tip_band": 0.85,
+    "skin_lo": [
+      40,
+      136,
+      77
+    ],
+    "skin_hi": [
+      255,
+      180,
+      130
+    ],
+    "foot_radius_cm": 15,
+    "max_jump_cm": 80,
+    "smooth_n": 5,
+    "gate_frac_s": 0.75,
+    "static_s": 3.0,
+    "static_seated_s": 30.0,
+    "static_motion": 2.0,
+    "seat_hold_cm": 50,
+    "ghost_cm": {
+      "blanket": 45,
+      "remote": 15
+    },
+    "cover_margin_cm": 20,
+    "still_cms": 12,
+    "sofa_margin_cm": 35,
+    "entry_edge_cm": 60,
+    "entry_anywhere": true,
+    "entry_s": 0.8,
+    "exit_dwell_s": 3.0,
+    "clear_s": 1.0,
+    "qr_show_s": 20.0,
+    "pos_send_s": 0.1,
+    "sample_s": 0.25,
+    "door_s": 0.4,
+    "person_detector": "yolo"
+  },
+  "_user_tune_keys": [
+    "proc_width",
+    "diff_thresh",
+    "min_person_frac",
+    "move_cm",
+    "hide_free_s",
+    "hide_under_s",
+    "sit_s",
+    "stand_s",
+    "absent_exit_s",
+    "lost_s",
+    "exit_margin_cm",
+    "foot_radius_cm",
+    "max_jump_cm",
+    "seat_hold_cm",
+    "ghost_cm",
+    "cover_margin_cm",
+    "still_cms",
+    "sofa_margin_cm",
+    "entry_edge_cm",
+    "pos_send_s",
+    "sample_s",
+    "point_mode"
+  ],
+  "lock_zones": true,
+  "layout_note": "언리얼 L_Current 도면 (cm, 홈페이지 experience.html 11/19 배치). 바닥 좌표 x = 언리얼 X, y = 언리얼 Y. 천장 카메라(EX_Cam_TopView) 화면의 오른쪽 = +X, 아래 = +Y. 위쪽 Y 0~72 지하철 칸, 가벽 Y 72~82(문 X 190~270), 아래 집",
+  "_note_tripod": "삼각대(비스듬히) 촬영용: nadir_px를 화면 아래 바깥에 둬서 사람 덩어리의 가장 아래 끝 = 발. 천장 수직 촬영이면 nadir_px를 null로."
+}
